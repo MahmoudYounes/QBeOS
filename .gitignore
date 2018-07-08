@@ -1,4 +1,6 @@
+bochsout.txt
 *.img
 *.bin
 build/**
-bochsout.txt
+sandbox/**
+.vscode/**
