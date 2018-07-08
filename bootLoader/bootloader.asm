@@ -1,9 +1,13 @@
+; stopped at trying to call kmain
+; bug at readdesksectors
+; check link to answer in manage.py to complete
+; 
 ; think of this code as code added on floppy disk.
 BITS 16
 
 ; this line tells the assembler where to place the data and code in correct locations
 ; this line tells the bootloader where to assume it is loading.
-ORG 0x7C00
+; ORG 0x7C00 given in linker command
 
 jmp _start
 nop
@@ -33,6 +37,7 @@ SectorsPerTrack:	db 0x0 				; 1 	number of sectors per track
 bootFailureMsg:		db "Booting sequence failed", 0
 bootLoadingMsg:		db "loading...", 0
 
+global _start
 _start:
 	cli
 	; preserving drive number and setting up registers for usage
@@ -57,10 +62,7 @@ _start:
 	pusha
 	mov ax, 2
 	push ax
-	mov ax, 0x1000
-	mov es, ax
-	call readDiskSector
-	jmp kmain
+	call kernelLoadAndJmp
 bootFailure:
 	pusha
 	push bootFailureMsg
@@ -72,7 +74,7 @@ bootloaderEnd:
 
 ; ============= Functions ============= ;
 ; Function to print to screen
-; args: address of first character
+; args: address of first character in stack
 printf:				; function preparation
 	pop bp 			; poping old ip in bp
 	pop si 			; poping arguments
@@ -105,9 +107,7 @@ endReadDiskParameters:
 
 ; Function to read from disk. default 3 retries and fail boot sequence afterwards
 ; args: the number of sector to read in lba mode
-readDiskSector:
-	pop bp 			; saving old ip
-	pop ax			; param lba
+kernelLoadAndJmp:
 	mov si, ax 		; preserving lba in si
 	mov di, 0
 loopReadDiskSector:
@@ -116,44 +116,25 @@ loopReadDiskSector:
 	xor ax, ax
 	int 13h
 	jc bootFailure
+	
+	; buffer to load second stage bootloader
+	mov ax, 0x9000
+	mov es, ax
+	xor bx, bx
 
-	mov ax, si
-	xor dx, dx
-	; (dx) Sector = (LBA(ax) mod SectorsPerTrack(18)) + 1
-	mov bx, [SectorsPerTrack]
-	div bx
-	inc dx
-	push dx
-	; ax has lba / sectorsPerTrack
-	; (ax) Cylinder = (LBA / SectorPerTrack) / NumHeads
-	; (dx) Head = (LBA / SectorsPerTrack) mod NumHeads
-	xor dx, dx
-	mov bx, [HeadCnt] 
-	div bx
-	push ax
-	push dx
-	; top 3 words in stack are head, cylinder, sector respectively
-	; setting head  and drive number
-	pop ax
-	mov dh, al
-	mov dl, [BootDrive]
-	; setting cylinder number
-	pop ax
-	mov ch, al
-	; setting sector number
-	pop ax
-	mov cl, al
-	; setting interrupt arguments
-	mov al, 1
-	mov ah, 2
-	mov bx, 0
-	; reading
-	cmp di, 3
-	je bootFailure
-	inc di
+	mov ah, 0x02	; read function in int 13h
+	mov al, 0x03	; number of sectors to read
+	mov ch, 0x00	; cylinder to read
+	mov cl, 0x02	; sector to read
+	mov dh, 0x00	; head to read
+	mov dl, [BootDrive] ; boot drive number
 	int 13h
 	jc loopReadDiskSector
-	ret
+	mov ax, 0x9000
+	mov es, ax
+	xor bx, bx
+	jmp 0x9000:0x0000
+	
 
 times 510 - ($ - $$) db 0
 dw 0xaa55

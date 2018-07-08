@@ -15,7 +15,7 @@ def executeCommand(command):
 	"""
 	execute a shell command in linux/unix environment
 	"""
-	process = subprocess.Popen(command, shell = True, stderr = subprocess.PIPE)
+	process = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE)
 	while True:
 		out = process.stderr.read(1)
 		exit_code = process.poll()
@@ -28,7 +28,7 @@ def executeCommand(command):
 def help():
 	"""
 	"""
-	print "to use this script: python make.py <command>"
+	print "to use this script: python manage.py <command> or ./manage.py"
 	print "where command can be:"
 	print "\t\thelp  : to print this help message."
 	print "\t\tbuild : to build the flat binary of the OS."
@@ -40,12 +40,32 @@ def clean():
 	"""
 	if os.path.isdir(BUILD_DIR):
 		shutil.rmtree(BUILD_DIR)
+	if os.path.exists("BeOs.img"):
+		os.remove("BeOs.img")
 
 def build():
+	"""
+	for info about build commands check this answer: https://stackoverflow.com/a/33619597
+	"""
 	clean()
 	os.mkdir(BUILD_DIR)
-	executeCommand("nasm -f bin -o build/boot.bin bootLoader/bootloader.asm; nasm -f bin -o build/kernel.bin src/kernel.asm;")
-#	executeCommand("(dd if=build/boot.bin bs=512")
+
+	"""
+	"""
+
+	executeCommand("""
+		nasm -g -f elf32 -F dwarf -o build/boot.o bootLoader/bootloader.asm;
+		ld -melf_i386 -Ttext=0x7c00 -nostdlib --nmagic -o build/boot.elf build/boot.o;
+		objcopy -O binary build/boot.elf build/boot.bin;
+
+		nasm -g -f elf32 -F dwarf -o build/kernel.o src/kernel.asm;
+		ld -melf_i386 -Tlinker.ld -nostdlib --nmagic -o build/kernel.elf build/kernel.o;
+		objcopy -O binary build/kernel.elf build/kernel.bin;
+
+		dd if=/dev/zero of=BeOs.img bs=512 count=2880;
+		dd if=build/boot.bin of=BeOs.img bs=512 conv=notrunc;
+		dd if=build/kernel.bin of=BeOs.img bs=512 seek=1 conv=notrunc;
+		""")
 
 def run():
 	if os.path.isdir(BUILD_DIR):
