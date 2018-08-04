@@ -58,13 +58,13 @@ def build():
 		ld -melf_i386 -Ttext=0x7c00 -nostdlib --nmagic -o build/boot.elf build/boot.o;
 		objcopy -O binary build/boot.elf build/boot.bin;
 
-		nasm -g -f elf32 -F dwarf -o build/kernel.o src/kernel.asm;
-		ld -melf_i386 -Tlinker.ld -nostdlib --nmagic -o build/kernel.elf build/kernel.o;
-		objcopy -O binary build/kernel.elf build/kernel.bin;
+		nasm -g -f elf32 -F dwarf -o build/boot2.o bootLoader/boot.asm;
+		ld -melf_i386 -Tlinker.ld -nostdlib --nmagic -o build/boot2.elf build/boot2.o;
+		objcopy -O binary build/boot2.elf build/boot2.bin;
 
 		dd if=/dev/zero of=BeOs.img bs=512 count=2880;
 		dd if=build/boot.bin of=BeOs.img bs=512 conv=notrunc;
-		dd if=build/kernel.bin of=BeOs.img bs=512 seek=1 conv=notrunc;
+		dd if=build/boot2.bin of=BeOs.img bs=512 seek=1 conv=notrunc;
 		""")
 
 def run():

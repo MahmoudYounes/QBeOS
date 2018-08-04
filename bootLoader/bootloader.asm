@@ -45,15 +45,18 @@ _start:
 	xor ax, ax
 	mov ds, ax
 	mov es, ax
+	
 	; setting up the stack. stack grows downwards
 	mov ss, ax
 	mov sp, 0x7C00
 	sti
+
 	; print loading msg
 	pusha
 	push bootLoadingMsg
 	call printf
 	popa
+	
 	; reading current disk parameters [this part will be useful when moving to iso instead of floppy]
 	pusha
 	call readDiskParameters
@@ -62,7 +65,7 @@ _start:
 	pusha
 	mov ax, 2
 	push ax
-	call kernelLoadAndJmp
+	call LoadSecondStage
 bootFailure:
 	pusha
 	push bootFailureMsg
@@ -107,7 +110,7 @@ endReadDiskParameters:
 
 ; Function to read from disk. default 3 retries and fail boot sequence afterwards
 ; args: the number of sector to read in lba mode
-kernelLoadAndJmp:
+LoadSecondStage:
 	mov si, ax 		; preserving lba in si
 	mov di, 0
 loopReadDiskSector:
@@ -118,9 +121,9 @@ loopReadDiskSector:
 	jc bootFailure
 	
 	; buffer to load second stage bootloader
-	mov ax, 0x9000
+	mov ax, 0x0000
 	mov es, ax
-	xor bx, bx
+	mov bx, 0x9000
 
 	mov ah, 0x02	; read function in int 13h
 	mov al, 0x03	; number of sectors to read
@@ -133,7 +136,7 @@ loopReadDiskSector:
 	mov ax, 0x9000
 	mov es, ax
 	xor bx, bx
-	jmp 0x9000:0x0000
+	jmp 0x9000
 	
 
 times 510 - ($ - $$) db 0
