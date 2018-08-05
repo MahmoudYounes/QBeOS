@@ -1,4 +1,3 @@
-; stopped at trying to call kmain
 ; bug at readdesksectors
 ; check link to answer in manage.py to complete
 ; 
