@@ -1,38 +1,16 @@
-; bug at readdesksectors
-; check link to answer in manage.py to complete
-; 
-; think of this code as code added on floppy disk.
+; boot code to boot the kernel from iso9660 compliant CD
+; boot sector size is 2kb ~ 2048 bytes
+; think of this code as code added on cd
+; writing the boot sector using EL torito specification
 BITS 16
-
-; this line tells the assembler where to place the data and code in correct locations
-; this line tells the bootloader where to assume it is loading.
-; ORG 0x7C00 given in linker command
-
+; BootRecordFlag: 			db 0
+; BootRecordId: 				db "CD001"
+; VolumeDescriptorVersion: 	db 0x0001
+; BootSystemId:				db "EL TORITO SPECIFICATION000000000"
+; times 70 - 39 				db 0		
 jmp _start
-nop
 
-; params for bootsector on floppy disk. check: maverick-os.dk/filesystemformats/fat16_filesystem.html
-OEM:				db "BeOs    "		; 8		OS Name
-SectorSize:			dw 0x200			; 2 	bytes per sector 
-SectorPerCluster:	db 1				; 1 	sectors per cluster 
-ReservedSector:		dw 1				; 2 	sector 0 is reserved so normaly this is 1
-FatCount:			db 2				; 1 	number of FAT on this media 
-RootSize:			dw 0x200			; 2 	number of entries in root FAT 
-TotalSectors:		dw 2880				; 2 	total number of sectors in this media 
-MediaDescript: 		db 0xF0				; 1	    code that describes the floppy
-SectorsPerFat:		dw 9				; 2     number of sectors in each FAT 
-TrackSector:		dw 9				; 2     number of setors per track 
-HeadCnt:			dw 2				; 2
-HiddenSectors:		dw 0				; 2
-HiddenSectorsHi:	dw 0				; 2
-BootDrive:			db 0				; 1     this is the drive number
-Rserved:			db 0				; 1
-BootSign:			db 0x29				; 1
-VolumeId:			db "seri"			; 4
-VolumeLabel:		db "MYVOLUME   "	; 11
-FSType:				db "FAT16   "		; 8
-Cylinders:			db 0x0 				; 1		number of cylinders in drive
-SectorsPerTrack:	db 0x0 				; 1 	number of sectors per track
+BootDrive:			db 0								; 1     this is the drive number
 bootFailureMsg:		db "Booting sequence failed", 0
 bootLoadingMsg:		db "loading...", 0
 
@@ -55,11 +33,7 @@ _start:
 	push bootLoadingMsg
 	call printf
 	popa
-	
-	; reading current disk parameters [this part will be useful when moving to iso instead of floppy]
-	pusha
-	call readDiskParameters
-	popa
+
 	; loading second stage bootloader
 	pusha
 	mov ax, 2
@@ -91,23 +65,7 @@ loop_printf:		; printing loop
 endPrintf:
 	ret
 
-; Function to read floppy disk parameters.
-; args: none
-readDiskParameters:
-	; zero out registers
-	xor ax, ax
-	mov dx, ax
-	; arguments for interrupt
-	mov dl, [BootDrive]
-	mov ah, 8
-	int 13h
-	jc bootFailure
-	mov [Cylinders], ch
-	mov [SectorsPerTrack], cl
-endReadDiskParameters:
-	ret
-
-; Function to read from disk. default 3 retries and fail boot sequence afterwards
+; Function to find second stage and load into it. default 3 retries and fail boot sequence afterwards
 ; args: the number of sector to read in lba mode
 LoadSecondStage:
 	mov si, ax 		; preserving lba in si

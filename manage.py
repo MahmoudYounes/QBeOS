@@ -1,6 +1,8 @@
 #!/usr/bin/python
 """
 script that manages BeOs development operations
+
+TODO: adjust build commands to accomdate for failures
 """
 
 import os, sys, subprocess, shutil
@@ -40,8 +42,8 @@ def clean():
 	"""
 	if os.path.isdir(BUILD_DIR):
 		shutil.rmtree(BUILD_DIR)
-	if os.path.exists("BeOs.img"):
-		os.remove("BeOs.img")
+	if os.path.exists("bin/BeOs.iso"):
+		os.remove("bin/BeOs.iso")
 
 def build():
 	"""
@@ -49,9 +51,6 @@ def build():
 	"""
 	clean()
 	os.mkdir(BUILD_DIR)
-
-	"""
-	"""
 
 	executeCommand("""
 		nasm -g -f elf32 -F dwarf -o build/bootloader.o bootLoader/bootloader.asm;
@@ -62,9 +61,9 @@ def build():
 		ld -melf_i386 -Tlinker.ld -nostdlib --nmagic -o build/boot.elf build/boot.o;
 		objcopy -O binary build/boot.elf build/boot.bin;
 
-		dd if=/dev/zero of=bin/BeOs.img bs=512 count=2880;
-		dd if=build/bootloader.bin of=bin/BeOs.img bs=512 conv=notrunc;
-		dd if=build/boot.bin of=bin/BeOs.img bs=512 seek=1 conv=notrunc;
+		cp build/bootloader.bin iso_root
+		cp build/boot.bin iso_root
+		mkisofs -R -J -c bootcat -b bootloader.bin -no-emul-boot -boot-load-size 4 -o ./bin/BeOs.iso ./iso_root
 		""")
 
 def run():

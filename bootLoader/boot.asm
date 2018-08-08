@@ -1,9 +1,9 @@
 ; second stage boot loader
 BITS 16
 jmp boot2
-boot2Msg: db "Loading stage two...", 0
-gdtrContent: dw 0    ; limit (size)
-			 dd 0    ; base  (address in memory)
+boot2Msg: 		db "Loading stage two...", 0
+gdtrContent: 	dw 0    ; limit (size)
+			 	dd 0    ; base  (address in memory)
 
 global boot2
 boot2:
@@ -21,7 +21,6 @@ boot2:
 	; TODO: search for the kernel and load it
 
 	; TODO: enable the A20 line
-
 
 
 	cli
@@ -67,7 +66,7 @@ boot2:
 	stosb
 
 	; loading gdt
-	lgdt gdtrContent
+	lgdt [gdtrContent]
 
 	; TODO: loading idt
 
@@ -98,3 +97,20 @@ loop_printf:		; printing loop
 	jmp loop_printf
 endPrintf:
 	ret
+
+; Function to read floppy disk parameters.
+; args: none
+; readDiskParameters:
+; 	; zero out registers
+; 	xor ax, ax
+; 	mov dx, ax
+; 	; arguments for interrupt
+; 	mov dl, [BootDrive]
+; 	mov ah, 8
+; 	int 13h
+; 	jc bootFailure
+; 	mov [Cylinders], ch
+; 	mov [SectorsPerTrack], cl
+; endReadDiskParameters:
+; 	ret
+
