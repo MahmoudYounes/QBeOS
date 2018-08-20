@@ -17,6 +17,8 @@ boot2:
 	push boot2Msg
     call printf
     popa
+	cli
+	hlt
 	
 	; TODO: search for the kernel and load it
 

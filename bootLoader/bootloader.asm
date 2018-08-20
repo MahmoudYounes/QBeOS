@@ -1,29 +1,33 @@
 ; boot code to boot the kernel from iso9660 compliant CD
 ; boot sector size is 2kb ~ 2048 bytes
-; think of this code as code added on cd
 ; writing the boot sector using EL torito specification
 BITS 16
 jmp _start
-
-PrimaryVolumeDescriptor: 	dd 1
-BootFileLocation:			dd 1
-BootFileLength:				dd 1
-Checksum:					dd 1
-Reserved:					db 40
+times 8 - ($ - $$) 			db 0
+PrimaryVolumeDescriptor: 	dd 0
+BootFileLocation:			dd 0			; LBA of boot file on iso image
+BootFileLength:				dd 0
+Checksum:					dd 0
+Reserved: times 40			dd 0
 BootDrive:					db 0
 BootFailureMsg:				db "Booting sequence failed", 0
 BootLoadingMsg:				db "loading...", 0
-KernelName:					db "BeOs.img", 0
+KernelName:					db "boot.bin", 0
 DAP:						db 10h			; DAP size (disk address packet)
 							db 0			; unused
 DAP2:						dw 1			; num sectors
 DAP4:						dw 0			; offset for buffer
 DAP6:						dw 0			; segment for buffer
-DAP8:						dw 0			; absolute number highest
+DAP8:						dw 0			; absolute sector number highest
 DAP10:						dw 0
-DAP12:						dw 0 			; absolute number lowest
+DAP12:						dw 0 			; absolute sector number lowest
 DAP14:						dw 0
-
+LengthOfDirectory:			db 0
+LocationOfDirectoryLSB:		dd 0
+DataLengthLSB:				dd 0
+LengthOfFileId:				db 0
+KernelLBA:					dd 0
+							dd 0
 
 global _start
 _start:
@@ -32,7 +36,7 @@ _start:
 	mov [BootDrive], dl
 	
 	; setting up the stack. stack grows downwards
-	xor ax, ax
+	mov ax, 0
 	mov ss, ax
 	mov sp, 0x7C00
 	sti
@@ -45,20 +49,30 @@ _start:
 
 	; resetting boot drive
 	pusha
-	mov ax, [BootDrive]
+	xor ax, ax
+	mov al, [BootDrive]
 	push ax
 	call func_ResetDisk
 	popa
 
+	; TODO: Check if int 13h extension methods 40h-48h exist and supported by BIOS
+
+
 	; search for kernel file
-	; read the volume descriptor
+	; start reading sectors from the drive
+	; first 32kb (16 sectors) are empty start at sector 16
+	; El torito boot structure places boot records at sector 0x11
+	mov edx, 0
+	mov ecx, 10h
+readPrimaryVolumeDescriptor:
 	pusha
 	;H2H1 sector number highest 32 bits
 	xor eax, eax
+	mov eax, edx
 	push eax
 	;L2L1 sector number lowest 32 bits
 	xor eax, eax
-	mov eax, 10h
+	mov eax, ecx		
 	push eax
 
 	; buffer segment
@@ -67,7 +81,7 @@ _start:
 
 	; buffer offset
 	xor ax, ax
-	mov ax, 1000h
+	mov ax, 100h
 	push ax 
 
 	; number of sectors to read
@@ -77,16 +91,59 @@ _start:
 	
 	call func_ReadISOSector
 	popa
+
+	mov bx, 100h
+	mov al, [ds:bx]
+	cmp al, 1
+	jne notPrimaryVolumeDescriptor
+	push cx
+scanForBeOsImg:
+	mov edx, [bx + 158]				; LBA of boot record
+	mov [BootFileLocation], edx
+	pusha
+	;H2H1 sector number highest 32 bits
+	xor eax, eax
+	mov eax, 0
+	push eax
+	;L2L1 sector number lowest 32 bits
+	xor eax, eax
+	mov eax, edx
+	push eax
+
+	; buffer segment
+	xor ax, ax
+	push ax
+
+	; buffer offset
+	xor ax, ax
+	mov ax, 100h
+	push ax 
+
+	; number of sectors to read
+	xor ax, ax
+	mov ax, 1
+	push ax
 	
+	mov ax, 0
+	mov es, ax
+	call func_ReadISOSector
+	popa
+
+
+
+loopReadFileName:
 
 
 
 
-	; loading second stage bootloader
-	; pusha
-	; mov ax, 2
-	; push ax
-	; call LoadSecondStage
+notPrimaryVolumeDescriptor:
+	; incrementing the sector number
+	; TODO: increment edxecx not only ecx
+	inc ecx
+	jmp readPrimaryVolumeDescriptor
+
+endReadPrimaryVolumeDescriptor:
+
 bootFailure:
 	pusha
 	push BootFailureMsg
@@ -151,7 +208,6 @@ func_ReadISOSector:
 	mov [DAP8], cx
 	shr ecx, 16
 	mov [DAP10], cx
-	shr ecx, 16
 	mov [DAP12], di
 	shr edi, 16
 	mov [DAP14], di
@@ -173,37 +229,3 @@ risos_fail:
 	cmp cx, 0
 	je bootFailure
 	jmp risos_loop_trials
-
-
-
-; Function to find second stage and load into it. default 3 retries and fail boot sequence afterwards
-; args: the number of sector to read in lba mode
-; LoadSecondStage:
-; 	mov si, ax 		; preserving lba in si
-; 	mov di, 0
-; loopReadDiskSector:
-; 	; reseting floppy drive
-; 	mov dl, [BootDrive]
-; 	xor ax, ax
-; 	int 13h
-; 	jc bootFailure
-	
-; 	; buffer to load second stage bootloader
-; 	mov ax, 0x0000
-; 	mov es, ax
-; 	mov bx, 0x9000
-
-; 	mov ah, 0x02	; read function in int 13h
-; 	mov al, 0x03	; number of sectors to read
-; 	mov ch, 0x00	; cylinder to read
-; 	mov cl, 0x02	; sector to read
-; 	mov dh, 0x00	; head to read
-; 	mov dl, [BootDrive] ; boot drive number
-; 	int 13h
-; 	jc loopReadDiskSector
-; 	mov ax, 0x9000
-; 	mov es, ax
-; 	xor bx, bx
-; 	jmp 0x9000
-	
-
