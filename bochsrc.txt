@@ -1,5 +1,5 @@
 megs: 32
-romimage: file=/usr/share/bochs/BIOS-bochs-latest, address=0xfffe0000
+romimage: file=/usr/share/bochs/bios.bin-1.7.5
 vgaromimage: file=/usr/share/vgabios/vgabios.bin
 ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 ata0-slave: type=cdrom, path="/home/osdev/be/bin/BeOs.iso", status=inserted

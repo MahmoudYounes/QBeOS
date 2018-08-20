@@ -3,16 +3,16 @@
 ; writing the boot sector using EL torito specification
 BITS 16
 jmp _start
-times 8 - ($ - $$) 			db 0
-PrimaryVolumeDescriptor: 	dd 0
-BootFileLocation:			dd 0			; LBA of boot file on iso image
-BootFileLength:				dd 0
-Checksum:					dd 0
-Reserved: times 40			dd 0
+; boot loader data
 BootDrive:					db 0
 BootFailureMsg:				db "Booting sequence failed", 0
 BootLoadingMsg:				db "loading...", 0
-KernelName:					db "boot.bin", 0
+
+; kernel info
+KernelName:					db "BOOT.BIN", 0x3b, 0x31 
+KernelLBA:					dd 0
+KernelLength:				dd 0
+; DAP buffer
 DAP:						db 10h			; DAP size (disk address packet)
 							db 0			; unused
 DAP2:						dw 1			; num sectors
@@ -22,12 +22,6 @@ DAP8:						dw 0			; absolute sector number highest
 DAP10:						dw 0
 DAP12:						dw 0 			; absolute sector number lowest
 DAP14:						dw 0
-LengthOfDirectory:			db 0
-LocationOfDirectoryLSB:		dd 0
-DataLengthLSB:				dd 0
-LengthOfFileId:				db 0
-KernelLBA:					dd 0
-							dd 0
 
 global _start
 _start:
@@ -55,51 +49,23 @@ _start:
 	call func_ResetDisk
 	popa
 
-	; TODO: Check if int 13h extension methods 40h-48h exist and supported by BIOS
+	; TODO: Check if int 13h extension methods 40h-48h exist and supported by BIOS. if not bootFailure
 
 
 	; search for kernel file
 	; start reading sectors from the drive
 	; first 32kb (16 sectors) are empty start at sector 16
-	; El torito boot structure places boot records at sector 0x11
-	mov edx, 0
-	mov ecx, 10h
-readPrimaryVolumeDescriptor:
 	pusha
-	;H2H1 sector number highest 32 bits
-	xor eax, eax
-	mov eax, edx
-	push eax
-	;L2L1 sector number lowest 32 bits
-	xor eax, eax
-	mov eax, ecx		
-	push eax
-
-	; buffer segment
-	xor ax, ax
-	push ax
-
-	; buffer offset
-	xor ax, ax
-	mov ax, 100h
-	push ax 
-
-	; number of sectors to read
-	xor ax, ax
-	mov ax, 1
-	push ax
-	
-	call func_ReadISOSector
+	call func_readPrimaryVolumeDescriptor
 	popa
+	
+	;pusha
+	;call func_LocateKernelImage
+	;popa
 
-	mov bx, 100h
-	mov al, [ds:bx]
-	cmp al, 1
-	jne notPrimaryVolumeDescriptor
-	push cx
 scanForBeOsImg:
+	mov bx, 100h
 	mov edx, [bx + 158]				; LBA of boot record
-	mov [BootFileLocation], edx
 	pusha
 	;H2H1 sector number highest 32 bits
 	xor eax, eax
@@ -129,20 +95,36 @@ scanForBeOsImg:
 	call func_ReadISOSector
 	popa
 
+	xor cx, cx
+	mov bx, 100h			; reset buffer
+loopLocateKernelFile:
+	mov dl, [bx]			; size of entry in buffer
+	mov cl, [ds:bx + 32]	; file identifier length
+	mov si, bx
+	add si, 33
+	mov ax, ds
+	mov es, ax
+	mov di, KernelName
+cmpStr:
+	cmp cl, 0
+	je fileFound
+	dec cl
+	cld
+	cmpsb
+	jne nextEntry
+	jmp cmpStr
+nextEntry:
+	add bl, dl
+	jmp loopLocateKernelFile
+
+fileFound:
+	mov eax, [bx + 2]
+	mov [KernelLBA], eax
+	mov eax, [bx + 10]
+	mov [KernelLength], eax
 
 
-loopReadFileName:
-
-
-
-
-notPrimaryVolumeDescriptor:
-	; incrementing the sector number
-	; TODO: increment edxecx not only ecx
-	inc ecx
-	jmp readPrimaryVolumeDescriptor
-
-endReadPrimaryVolumeDescriptor:
+loadKernel:
 
 bootFailure:
 	pusha
@@ -229,3 +211,51 @@ risos_fail:
 	cmp cx, 0
 	je bootFailure
 	jmp risos_loop_trials
+
+; Function that reads the primary volume descriptor from the cd
+; args: none
+; after the end of this function, the PVD will be at ds:100h in memory
+func_readPrimaryVolumeDescriptor:
+	mov edx, 0
+	mov ecx, 10h
+rpvd_read:
+	pusha
+	;H2H1 sector number highest 32 bits
+	xor eax, eax
+	mov eax, edx
+	push eax
+	;L2L1 sector number lowest 32 bits
+	xor eax, eax
+	mov eax, ecx		
+	push eax
+
+	; buffer segment
+	xor ax, ax
+	push ax
+
+	; buffer offset
+	xor ax, ax
+	mov ax, 100h
+	push ax 
+
+	; number of sectors to read
+	xor ax, ax
+	mov ax, 1
+	push ax
+	
+	call func_ReadISOSector
+	popa
+
+	mov bx, 100h
+	mov al, [ds:bx]
+	cmp al, 1
+	je rpvd_ret
+	inc ecx
+	jmp rpvd_read
+rpvd_ret:
+	ret
+
+; function to locate the kernel Image
+; args: none
+; after this function completes the LBA that contains the file will be in KernelLBA and size will be in KernelLength
+;func_LocateKernelImage

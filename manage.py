@@ -63,7 +63,7 @@ def build():
 
 		cp build/bootloader.bin iso_root
 		cp build/boot.bin iso_root
-		mkisofs -R -J -c bootcat -b bootloader.bin -no-emul-boot -boot-load-size 4 -o ./bin/BeOs.iso ./iso_root
+		mkisofs -c bootcat -b bootloader.bin -no-emul-boot -boot-load-size 4 -o ./bin/BeOs.iso ./iso_root
 		""")
 
 def run():
