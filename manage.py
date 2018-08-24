@@ -2,6 +2,7 @@
 """
 script that manages BeOs development operations
 
+TODO: move to make
 TODO: adjust build commands to accomdate for failures
 """
 

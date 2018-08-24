@@ -1,6 +1,6 @@
 ; boot code to boot the kernel from iso9660 compliant CD
 ; boot sector size is 2kb ~ 2048 bytes
-; writing the boot sector using EL torito specification
+; writing the boot sector should be done using EL torito specification with no rock ridge or juliet support
 BITS 16
 jmp _start
 ; boot loader data
@@ -12,6 +12,11 @@ BootLoadingMsg:				db "loading...", 0
 KernelName:					db "BOOT.BIN", 0x3b, 0x31 
 KernelLBA:					dd 0
 KernelLength:				dd 0
+
+; gdtr
+gdtrContent: 	dw 0    ; limit (size)
+			 	dd 0    ; base  (address in memory)
+
 ; DAP buffer
 DAP:						db 10h			; DAP size (disk address packet)
 							db 0			; unused
@@ -26,7 +31,7 @@ DAP14:						dw 0
 global _start
 _start:
 	cli
-	; preserving drive number and setting up registers for usage
+	; preserving boot drive number
 	mov [BootDrive], dl
 	
 	; setting up the stack. stack grows downwards
@@ -59,72 +64,64 @@ _start:
 	call func_readPrimaryVolumeDescriptor
 	popa
 	
-	;pusha
-	;call func_LocateKernelImage
-	;popa
-
-scanForBeOsImg:
-	mov bx, 100h
-	mov edx, [bx + 158]				; LBA of boot record
 	pusha
-	;H2H1 sector number highest 32 bits
-	xor eax, eax
-	mov eax, 0
-	push eax
-	;L2L1 sector number lowest 32 bits
-	xor eax, eax
-	mov eax, edx
-	push eax
-
-	; buffer segment
-	xor ax, ax
-	push ax
-
-	; buffer offset
-	xor ax, ax
-	mov ax, 100h
-	push ax 
-
-	; number of sectors to read
-	xor ax, ax
-	mov ax, 1
-	push ax
-	
-	mov ax, 0
-	mov es, ax
-	call func_ReadISOSector
+	call func_LocateKernelImage
 	popa
 
-	xor cx, cx
-	mov bx, 100h			; reset buffer
-loopLocateKernelFile:
-	mov dl, [bx]			; size of entry in buffer
-	mov cl, [ds:bx + 32]	; file identifier length
-	mov si, bx
-	add si, 33
-	mov ax, ds
+	pusha
+	call func_LoadKernel
+	popa
+
+	; clear screen
+	xor ax, ax
+	mov al, 02h
+	int 10h
+
+	cli
+	; assigning right address to gdt
+	mov [gdtrContent], word 0xffff		; 4 GB size
+	mov [gdtrContent + 1], word 0x0000	; base address
+	mov [gdtrContent + 2], word 0x0800	; base address
+
+	; creating 3 entries in the GDT for now
+	; null descriptor
+	mov ax, 0
 	mov es, ax
-	mov di, KernelName
-cmpStr:
-	cmp cl, 0
-	je fileFound
-	dec cl
-	cld
-	cmpsb
-	jne nextEntry
-	jmp cmpStr
-nextEntry:
-	add bl, dl
-	jmp loopLocateKernelFile
+	mov di, 0x0800
+	mov cx, 4
+	rep stosw
 
-fileFound:
-	mov eax, [bx + 2]
-	mov [KernelLBA], eax
-	mov eax, [bx + 10]
-	mov [KernelLength], eax
+	; code descriptor (4 GB)
+	mov ax, 0xffff 	; limit 0 -> 15 = ffff
+	stosw
+	mov ax, 0		; base 16 -> 31 = 0
+	stosw
+	mov al, 0		; base 32 -> 39 = 0
+	stosb
+	mov al, 0x9a	; access byte 40 -> 47 = 9a = 10011010
+	stosb
+	mov al, 0xcf	; flags + limit 48 -> 55 = cf = 1100 1111
+	stosb
+	mov al, 0 		; base 56 -> 64 = 0 
+	stosb
 
+	; data descriptor (4 GB)
+	mov ax, 0xffff 	; limit 0 -> 15 = ffff
+	stosw
+	mov ax, 0		; base 16 -> 31 = 0
+	stosw
+	mov al, 0		; base 32 -> 39 = 0
+	stosb
+	mov al, 0x92	; access byte 40 -> 47 = 9a = 10010010
+	stosb
+	mov al, 0xcf	; flags + limit 48 -> 55 = cf = 1100 1111
+	stosb
+	mov al, 0 		; base 56 -> 64 = 0 
+	stosb
 
-loadKernel:
+	; loading gdt
+	lgdt [gdtrContent]
+
 
 bootFailure:
 	pusha
@@ -138,7 +135,7 @@ bootloaderEnd:
 ; ============= Functions ============= ;
 ; Function to print to screen
 ; args: address of first character in stack
-func_printf:				; function preparation
+func_printf:				
 	pop bp 			; poping old ip in bp
 	pop si 			; poping arguments
 	push bp			; re-adding the old ip
@@ -151,7 +148,7 @@ loop_printf:		; printing loop
 	jmp loop_printf
 endPrintf:
 	ret
-
+; ========================================
 
 ; Reset the drive passed in as argument
 ; args: drive number as byte in stack
@@ -170,10 +167,11 @@ rd_ResetFail:
 	cmp cx, 0
 	je bootFailure
 	jmp rd_loop_trials
+; ========================================
 
 ; Read Sector from iso image
-; args: drive number(2 byte), number of sectors to read (2 bytes), offset of buffer (2 bytes), segment of buffer (2 bytes)
-; absolute number of start of the sectors to read (8 bytes)
+; args: number of sectors to read (2 bytes), offset of buffer (2 bytes), segment of buffer (2 bytes)
+; absolute number of start sector to read (8 bytes)
 func_ReadISOSector:
 	pop bp		; ip
 	pop ax		; number of sectors to read
@@ -211,6 +209,7 @@ risos_fail:
 	cmp cx, 0
 	je bootFailure
 	jmp risos_loop_trials
+; ========================================
 
 ; Function that reads the primary volume descriptor from the cd
 ; args: none
@@ -254,8 +253,101 @@ rpvd_read:
 	jmp rpvd_read
 rpvd_ret:
 	ret
+; ========================================
 
 ; function to locate the kernel Image
 ; args: none
 ; after this function completes the LBA that contains the file will be in KernelLBA and size will be in KernelLength
-;func_LocateKernelImage
+func_LocateKernelImage:
+	mov bx, 100h
+	mov edx, [bx + 158]				; LBA of boot record
+	pusha
+	;H2H1 sector number highest 32 bits
+	xor eax, eax
+	mov eax, 0
+	push eax
+	;L2L1 sector number lowest 32 bits
+	xor eax, eax
+	mov eax, edx
+	push eax
+
+	; buffer segment
+	xor ax, ax
+	push ax
+
+	; buffer offset
+	xor ax, ax
+	mov ax, 100h
+	push ax 
+
+	; number of sectors to read
+	xor ax, ax
+	mov ax, 1
+	push ax
+	
+	mov ax, 0
+	mov es, ax
+	call func_ReadISOSector
+	popa
+
+	xor cx, cx
+	mov bx, 100h			; reset buffer
+; TODO: there is a bug here (pointer out of buffer bounds "need to fix this")
+loopLocateKernelFile:
+	mov dl, [bx]			; size of entry in buffer
+	mov cl, [ds:bx + 32]	; file identifier length
+	mov si, bx
+	add si, 33
+	mov ax, ds
+	mov es, ax
+	mov di, KernelName
+cmpStr:
+	cmp cl, 0
+	je fileFound
+	dec cl
+	cld
+	cmpsb
+	jne nextEntry
+	jmp cmpStr
+nextEntry:
+	add bl, dl
+	jmp loopLocateKernelFile
+
+fileFound:
+	mov eax, [bx + 2]
+	mov [KernelLBA], eax
+	mov eax, [bx + 10]
+	mov [KernelLength], eax
+	ret
+; ========================================
+
+; function to read kernel and load it at 0x0000:0x9000
+; args: none
+func_LoadKernel:
+	pusha
+	;H2H1 sector number highest 32 bits
+	xor eax, eax
+	push eax
+	;L2L1 sector number lowest 32 bits
+	xor eax, eax
+	mov eax, [KernelLBA]		
+	push eax
+
+	; buffer segment
+	xor ax, ax
+	push ax
+
+	; buffer offset
+	xor ax, ax
+	mov ax, 9000h
+	push ax 
+
+	; number of sectors to read
+	xor ax, ax
+	mov ax, 1
+	push ax
+	
+	call func_ReadISOSector
+	popa
+	ret
+
