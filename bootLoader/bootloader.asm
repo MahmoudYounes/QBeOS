@@ -7,6 +7,7 @@ jmp _start
 BootDrive:					db 0
 BootFailureMsg:				db "Booting sequence failed", 0
 BootLoadingMsg:				db "loading...", 0
+WelcomeMsg:					db "Welcome to BeOs!", 0
 
 ; kernel info
 KernelName:					db "BOOT.BIN", 0x3b, 0x31 
@@ -20,7 +21,7 @@ gdtrContent: 	dw 0    ; limit (size)
 ; DAP buffer
 DAP:						db 10h			; DAP size (disk address packet)
 							db 0			; unused
-DAP2:						dw 1			; num sectors
+DAP2:						dw 0			; num sectors
 DAP4:						dw 0			; offset for buffer
 DAP6:						dw 0			; segment for buffer
 DAP8:						dw 0			; absolute sector number highest
@@ -72,16 +73,10 @@ _start:
 	call func_LoadKernel
 	popa
 
-	; clear screen
-	xor ax, ax
-	mov al, 02h
-	int 10h
-
-	cli
 	; assigning right address to gdt
-	mov [gdtrContent], word 0xffff		; 4 GB size
-	mov [gdtrContent + 1], word 0x0000	; base address
-	mov [gdtrContent + 2], word 0x0800	; base address
+	mov word [gdtrContent], 0xffff		; 4 GB size
+	mov word [gdtrContent + 2], 0x0000	; base address
+	mov word [gdtrContent + 4], 0x0800	; base address
 
 	; creating 3 entries in the GDT for now
 	; null descriptor
@@ -121,6 +116,19 @@ _start:
 
 	; loading gdt
 	lgdt [gdtrContent]
+
+	;clear screen
+	xor ax, ax
+	mov al, 02h
+	int 10h
+
+	pusha
+	push WelcomeMsg
+	call func_printf
+	popa
+
+	cli
+	hlt
 
 
 bootFailure:

@@ -12,7 +12,8 @@ import os, sys, subprocess, shutil
 CURRENT_DIR = os.getcwd()
 BOOTLOADER_DIR = "{}/bootLoader/".format(CURRENT_DIR)
 BUILD_DIR = "{}/build/".format(CURRENT_DIR)
-SUPPORTED_COMMANDS = ['build', 'run', 'help', 'clean']
+BIN_DIR = "{}/bin/".format(CURRENT_DIR)
+SUPPORTED_COMMANDS = ['build', 'run', 'help', 'clean', 'debug']
 
 def executeCommand(command):
 	"""
@@ -73,6 +74,11 @@ def run():
 	else:
 		print "Build directory was not found. please build the os first."
 
+def debug():
+	if os.path.isdir(BUILD_DIR) and os.path.isdir(BIN_DIR) and os.path.exists("qemu_dbg.gdb"):
+		executeCommand("gdb -x qemu_dbg.gdb")
+	else:
+		print "required directories not found. please build the os first."
 
 def main():
 	"""
