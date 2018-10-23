@@ -1,6 +1,9 @@
 bochsout.txt
 *.img
 *.bin
+bin/*
 build/**
 sandbox/**
 .vscode/**
+bochsout.txt
+ParallelOut.txt

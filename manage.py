@@ -34,10 +34,10 @@ def help():
 	"""
 	print "to use this script: python manage.py <command> or ./manage.py"
 	print "where command can be:"
-	print "\t\thelp  : to print this help message."
-	print "\t\tbuild : to build the flat binary of the OS."
-	print "\t\trun	 : to run os in bochs."
-	print "\t\tclean : to remove build files."
+	print "\thelp  : to print this help message."
+	print "\tbuild : to build the ISO file of the OS."
+	print "\trun   : to run os in bochs."
+	print "\tclean : to remove build files."
 
 def clean():
 	"""
@@ -55,18 +55,18 @@ def build():
 	os.mkdir(BUILD_DIR)
 
 	executeCommand("""
-		nasm -g -f elf32 -F dwarf -o build/bootloader.o bootLoader/bootloader.asm;
-		ld -melf_i386 -Ttext=0x7c00 -nostdlib --nmagic -o build/bootloader.elf build/bootloader.o;
-		objcopy -O binary build/bootloader.elf build/bootloader.bin;
+	nasm -g -f elf32 -F dwarf -o build/bootloader.o bootLoader/bootloader.asm;
+	ld -melf_i386 -Ttext=0x7c00 -nostdlib --nmagic -o build/bootloader.elf build/bootloader.o;
+	objcopy -O binary build/bootloader.elf build/bootloader.bin;
 
-		nasm -g -f elf32 -F dwarf -o build/boot.o bootLoader/boot.asm;
-		ld -melf_i386 -Tlinker.ld -nostdlib --nmagic -o build/boot.elf build/boot.o;
-		objcopy -O binary build/boot.elf build/boot.bin;
+	nasm -g -f elf32 -F dwarf -o build/boot.o bootLoader/boot.asm;
+	ld -melf_i386 -Tlinker.ld -nostdlib --nmagic -o build/boot.elf build/boot.o;
+	objcopy -O binary build/boot.elf build/boot.bin;
 
-		cp build/bootloader.bin iso_root
-		cp build/boot.bin iso_root
-		mkisofs -c bootcat -b bootloader.bin -no-emul-boot -boot-load-size 4 -o ./bin/BeOs.iso ./iso_root
-		""")
+	cp build/bootloader.bin iso_root
+	cp build/boot.bin iso_root
+	mkisofs -c bootcat -b bootloader.bin -no-emul-boot -boot-load-size 4 -o ./bin/BeOs.iso ./iso_root
+	""")
 
 def run():
 	if os.path.isdir(BUILD_DIR):
