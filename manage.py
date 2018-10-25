@@ -1,5 +1,10 @@
 #!/usr/bin/python
 """
+backup : nasm -g -f elf32 -F dwarf -o build/boot.o bootLoader/boot.asm;
+	ld -melf_i386 -Tlinker.ld -nostdlib --nmagic -o build/boot.elf build/boot.o;
+	objcopy -O binary build/boot.elf build/boot.bin;
+
+
 script that manages BeOs development operations
 
 TODO: move to make
@@ -13,6 +18,8 @@ CURRENT_DIR = os.getcwd()
 BOOTLOADER_DIR = "{}/bootLoader/".format(CURRENT_DIR)
 BUILD_DIR = "{}/build/".format(CURRENT_DIR)
 BIN_DIR = "{}/bin/".format(CURRENT_DIR)
+ISOROOT_DIR = "{}/iso_root/".format(CURRENT_DIR)
+
 SUPPORTED_COMMANDS = ['build', 'run', 'help', 'clean', 'debug']
 
 def executeCommand(command):
@@ -44,6 +51,8 @@ def clean():
 	"""
 	if os.path.isdir(BUILD_DIR):
 		shutil.rmtree(BUILD_DIR)
+	if os.path.isdir(ISOROOT_DIR):
+		shutil.rmtree(ISOROOT_DIR)
 	if os.path.exists("bin/BeOs.iso"):
 		os.remove("bin/BeOs.iso")
 
@@ -52,19 +61,17 @@ def build():
 	for info about build commands check this answer: https://stackoverflow.com/a/33619597
 	"""
 	clean()
-	os.mkdir(BUILD_DIR)
-
+	if not os.path.exists(BUILD_DIR):
+		os.mkdir(BUILD_DIR)
+	if not os.path.exists(ISOROOT_DIR):
+		os.mkdir(ISOROOT_DIR)
 	executeCommand("""
-	nasm -g -f elf32 -F dwarf -o build/bootloader.o bootLoader/bootloader.asm;
-	ld -melf_i386 -Ttext=0x7c00 -nostdlib --nmagic -o build/bootloader.elf build/bootloader.o;
-	objcopy -O binary build/bootloader.elf build/bootloader.bin;
+	nasm -g -f bin -o build/bootloader.bin bootLoader/bootloader.asm;
+	nasm -g -f bin -o build/kernel.bin src/kernel.asm;
 
-	nasm -g -f elf32 -F dwarf -o build/boot.o bootLoader/boot.asm;
-	ld -melf_i386 -Tlinker.ld -nostdlib --nmagic -o build/boot.elf build/boot.o;
-	objcopy -O binary build/boot.elf build/boot.bin;
+	cp build/bootloader.bin iso_root/
+	cp build/kernel.bin iso_root/
 
-	cp build/bootloader.bin iso_root
-	cp build/boot.bin iso_root
 	mkisofs -c bootcat -b bootloader.bin -no-emul-boot -boot-load-size 4 -o ./bin/BeOs.iso ./iso_root
 	""")
 
