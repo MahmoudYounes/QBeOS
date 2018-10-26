@@ -1,4 +1,5 @@
-func_enableProtectedMode:
+func_enableProtectedModeAndJmpKernel:
+    
     ; assigning right address to gdt
     ; 4 GB size. 65535 (0xffff) entries * 64 bits per entry. each entry can describe: 32 bit address for segment + 20 bit offset)
     mov word [gdtrLimit], 0xffff
@@ -45,7 +46,16 @@ func_enableProtectedMode:
 
     ; loading gdt
     lgdt [gdtrLimit]
-    
-    ; TODO: fix the cs and ip with a jmp far
+
+    ; reading control register zero to switch to 32 bit protected mode
+    ; by setting the first bit in this register and putting it
+    ; back to its location
+    mov eax, cr0
+    or eax, 0x1
+    mov cr0, eax
+
+    ; a far jump to flush the processor's pipeline
+    ; and fix cs and ip (since we entered 32 bit mode)
+    jmp 0x0008:0x9000
 
     ret

@@ -61,8 +61,8 @@ _start:
 
 	call func_EnableA20
 
-	call func_enableProtectedMode
-	
+	call func_enableProtectedModeAndJmpKernel
+
 	cli
 	hlt
 bootFailure:
