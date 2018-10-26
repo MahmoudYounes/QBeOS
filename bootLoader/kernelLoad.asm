@@ -48,56 +48,61 @@ func_LocateKernelImage:
 	call func_ReadISOSector
 
 
-	xor cx, cx
-	mov bx, 0			; reset buffer
+	mov di, 0			; reset buffer
+	mov bx, di			; bx used to point to beginning of the directory entry. while, di is used to compare names
 ; TODO: there is a bug here (pointer out of buffer bounds "need to fix this")
+; es:di points to the beginning of the root directory entries
+; first two entries of the root directory are the .(current dir) and ..(parent dir)
 loopLocateKernelFile:
-	mov dl, [es:bx]			; size of entry in buffer
-	mov cl, [es:bx + 32]	; file identifier length
-	mov si, bx
-	add si, 33
-	mov ax, ds
-	mov es, ax
-	mov di, KernelName
+	xor edx, edx
+	mov dl, BYTE [es:bx]			; size of entry in buffer
+	xor ecx, ecx
+	mov cl, BYTE [es:bx + 32]	; file identifier length
+	add di, 33				; first byte of file identifier
+	mov si, KernelName
 cmpStr:
-	cmp cl, 0
+	cmp cx, 0
 	je fileFound
-	dec cl
+	dec cx
 	cld
 	cmpsb
 	jne nextEntry
 	jmp cmpStr
 nextEntry:
-	add bl, dl
+	add bx, dx		
+	mov di, bx
 	jmp loopLocateKernelFile
-
 fileFound:
-	mov eax, [bx + 2]
+	mov eax, DWORD [es:bx + 2]
 	mov [KernelLBA], eax
-	mov eax, [bx + 10]
+	mov eax, DWORD [es:bx + 10]
 	mov [KernelLength], eax
+
+	popad
 	ret
 
 ; ========================================
-; function to read kernel and load it at 0x0000:0x9000
+; function to read kernel and load it at 
+; 0x0000:0x9000
 ; args: none
 ; ========================================
 func_LoadKernel:
 	pushad
-	;H2H1 sector number highest 32 bits
-	mov edi, 0
-	;L2L1 sector number lowest 32 bits
-	mov ecx, [KernelLBA]		
+	; calculating how many sectors to read
+	xor eax, eax
+	mov ebx, eax
+	mov ecx, eax
 
-	; buffer segment
-	mov dx, 0
+	mov eax, [KernelLength]
+	add eax, 0x0800
+	mov bx, 0x0800
+	div bx
 
-	; buffer offset
-	mov bx, 9000h
-
-	; number of sectors to read
-	mov ax, 1
-	
+	mov cl, al
+	mov di, 0x9000
+	mov eax, 0
+	mov es, eax
+	mov ebx, [KernelLBA]
 	call func_ReadISOSector
 	popad
 	ret

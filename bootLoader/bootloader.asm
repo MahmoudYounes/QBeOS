@@ -80,8 +80,7 @@ bootloaderEnd:
 ; boot loader data
 BootDrive:					db 0
 BootFailureMsg:				db "Booting sequence failed", 0
-BootLoadingMsg:				db "loading...", 0
-WelcomeMsg:					db "Welcome to BeOS!", 0
+BootLoadingMsg:				db "loading BeOS...", 0
 BytesPerSector:				dw 0
 
 ; kernel info

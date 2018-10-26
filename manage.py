@@ -53,8 +53,8 @@ def clean():
 		shutil.rmtree(BUILD_DIR)
 	if os.path.isdir(ISOROOT_DIR):
 		shutil.rmtree(ISOROOT_DIR)
-	if os.path.exists("bin/BeOs.iso"):
-		os.remove("bin/BeOs.iso")
+	if os.path.isdir(BIN_DIR):
+		shutil.rmtree(BIN_DIR)
 
 def build():
 	"""
@@ -65,9 +65,15 @@ def build():
 		os.mkdir(BUILD_DIR)
 	if not os.path.exists(ISOROOT_DIR):
 		os.mkdir(ISOROOT_DIR)
+	if not os.path.exists(BIN_DIR):
+		os.mkdir(BIN_DIR)
 	executeCommand("""
 	nasm -g -f bin -o build/bootloader.bin bootLoader/bootloader.asm;
-	nasm -g -f bin -o build/kernel.bin src/kernel.asm;
+	
+	nasm -g -f elf32 -F dwarf -o build/kernel.o src/kernel.asm;
+	ld -melf_i386 -Tlinker.ld -nostdlib --nmagic -o build/kernel.elf build/kernel.o;
+	objcopy -O binary build/kernel.elf build/kernel.bin;
+
 
 	cp build/bootloader.bin iso_root/
 	cp build/kernel.bin iso_root/
