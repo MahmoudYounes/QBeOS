@@ -3,13 +3,69 @@
 ; args: none
 ; ========================================
 func_EnableA20:
+	pushad
 	cli
-	mov cx, 0
-testA20:
-	xor ax, ax ; ax = 0
+	mov cx, 0						   ; counter to check which method we have used
+
+checkIfEnabled:
+	; first let's check if a20 is enabled
+	; if not enabled carry flag will be set
+	clc
+	call func_testA20
+	jne EnableA20End
+
+
+EnableA20:
+	cmp cx, 0
+	je BiosEnable
+	cmp cx, 1
+	je KeyboardControllerEnable
+	cmp cx, 2
+	je FastGateEnable
+	jmp bootFailure
+
+BiosEnable:
+	inc cx
+	clc
+	call func_biosEnableA20
+	jc EnableA20
+	jmp checkIfEnabled
+
+KeyboardControllerEnable:
+	inc cx
+	call func_keyboardControllerEnableA20
+	jmp checkIfEnabled
+
+FastGateEnable:
+	inc cx
+	in al, 0x92
+	test al, 2
+	jnz checkIfEnabled
+	or al, 2
+	and al, 0xFE
+	out 0x92, al
+	jmp checkIfEnabled
+
+EnableA20End:
+	popad
+	ret
+
+
+; ========================================
+; function to check if A20 line is enabled
+; or no.
+; args: none
+; if enabled carry flag is set
+; ========================================
+func_testA20:
+	pushad
+	
+	cli
+
+	xor ax, ax 				; ax = 0
 	mov es, ax
 
-	not ax ; ax = 0xFFFF
+	not ax 					; ax = 0xFFFF
 	mov ds, ax
 
 	mov di, 0x0500
@@ -32,97 +88,102 @@ testA20:
 	pop ax
 	mov byte [es:di], al
 	
-	je EnableA20
-	jmp EnableA20End
-
-EnableA20:
-	cmp cx, 0
-	je EnableA200
-	cmp cx, 1
-	je EnableA201
-	cmp cx, 2
-	je EnableA202
-	jmp bootFailure
-
-EnableA200:								; BIOS int ,ethod
-	inc cx								; we do not want to get back here again
-	mov     ax, 2403h
-	int     15h
-	jb      EnableA20                  	; INT 15h is not supported
-	cmp     ah, 0
-	jnz     EnableA20                  	; INT 15h is not supported
-	
-	mov     ax, 2402h               
-	int     15h
-	jb      EnableA20               	; couldn't get status
-	cmp     ah, 0
-	jnz     EnableA20               	; couldn't get status
-	
-	cmp     al, 1
-	jz      testA20                 	; A20 is already activated
-	
-	mov     ax, 2401h
-	int     15h
-	jb      testA20  		            ; couldn't activate the gate
-	cmp     ah, 0	
-	jnz     testA20 	   		        ; couldn't activate the gate
-	jmp testA20
-
-EnableA201:
-	inc cx
-	cli
-	call    a20wait
-	mov     al, 0xAD
-	out     0x64, al
-
-	call    a20wait
-	mov     al, 0xD0
-	out     0x64, al
-
-	call    a20wait2
-	in      al, 0x60
-	push    eax
-
-	call    a20wait
-	mov     al, 0xD1
-	out     0x64, al
-
-	call    a20wait
-	pop     eax
-	or      al, 2
-	out     0x60, al
-
-	call    a20wait
-	mov     al, 0xAE
-	out     0x64, al
-
-	call    a20wait
-	sti
-	jmp testA20
-
-a20wait:
-	in      al,0x64
-	test    al,2
-	jnz     a20wait
+	popad
 	ret
 
-a20wait2:
+; ========================================
+; function to enable A20 line with bios
+; interrupts.
+; args: none
+; if error carry flag is set
+; ========================================
+func_biosEnableA20:							; BIOS int method
+	pushad
+
+	mov ax, 2403h
+	int 15h
+	jb  biosError                  				; INT 15h is not supported
+	cmp ah, 0
+	jnz biosError                  				; INT 15h is not supported
+	
+	mov ax, 2402h               
+	int 15h
+	jb  biosError               				; couldn't get status
+	cmp ah, 0
+	jnz biosError               				; couldn't get status
+	
+	cmp al, 1
+	jz  biosEnableEnd              				; A20 is already activated
+	
+	mov ax, 2401h
+	int 15h
+	jb  biosError   		            		; couldn't activate the gate
+	cmp ah, 0	
+	jnz biosError	 	   		        		; couldn't activate the gate
+	jmp biosEnableEnd
+biosError:
+	stc
+biosEnableEnd:
+	popad
+	ret
+
+; ========================================
+; function to enable A20 line with 
+; keyboard controller manipulation
+; args: none
+; ========================================
+func_keyboardControllerEnableA20:
+	pushad
+
+	call func_a20WaitAl2
+	mov al, 0xad
+	out 0x64, al
+
+	call func_a20WaitAl2
+	mov al, 0xd0
+	out 0x64, al
+
+	call func_a20WaitAl1
+	in al, 0x60
+	push eax
+
+	call func_a20WaitAl2
+	mov al, 0xd1
+	out 0x64, al
+
+	call func_a20WaitAl2
+	pop eax
+	or al, 2
+	out 0x60, al
+
+	call func_a20WaitAl2
+	mov al, 0xae
+	out 0x64, al
+
+	call func_a20WaitAl2
+	sti
+controllerEnd:
+	popad
+	ret
+
+; ========================================
+; function to await keyboard controller
+; port 
+; args: none
+; ========================================
+func_a20WaitAl2:
+	in      al, 0x64
+	test    al, 2
+	jnz     func_a20WaitAl2
+	ret
+
+; ========================================
+; function to await keyboard controller
+; port 
+; args: none
+; ========================================
+func_a20WaitAl1:
 	in      al,0x64
 	test    al,1
-	jz      a20wait2
-	ret
-
-EnableA202:
-	inc cx
-	in al, 0x92
-	test al, 2
-	jnz after
-	or al, 2
-	and al, 0xFE
-	out 0x92, al
-after:
-	jmp testA20
-
-
-EnableA20End:
+	jz      func_a20WaitAl1
 	ret

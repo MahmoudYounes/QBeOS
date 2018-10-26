@@ -1,4 +1,4 @@
-func_enableProtectionMode:
+func_enableProtectedMode:
     ; assigning right address to gdt
     ; 4 GB size. 65535 (0xffff) entries * 64 bits per entry. each entry can describe: 32 bit address for segment + 20 bit offset)
     mov word [gdtrLimit], 0xffff

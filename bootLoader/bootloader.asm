@@ -61,6 +61,8 @@ _start:
 
 	call func_EnableA20
 
+	call func_enableProtectedMode
+	
 	cli
 	hlt
 bootFailure:
