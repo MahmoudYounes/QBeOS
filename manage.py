@@ -19,6 +19,7 @@ BOOTLOADER_DIR = "{}/bootLoader/".format(CURRENT_DIR)
 BUILD_DIR = "{}/build/".format(CURRENT_DIR)
 BIN_DIR = "{}/bin/".format(CURRENT_DIR)
 ISOROOT_DIR = "{}/iso_root/".format(CURRENT_DIR)
+BOCHS_PATHS = ['bochsout.txt']
 
 SUPPORTED_COMMANDS = ['build', 'run', 'help', 'clean', 'debug']
 
@@ -55,6 +56,10 @@ def clean():
 		shutil.rmtree(ISOROOT_DIR)
 	if os.path.isdir(BIN_DIR):
 		shutil.rmtree(BIN_DIR)
+	
+	for path in BOCHS_PATHS:
+		if os.path.exists(path):
+			os.remove(path)
 
 def build():
 	"""

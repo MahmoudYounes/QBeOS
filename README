@@ -1,6 +1,1 @@
-source control repo for BeOs. an operating system for educational purposes. 
-
-
-requirements:
-* download the SeaBIOS from bochs repo here https://github.com/svn2github/bochs/blob/master/bochs/bios/bios.bin-1.7.5
-due to a bug in the bochs default BIOS (int 13h ah=42h gets called successfuly first time then second time it does not return "infinite loop")
+source control repo for BeOs. an operating system for educational purposes.
