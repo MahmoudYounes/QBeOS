@@ -17,6 +17,9 @@ bootloader:
 # kernel:
 # 	$(MAKE) -C kernel
 
+run: $(BIN_DIR)/$(ISO_NAME)
+	bochs -f bochsrc.txt
+
 clean:
 	if [ -d build ]; then rm -r build; fi
 	if [ -d bin ]; then rm -r bin; fi
