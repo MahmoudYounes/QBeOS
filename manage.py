@@ -1,14 +1,11 @@
 #!/usr/bin/python
 """
-backup : nasm -g -f elf32 -F dwarf -o build/boot.o bootLoader/boot.asm;
-	ld -melf_i386 -Tlinker.ld -nostdlib --nmagic -o build/boot.elf build/boot.o;
-	objcopy -O binary build/boot.elf build/boot.bin;
-
 
 script that manages BeOs development operations
 
-TODO: move to make
-TODO: adjust build commands to accomdate for failures
+TODO: move to make (done)
+
+this build script is obsolete please use make instead (this build script won't be supported)
 """
 
 import os, sys, subprocess, shutil
@@ -83,7 +80,7 @@ def build():
 	cp build/bootloader.bin iso_root/
 	cp build/kernel.bin iso_root/
 
-	mkisofs -c bootcat -b bootloader.bin -no-emul-boot -boot-load-size 4 -o ./bin/BeOs.iso ./iso_root
+	mkisofs -c bootcat -b bootloader.bin -no-emul-boot -boot-load-size 4 -o ./bin/BeOS.iso ./iso_root
 	""")
 
 def run():

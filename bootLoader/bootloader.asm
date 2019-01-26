@@ -72,11 +72,11 @@ bootloaderEnd:
 	cli
 	hlt
 
-%include "./bootLoader/screen.asm"
-%include "./bootLoader/isoUtilities.asm"
-%include "./bootLoader/kernelLoad.asm"
-%include "./bootLoader/enableA20.asm"
-%include "./bootLoader/protectedMode.asm"
+%include "./screen.asm"
+%include "./isoUtilities.asm"
+%include "./kernelLoad.asm"
+%include "./enableA20.asm"
+%include "./protectedMode.asm"
 
 
 ; boot loader data
