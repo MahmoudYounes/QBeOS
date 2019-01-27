@@ -1,5 +1,6 @@
 ; ========================================
 ; function to enable A20 if not enabled
+; credits to osdev
 ; args: none
 ; ========================================
 func_EnableA20:

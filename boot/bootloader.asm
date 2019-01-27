@@ -7,6 +7,9 @@
 ; boot sector size is 2kb ~ 2048 bytes
 ;===================================================================
 
+; TODO: make more explicit error messages
+; TODO: discover memory layout
+
 [BITS 16]
 [ORG 0x0000]
 jmp _start

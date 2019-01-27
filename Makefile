@@ -2,7 +2,7 @@ BLD_DIR = ./build
 BIN_DIR = ./bin
 ISO_NAME = BeOS.iso
 
-build: setupEnvironment bootloader #kernel
+build: setupEnvironment bootloader kernel
 	cp build/* iso_root/
 	mkisofs -c bootcat -b bootloader.bin -no-emul-boot -boot-load-size 4 -o $(BIN_DIR)/$(ISO_NAME) ./iso_root
 
@@ -14,8 +14,8 @@ setupEnvironment:
 bootloader:
 	$(MAKE) -C bootLoader
 
-# kernel:
-# 	$(MAKE) -C kernel
+kernel:
+ 	$(MAKE) -C kernel
 
 run: $(BIN_DIR)/$(ISO_NAME)
 	bochs -f bochsrc.txt

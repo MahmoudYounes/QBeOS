@@ -1,7 +1,7 @@
 #!/usr/bin/python
 """
 
-script that manages BeOs development operations
+script that manages BeOS development operations
 
 TODO: move to make (done)
 
@@ -24,6 +24,7 @@ def executeCommand(command):
 	"""
 	execute a shell command in linux/unix environment
 	"""
+	print "this build script is obsolete please move to make!"
 	process = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE)
 	while True:
 		out = process.stderr.read(1)
