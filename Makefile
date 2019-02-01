@@ -12,10 +12,10 @@ setupEnvironment:
 	if [ ! -d iso_root ]; then mkdir iso_root; fi
 
 bootloader:
-	$(MAKE) -C bootLoader
+	$(MAKE) -C boot
 
 kernel:
- 	$(MAKE) -C kernel
+	$(MAKE) -C src
 
 run: $(BIN_DIR)/$(ISO_NAME)
 	bochs -f bochsrc.txt
@@ -24,3 +24,4 @@ clean:
 	if [ -d build ]; then rm -r build; fi
 	if [ -d bin ]; then rm -r bin; fi
 	if [ -d iso_root ]; then rm -r iso_root; fi
+	$(MAKE) -C src clean

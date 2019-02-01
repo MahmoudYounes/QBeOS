@@ -3,6 +3,7 @@ bochsout.txt
 *.bin
 bin/*
 build/**
+build/*
 sandbox/
 sandbox/**
 .vscode/**
