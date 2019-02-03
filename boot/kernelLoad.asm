@@ -57,8 +57,8 @@ loopLocateKernelFile:
 	xor edx, edx
 	mov dl, BYTE [es:bx]			; size of entry in buffer
 	xor ecx, ecx
-	mov cl, BYTE [es:bx + 32]	; file identifier length
-	add di, 33				; first byte of file identifier
+	mov cl, BYTE [es:bx + 32]		; file identifier length
+	add di, 33						; first byte of file identifier
 	mov si, KernelName
 cmpStr:
 	cmp cx, 0

@@ -1,11 +1,20 @@
-bochsout.txt
-*.img
-*.bin
+
+# ignoring bin outputs
 bin/*
+iso_root/*
+
+# ignoring any build and everything underneath
 build/**
 build/*
+**/build/*
+
+# ignoring sandbox folder
 sandbox/
 sandbox/**
+
+# ignoring vscode files
 .vscode/**
+
+# ignoring log files
 bochsout.txt
 ParallelOut.txt

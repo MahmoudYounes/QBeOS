@@ -1,6 +1,6 @@
 ## What? 
 
-this text files describes the output files and their formats produced from the build process step by step.
+this text file describes the output files and their formats produced from the build process step by step.
 
 ## bootloader
 

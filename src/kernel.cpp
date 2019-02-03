@@ -1,6 +1,6 @@
-int main()
+int kmain()
 {
-    int* videoRamAdress = (int *)0xb800;
+    char* videoRamAdress = (char *)0xb800;
     const char *welcomeMessage = "Welcome To BeOS\0";
 
     while( *welcomeMessage != 0)

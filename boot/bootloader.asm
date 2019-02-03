@@ -89,7 +89,7 @@ BootLoadingMsg:				db "loading BeOS...", 0
 BytesPerSector:				dw 0
 
 ; kernel info
-KernelName:					db "KERNEL.BIN", 0x3b, 0x31 
+KernelName:					db "KERNEL.IMG", 0x3b, 0x31 
 KernelLBA:					dd 0
 KernelLength:				dd 0
 
