@@ -9,7 +9,7 @@ boot: cdrom
 floppy_bootsig_check: disabled=0
 ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 ata0-master: type=disk, mode=flat, translation=auto, cylinders=198, heads=16, spt=63, biosdetect=auto
-ata0-slave: type=cdrom, path="bin/BeOs.iso", status=inserted, biosdetect=auto
+ata0-slave: type=cdrom, path="bin/BeOS.iso", status=inserted, biosdetect=auto
 ata2: enabled=0
 ata3: enabled=0
 pci: enabled=1, chipset=i440fx
