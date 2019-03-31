@@ -14,8 +14,8 @@ clear
 
 # helpful functions
 createDirIfNotExist () {
-    if [ ! -d $0 ]; then
-        mkdir BUILD_DIR
+    if [ ! -d $1 ]; then
+        mkdir $1
         if [ $? -ne 0 ]; then
             echo "Failed to create directory: $0"
             exit 1
@@ -32,9 +32,13 @@ export GCC_DIR="$PREFIX/gcc"
 export PATH="$PREFIX/bin:$PATH"
 
 # creating required folders
+echo "creating $PREFIX"
 createDirIfNotExist $PREFIX
+echo "creating $TMP_DIR"
 createDirIfNotExist $TMP_DIR
+echo "creating $BINUTILS_DIR"
 createDirIfNotExist $BINUTILS_DIR
+echo "creating $GCC_DIR"
 createDirIfNotExist $GCC_DIR
 
 echo "downloading packages..."
@@ -42,7 +46,7 @@ echo "downloading packages..."
 cd $TMP_DIR
 # download all cross compiler dependiencies
 # check the dependiencies version in this url: https://wiki.osdev.org/GCC_Cross-Compiler
-sudo apt install build-essential bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo libcloog-isl-dev libisl-dev git subversion
+sudo apt install -y build-essential bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo libcloog-isl-dev libisl-0.18-dev git subversion
 
 # downloading latest version of binuils through git
 git clone git://sourceware.org/git/binutils-gdb.git binutils-src
