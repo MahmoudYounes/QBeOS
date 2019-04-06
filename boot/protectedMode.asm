@@ -23,7 +23,7 @@ func_enableProtectedModeAndJmpKernel:
     stosw
     mov al, 0		; base 32 -> 39 = 0
     stosb
-    mov al, 0x9c	; access byte 40 -> 47 = 9a = 10011100
+    mov al, 0x9a	; access byte 40 -> 47 = 9a = 10011100
     stosb
     mov al, 0xcf	; flags + limit 48 -> 55 = cf = 1100 1111
     stosb
@@ -37,7 +37,7 @@ func_enableProtectedModeAndJmpKernel:
     stosw
     mov al, 0		; base 32 -> 39 = 0
     stosb
-    mov al, 0x96	; access byte 40 -> 47 = 96 = 10010110
+    mov al, 0x92	; access byte 40 -> 47 = 96 = 10010010
     stosb
     mov al, 0xcf	; flags + limit 48 -> 55 = cf = 1100 1111
     stosb
