@@ -44,7 +44,6 @@ loop_printf:
 	lodsb
 	cmp al, 0
 	je end_printf
-;	mov ah, al
 	mov ah, whiteOnBlackConst
 	mov bx, [currentCursorPosition]
 	mov [es:bx], ax

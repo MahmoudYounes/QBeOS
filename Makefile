@@ -25,3 +25,7 @@ clean:
 	if [ -d bin ]; then rm -r bin; fi
 	if [ -d iso_root ]; then rm -r iso_root; fi
 	$(MAKE) -C src clean
+
+rebuild:
+	$(MAKE) clean
+	$(MAKE) build

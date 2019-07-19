@@ -5,11 +5,10 @@ void kmain()
 {
     char *videoRamAdress = (char *)0xb800;
     char *welcomeMessage = "Welcome To BeOS\0";
-    welcomeMessage++;
     while( *welcomeMessage != '\0')
     {
         *videoRamAdress++ = *welcomeMessage++;
         *videoRamAdress++ = 0x70;
     }
-    return;
+    asm("hlt");
 }
