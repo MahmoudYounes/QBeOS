@@ -48,6 +48,7 @@ FastGateEnable:
 	jmp checkIfEnabled
 
 EnableA20End:
+	sti
 	popad
 	ret
 
@@ -61,12 +62,17 @@ EnableA20End:
 func_testA20:
 	pushad
 	
+	; storing ds
+	mov ax, ds
+	push ax
+
 	cli
 
 	xor ax, ax 				; ax = 0
 	mov es, ax
 
 	not ax 					; ax = 0xFFFF
+
 	mov ds, ax
 
 	mov di, 0x0500
@@ -89,6 +95,12 @@ func_testA20:
 	pop ax
 	mov byte [es:di], al
 	
+	sti
+
+	; restoring ds
+	pop ax
+	mov ds, ax
+
 	popad
 	ret
 

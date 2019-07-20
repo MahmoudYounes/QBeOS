@@ -23,12 +23,21 @@ func_enableProtectedModeAndJmpKernel:
     stosw
     mov al, 0		            ; base 32 -> 39 = 0
     stosb
-    ; bit 1 (access) always 1
-    ; bit 2 (rw) for cs 0 means not readable 1 means readable
-    ; bit 3 (DC) for cs 1 
-    mov al, 01111100b	        ; access byte 40 -> 47 = 9a = 10011100
+    ; bit 0    (access) just set to 0
+    ; bit 1    (rw)     for cs 0 means not readable 1 means readable
+    ; bit 2    (DC)     for cs 1 means can be executed from Prvl level or lower. 0 only level in Prvl
+    ; bit 3    (EX)     1 Code Segment, 0 Data Segment
+    ; bit 4    (S)      1 for code or data segment 0 for system segment (eg task state segment)
+    ; bit 5, 6 (Prvl)   define the Prvl level
+    ; bit 7    (Pr)     present (must be 1 for all valid selectors)
+    mov al, 11111110b
     stosb
-    mov al, 11001111b	        ; flags + limit 48 -> 55 = cf = 1100 1111
+    ; 48 -> 51 LIMIT, 52 -> 55 flags
+    ; bit 4     0
+    ; bit 5     0
+    ; bit 6     (sz)    If 0 the selector defines 16 bit protected mode. If 1 it defines 32 bit protected mode
+    ; bit 7     (Gr)    If 0 the limit is in 1 B blocks (byte granularity), if 1 the limit is in 4 KiB blocks
+    mov al, 11001111b
     stosb
     mov al, 0 		            ; base 56 -> 64 = 0 
     stosb
@@ -40,9 +49,21 @@ func_enableProtectedModeAndJmpKernel:
     stosw
     mov al, 0		            ; base 32 -> 39 = 0
     stosb
-    mov al, 01001010b	        ; access byte 40 -> 47 = 96 = 10010010
+    ; bit 0    (access) just set to 0
+    ; bit 1    (rw)     for ds 0 means not writable 1 means writable
+    ; bit 2    (DC)     for ds 0 ds grows up 1 ds grows down (stack)
+    ; bit 3    (EX)     1 Code Segment, 0 Data Segment
+    ; bit 4    (S)      1 for code or data segment 0 for system segment (eg task state segment)
+    ; bit 5, 6 (Prvl)   define the Prvl level
+    ; bit 7    (Pr)     present (must be 1 for all valid selectors)
+    mov al, 11110010b
     stosb
-    mov al, 11001111b	            ; flags + limit 48 -> 55 = cf = 1100 1111
+    ; 48 -> 51 LIMIT, 52 -> 55 flags
+    ; bit 4     0
+    ; bit 5     0
+    ; bit 6     (sz)    If 0 the selector defines 16 bit protected mode. If 1 it defines 32 bit protected mode
+    ; bit 7     (Gr)    If 0 the limit is in 1 B blocks (byte granularity), if 1 the limit is in 4 KiB blocks
+    mov al, 11001111b
     stosb
     mov al, 0 		            ; base 56 -> 64 = 0 
     stosb
@@ -51,8 +72,8 @@ func_enableProtectedModeAndJmpKernel:
     lgdt [gdtrLimit]
 
     ; setting up DS
-    mov eax, 8h
-    mov ds, eax 
+    ; mov eax, 8h
+    ; mov ds, eax 
 
     ; reading control register zero to switch to 32 bit protected mode
     ; by setting the first bit in this register and putting it
