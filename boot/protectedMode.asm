@@ -72,8 +72,8 @@ func_enableProtectedModeAndJmpKernel:
     lgdt [gdtrLimit]
 
     ; setting up DS
-    ; mov eax, 8h
-    ; mov ds, eax 
+    mov eax, 8h
+    mov ds, eax 
 
     ; reading control register zero to switch to 32 bit protected mode
     ; by setting the first bit in this register and putting it
