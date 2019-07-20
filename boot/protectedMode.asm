@@ -30,7 +30,7 @@ func_enableProtectedModeAndJmpKernel:
     ; bit 4    (S)      1 for code or data segment 0 for system segment (eg task state segment)
     ; bit 5, 6 (Prvl)   define the Prvl level
     ; bit 7    (Pr)     present (must be 1 for all valid selectors)
-    mov al, 11111110b
+    mov al, 10011010b
     stosb
     ; 48 -> 51 LIMIT, 52 -> 55 flags
     ; bit 4     0
@@ -56,7 +56,7 @@ func_enableProtectedModeAndJmpKernel:
     ; bit 4    (S)      1 for code or data segment 0 for system segment (eg task state segment)
     ; bit 5, 6 (Prvl)   define the Prvl level
     ; bit 7    (Pr)     present (must be 1 for all valid selectors)
-    mov al, 11110010b
+    mov al, 10010010b
     stosb
     ; 48 -> 51 LIMIT, 52 -> 55 flags
     ; bit 4     0
@@ -84,4 +84,4 @@ func_enableProtectedModeAndJmpKernel:
 
     ; a far jump to flush the processor's pipeline
     ; and fix cs and ip (since we entered 32 bit mode)
-    jmp 0x0008:0x9000
+    jmp dword 0x0008:0x9000
