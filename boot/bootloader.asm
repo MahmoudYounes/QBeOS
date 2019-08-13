@@ -52,7 +52,7 @@ _start:
 	mov eax, 100h
 	mov es, eax
 	xor edi, edi
-	call func_readPrimaryVolumeDescriptor
+	call func_ReadPrimaryVolumeDescriptor
 
 	; search for kernel file	
 	mov eax, 100h
@@ -63,8 +63,10 @@ _start:
 	call func_LoadKernel
 
 	call func_EnableA20
+	
+	call func_PrepareGDT
 
-	call func_enableProtectedModeAndJmpKernel
+	call func_EnableProtectedModeAndJmpKernel
 
 	cli
 	hlt
@@ -79,6 +81,7 @@ bootloaderEnd:
 %include "./isoUtilities.asm"
 %include "./kernelLoad.asm"
 %include "./enableA20.asm"
+%include "./gdt.asm"
 %include "./protectedMode.asm"
 
 
@@ -94,9 +97,28 @@ KernelLBA:					dd 0
 KernelLength:				dd 0
 
 ; gdtr
-gdtrLimit:	 				dw 0    		; limit (size)
-gdtrBaseLow: 				dw 0    		; base  (address in memory)
-gdtrBaseHigh: 				dw 0    		; base  (address in memory)
+gdtData:
+	dd 0x0000
+	dd 0x0000
+;												;Code Descriptor
+	dw 0xFFFF									;Limit (Low)
+	dw 0x0000									;Base (Low)
+	DB 0x00										;Base (Middle)
+	DB 10011010b								;Access
+	DB 11001111b								;Granularity
+	DB 0x00										;Base (High)
+;												;Data Descriptor
+	dw 0xFFFF									;Limit (Low)
+	dw 0x0000									;Base (Low)
+	DB 0x00										;Base (Middle)
+	DB 10010010b								;Access
+	DB 11001111b								;Granularity
+	DB 0x00										;Base (High)
+gdtEnd:
+GDT:
+	dw gdtEnd - gdtData - 1						;GDT Size - 1
+	dd gdtData									;Base Of GDT
+
 
 ; DAP buffer
 DAP:						db 10h			; DAP size (disk address packet)

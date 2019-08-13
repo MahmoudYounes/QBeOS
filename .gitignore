@@ -18,3 +18,5 @@ sandbox/**
 # ignoring log files
 bochsout.txt
 ParallelOut.txt
+debugger.out
+debugger-log.out

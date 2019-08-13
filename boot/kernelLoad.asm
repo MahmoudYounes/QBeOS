@@ -5,7 +5,7 @@
 ; di: offset to load the pvd in
 ; after the end of this function, the PVD will be at ds:100h in memory
 ; ========================================
-func_readPrimaryVolumeDescriptor:
+func_ReadPrimaryVolumeDescriptor:
 rpvd_read:
 	pushad
 	
