@@ -11,27 +11,25 @@
 ; TODO: discover memory layout
 
 [BITS 16]
-[ORG 0x0000]
+[ORG 0x7C00]
 jmp _start
 
 global _start
 _start:
 	; setting up segments and offsets
 	cli
-	mov ax,0x07c0							
+	xor ax, ax
 	mov ds,ax
 	mov es,ax
 	mov fs,ax
 	mov gs,ax
-
-	xor ax,ax
 	mov ss,ax
 	mov sp,0xffff	
 	sti
 
 	; far jmp to make sure that cs and ip are the correct values
 	; 5 = 1 opcode + 2 segment + 2 offset
-	jmp 0x07c0:$ + 5
+	jmp 0h:$ + 5
 	
 	; preserving boot drive number
 	mov BYTE[BootDrive], dl

@@ -62,9 +62,9 @@ EnableA20End:
 func_testA20:
 	pushad
 	
-	; storing ds
-	mov ax, ds
-	push ax
+	; storing ds and es
+	push ds
+	push es
 
 	cli
 
@@ -72,7 +72,6 @@ func_testA20:
 	mov es, ax
 
 	not ax 					; ax = 0xFFFF
-
 	mov ds, ax
 
 	mov di, 0x0500
@@ -97,9 +96,9 @@ func_testA20:
 	
 	sti
 
-	; restoring ds
-	pop ax
-	mov ds, ax
+	; restoring ds and es
+	pop es
+	pop ds
 
 	popad
 	ret
