@@ -1,4 +1,12 @@
 func_EnableProtectedModeAndJmpKernel:
+    
+    ; reading control register zero to switch to 32 bit protected mode
+    ; by setting the first bit in this register and putting it
+    ; back to its location
+    mov eax, cr0
+    or eax, 0x1
+    mov cr0, eax
+
     ; setting up DS
     ; when in protected mode the bits meanings in the segmant registers differ
     ; bits 0, 1 -> describes prvl
@@ -12,13 +20,6 @@ func_EnableProtectedModeAndJmpKernel:
     mov ss, eax
     mov es, eax
     mov esp, 0xFFFF
-
-    ; reading control register zero to switch to 32 bit protected mode
-    ; by setting the first bit in this register and putting it
-    ; back to its location
-    mov eax, cr0
-    or eax, 0x1
-    mov cr0, eax
 
     ; a far jump to flush the processor's pipeline
     ; and fix cs and ip (since we entered 32 bit mode)
