@@ -46,7 +46,11 @@ echo "downloading packages..."
 cd $TMP_DIR
 # download all cross compiler dependiencies
 # check the dependiencies version in this url: https://wiki.osdev.org/GCC_Cross-Compiler
-sudo apt install -y build-essential bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo libcloog-isl-dev libisl-0.18-dev git subversion
+sudo apt install -y build-essential bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo libisl-dev git subversion
+if [ $? -ne 0 ]; then
+    echo "failed to install dependency libraries"
+    exit 1
+fi
 
 # downloading latest version of binuils through git
 git clone git://sourceware.org/git/binutils-gdb.git binutils-src
@@ -74,3 +78,11 @@ make all-gcc
 make all-target-libgcc
 make install-gcc
 make install-target-libgcc
+
+echo "cross compiler build done."
+echo "installing nasm"
+sudo apt install nasm
+
+echo "done installing nasm"
+echo "installing bochs"
+sudo apt install bochs bochs-x
