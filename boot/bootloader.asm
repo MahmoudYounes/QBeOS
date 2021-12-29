@@ -19,12 +19,12 @@ _start:
 	; setting up segments and offsets
 	cli
 	xor ax, ax
-	mov ds,ax
-	mov es,ax
-	mov fs,ax
-	mov gs,ax
-	mov ss,ax
-	mov sp,0xffff	
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
+	mov sp, 0xffff	
 	sti
 
 	; far jmp to make sure that cs and ip are the correct values

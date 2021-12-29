@@ -1,9 +1,11 @@
 void InitializeTerminal();
+void WriteString(char* stringPtr);
 
 void kmain()
 {
     InitializeTerminal();
-    *((int*)0xb8000)=0x07690748;
+    char* string = "Hello, World!\0";
+    WriteString(string);
     asm("hlt");
 }
 
@@ -26,11 +28,12 @@ void WriteCharacterToScreen(volatile char* currLocation, const char characterToP
 void ClearScreen()
 {
     int charCounts = 0;
+    volatile char* currCursorLocation = cursorLocation;
     while (charCounts < VD_ROW_COUNT * VD_COL_COUNT)
     {
-        WriteCharacterToScreen(cursorLocation, WHITE_SPACE);
-        cursorLocation++;
-        cursorLocation++;
+        WriteCharacterToScreen(currCursorLocation, WHITE_SPACE);
+        currCursorLocation++;
+        currCursorLocation++;
         charCounts++;
     }
 }
@@ -42,5 +45,13 @@ void InitializeTerminal()
 
 void WriteString(char* stringPtr)
 {
-
+    volatile char* currCursorLocation = cursorLocation;
+    char* ptr = stringPtr;
+    while (*ptr != '\0') {
+        char ch = *ptr;
+        short och = 0x0700 | ch;
+        WriteCharacterToScreen(currCursorLocation, och);
+        currCursorLocation += 2;
+        ptr++;
+    }
 }
