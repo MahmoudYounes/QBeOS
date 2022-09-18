@@ -20,3 +20,6 @@ bochsout.txt
 ParallelOut.txt
 debugger.out
 debugger-log.out
+
+# ignore ini files
+**.ini
