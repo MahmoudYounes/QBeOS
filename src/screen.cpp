@@ -7,29 +7,20 @@
 void Screen::ClearScreen()
 {
     int charCounts = 0;
-    volatile char* currCursorLocation = (char *)BaseMemoryAddress;
-    while (charCounts < rowCount * colCount)
-    {
-        WriteCharacterToScreen(currCursorLocation, whiteSpace);
-        currCursorLocation += 2;
-        charCounts++;
+    volatile short* currCursorLocation = (short*)VideoMemory;
+    for(int i = 0; i < rowCount * colCount; i++) {
+        VideoMemory[i]=(VideoMemory[i] & 0x0200)|whiteSpace;
     }
 }
 
-void Screen::WriteString(char* stringPtr)
+void Screen::WriteString(char* str)
 {
-    volatile char* currCursorLocation = (char *)BaseMemoryAddress;
-    char* ptr = stringPtr;
-    while (*ptr != '\0') {
-        char ch = *ptr;
-        short och = 0x0700 | ch;
-        WriteCharacterToScreen(currCursorLocation, och);
-        currCursorLocation += 2;
-        ptr++;
+   for(int i=0; str[i]!='\0';++i){
+        VideoMemory[i]=(VideoMemory[i] & 0xFF00)|str[i];
     }
 }
 
-void Screen::WriteCharacterToScreen(volatile char* currLocation, const char characterToPrint)
+void Screen::WriteCharacterToScreen(volatile short* currLocation, const char characterToPrint)
 {
     *(currLocation) = characterToPrint;
 }
