@@ -9,7 +9,7 @@ void kmain()
 {
     Screen screen = Screen();
     screen.ClearScreen();
-    char* string1 = "123456789123456789123456789987654321\0";
+    char* string1 = "12345\0";
     screen.WriteString(string1);
     screen.ScrollUp();
     char* string2 = "abcdefghijklmnopqrstuvwxyz\0";

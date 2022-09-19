@@ -3,6 +3,7 @@
 ***/
 
 #include "screen.h"
+#include "math.h"
 
 /**
  * @brief fills the screen buffer with white spaces
@@ -48,11 +49,18 @@ void Screen::WriteCharacterToScreen(const char characterToPrint)
  */
 void Screen::ScrollUp() 
 {
+    if (currCursorPos <= colCount) {
+        for (int j = 0; j < colCount;j++){
+            VideoMemory[j] = format << 8 | whiteSpace;
+        }
+        currCursorPos = 0;
+    }
+
     int i = 0, j = colCount;
-    while (j < rowCount * colCount) {
+    while (j < currCursorPos) {
         VideoMemory[i] = VideoMemory[j];
         i++;
         j++;
     }
-    currCursorPos = i;
+    currCursorPos = Max(currCursorPos - colCount, 0);
 }
