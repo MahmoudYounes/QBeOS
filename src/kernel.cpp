@@ -9,7 +9,10 @@ void kmain()
 {
     Screen screen = Screen();
     screen.ClearScreen();
-    char* string = "Hello, World!\0";
-    screen.WriteString(string);
+    char* string1 = "123456789123456789123456789987654321\0";
+    screen.WriteString(string1);
+    screen.ScrollUp();
+    char* string2 = "abcdefghijklmnopqrstuvwxyz\0";
+    screen.WriteString(string2);
     asm("hlt");
 }

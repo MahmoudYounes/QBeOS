@@ -4,23 +4,55 @@
 
 #include "screen.h"
 
+/**
+ * @brief fills the screen buffer with white spaces
+ * 
+ */
 void Screen::ClearScreen()
 {
-    int charCounts = 0;
-    volatile short* currCursorLocation = (short*)VideoMemory;
     for(int i = 0; i < rowCount * colCount; i++) {
-        VideoMemory[i]=(VideoMemory[i] & 0x0200)|whiteSpace;
+        VideoMemory[i]= format << 8 | whiteSpace;
     }
+    currCursorPos = 0;
 }
 
+/**
+ * @brief equivelent to printf except there is no f for now. f.
+ * 
+ * @param str 
+ */
 void Screen::WriteString(char* str)
 {
-   for(int i=0; str[i]!='\0';++i){
-        VideoMemory[i]=(VideoMemory[i] & 0xFF00)|str[i];
+    for(int i=0; str[i]!='\0';++i){
+        WriteCharacterToScreen(str[i]);
     }
 }
 
-void Screen::WriteCharacterToScreen(volatile short* currLocation, const char characterToPrint)
+/**
+ * @brief prints a character to screen. if buffer is full, scroll up. advances the currCursorPos
+ * 
+ * @param characterToPrint 
+ */
+void Screen::WriteCharacterToScreen(const char characterToPrint)
 {
-    *(currLocation) = characterToPrint;
+    if (currCursorPos == rowCount * colCount) {
+        ScrollUp();
+    }
+    VideoMemory[currCursorPos] = format << 8 | characterToPrint;
+    currCursorPos++;
+}
+
+/**
+ * @brief Scrolls the screen up
+ * This is a very ill implemented method that doesn't correctly scroll up except when the screen is full
+ */
+void Screen::ScrollUp() 
+{
+    int i = 0, j = colCount;
+    while (j < rowCount * colCount) {
+        VideoMemory[i] = VideoMemory[j];
+        i++;
+        j++;
+    }
+    currCursorPos = i;
 }
