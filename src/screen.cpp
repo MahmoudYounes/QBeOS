@@ -39,6 +39,12 @@ void Screen::WriteCharacterToScreen(const char characterToPrint)
     if (currCursorPos == rowCount * colCount) {
         ScrollUp();
     }
+    if (characterToPrint == '\n'){
+        int currRow = currCursorPos / colCount;
+        currCursorPos = (currRow + 1) * colCount;
+        // TODO: Handle scrollup here
+        return;
+    }
     VideoMemory[currCursorPos] = format << 8 | characterToPrint;
     currCursorPos++;
 }
