@@ -45,7 +45,8 @@ void Screen::WriteCharacterToScreen(const char characterToPrint)
 
 /**
  * @brief Scrolls the screen up
- * This is a very ill implemented method that doesn't correctly scroll up except when the screen is full
+ * This is a very ill implemented method that doesn't correctly scroll up in the standard expected way
+ * this will be more imporved when input from user is added
  */
 void Screen::ScrollUp() 
 {
@@ -64,3 +65,23 @@ void Screen::ScrollUp()
     }
     currCursorPos = Max(currCursorPos - colCount, 0);
 }
+
+/**
+ * @brief prints an integer number to screen
+ * 
+ * @param num 
+ */
+void Screen::WriteIntToScreen(int num) {
+    char bf[10];
+    int li = 9;
+    for (;num > 0;) {
+        int res = num % 10;
+        num = num / 10;
+        bf[li] = '0' + res;
+        li--;
+    }
+    for (li++;li < 10; li++){
+        WriteCharacterToScreen(bf[li]);
+    }
+}
+
