@@ -3,24 +3,91 @@
 ***/
 
 #include "screen.h"
+#include "math.h"
 
+/**
+ * @brief fills the screen buffer with white spaces
+ * 
+ */
 void Screen::ClearScreen()
 {
-    int charCounts = 0;
-    volatile short* currCursorLocation = (short*)VideoMemory;
     for(int i = 0; i < rowCount * colCount; i++) {
-        VideoMemory[i]=(VideoMemory[i] & 0x0200)|whiteSpace;
+        VideoMemory[i]= format << 8 | whiteSpace;
     }
+    currCursorPos = 0;
 }
 
+/**
+ * @brief equivelent to printf except there is no f for now. f.
+ * 
+ * @param str 
+ */
 void Screen::WriteString(char* str)
 {
-   for(int i=0; str[i]!='\0';++i){
-        VideoMemory[i]=(VideoMemory[i] & 0xFF00)|str[i];
+    for(int i=0; str[i]!='\0';++i){
+        WriteCharacterToScreen(str[i]);
     }
 }
 
-void Screen::WriteCharacterToScreen(volatile short* currLocation, const char characterToPrint)
+/**
+ * @brief prints a character to screen. if buffer is full, scroll up. advances the currCursorPos
+ * 
+ * @param characterToPrint 
+ */
+void Screen::WriteCharacterToScreen(const char characterToPrint)
 {
-    *(currLocation) = characterToPrint;
+    if (currCursorPos == rowCount * colCount) {
+        ScrollUp();
+    }
+    if (characterToPrint == '\n'){
+        int currRow = currCursorPos / colCount;
+        currCursorPos = (currRow + 1) * colCount;
+        // TODO: Handle scrollup here
+        return;
+    }
+    VideoMemory[currCursorPos] = format << 8 | characterToPrint;
+    currCursorPos++;
 }
+
+/**
+ * @brief Scrolls the screen up
+ * This is a very ill implemented method that doesn't correctly scroll up in the standard expected way
+ * this will be more imporved when input from user is added
+ */
+void Screen::ScrollUp() 
+{
+    if (currCursorPos <= colCount) {
+        for (int j = 0; j < colCount;j++){
+            VideoMemory[j] = format << 8 | whiteSpace;
+        }
+        currCursorPos = 0;
+    }
+
+    int i = 0, j = colCount;
+    while (j < currCursorPos) {
+        VideoMemory[i] = VideoMemory[j];
+        i++;
+        j++;
+    }
+    currCursorPos = Max(currCursorPos - colCount, 0);
+}
+
+/**
+ * @brief prints an integer number to screen
+ * 
+ * @param num 
+ */
+void Screen::WriteIntToScreen(int num) {
+    char bf[10];
+    int li = 9;
+    for (;num > 0;) {
+        int res = num % 10;
+        num = num / 10;
+        bf[li] = '0' + res;
+        li--;
+    }
+    for (li++;li < 10; li++){
+        WriteCharacterToScreen(bf[li]);
+    }
+}
+

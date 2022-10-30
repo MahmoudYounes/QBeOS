@@ -9,7 +9,15 @@ void kmain()
 {
     Screen screen = Screen();
     screen.ClearScreen();
-    char* string = "Hello, World!\0";
-    screen.WriteString(string);
+    screen.WriteString("I Love You, Queen Be!\n\0");
+    char* string1 = "12345\0";
+    screen.WriteString(string1);
+    //screen.ScrollUp();
+    char* string2 = "abcdefghijklmnopqrstuvwxyz\n\0";
+    screen.WriteString(string2);
+    screen.WriteString("this is a number converted to string: \0");
+    screen.WriteIntToScreen(2147483647);
+    screen.WriteString("\n\0");
+    screen.WriteString("Hello,\nWorld!\0");
     asm("hlt");
 }
