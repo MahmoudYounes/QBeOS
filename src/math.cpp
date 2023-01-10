@@ -7,3 +7,7 @@ int Max(int a, int b){
 int Min(int am, int bm) {
     return am <= bm ? am:bm;
 }
+
+int Floor(float x) {
+    // whatever
+}
