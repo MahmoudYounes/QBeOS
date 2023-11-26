@@ -20,10 +20,18 @@ void Screen::ClearScreen()
 /**
  * @brief equivelent to printf except there is no f for now. f.
  * 
- * @param str 
+ * @param str
  */
-void Screen::WriteString(char* str)
+void Screen::WriteString(const char *str)
 {
+    if (_Ddebug) {
+        _Ddebug = false;
+        WriteString("currCursorPos is ");
+        WriteIntToScreen(currCursorPos);
+        WriteString("\n");
+        _Ddebug = true;
+    }
+
     for(int i=0; str[i]!='\0';++i){
         WriteCharacterToScreen(str[i]);
     }
@@ -91,3 +99,7 @@ void Screen::WriteIntToScreen(int num) {
     }
 }
 
+
+void Screen::_DenableSelfDebug(){
+    _Ddebug = true;
+}

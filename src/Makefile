@@ -3,11 +3,18 @@ OBJ_SOURCES = $(CPP_SOURCES:.cpp=.o)
 GCC = i686-elf-g++
 LD = i686-elf-ld
 
-build: setupEnvironment $(CPP_SOURCES)
-	$(GCC) -ffreestanding -c $(CPP_SOURCES) -Wall -Wextra -fno-exceptions -fno-rtti
+# defining phony rules
+.PHONY: build srcs $(CPP_SOURCES) setupEnvironment clean
+
+build: setupEnvironment srcs
 	$(LD) -melf_i386 -T../linker.ld --oformat binary -o build/KERNEL.IMG $(OBJ_SOURCES)
 	mv *.o build
 	cp build/KERNEL.IMG ../build/
+
+srcs: $(CPP_SOURCES)
+
+$(CPP_SOURCES):
+	$(GCC) -ffreestanding -c $@ -Wall -Wextra -fno-exceptions -fno-rtti
 
 setupEnvironment:
 	if [ ! -d build ]; then mkdir build; fi
