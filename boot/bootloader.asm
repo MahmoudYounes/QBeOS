@@ -54,24 +54,12 @@ _start:
 	; reading primary volume descriptor to locate the kernel files
 	; first 32kb (16 sectors) are empty start at sector 16
 	; the es contains the begining of the buffer to load into
-	; setting this explicitly to 500h. same address as stack boundry
-	; we are at the begining of the bootloader and stack is supposedly not full
-	;
-	; TODO: You stopped here Dec 7th.
-	; your next steps were fixing the isoUtilities:
-	;   * load the PVD at the begining of the stack and keep it there
-	;   * use the PVD to locate the kernel correctly, read osdev articles
-	;   * you need to load the kernel above the 1 MB memory boundry in order not to
-	;     impact BIOS data and hardware mapped regions. notice you only have 14MBs
-	;   * the kernel can't be more than 14 MBs. if the kernel increases in size you need to
-	;     implement a 2 stage bootloader
-	mov eax, [PVDBeginAddress]
+	mov eax, [PVDBufAddress]
 	mov es, eax
 	xor edi, edi
 	call func_ReadPrimaryVolumeDescriptor
 
-	; search for kernel file	
-	mov eax, [PVDBeginAddress]
+	mov eax, [PVDBufAddress]
 	mov es, eax
 	xor edi, edi
 	call func_LocateKernelImage
@@ -112,7 +100,8 @@ KernelLBA:					dd 0
 KernelLength:				dd 0
 
 ; PVD begining address
-PVDBeginAddress:	dw 0x0050
+PVDBufAddress:	dw 0x0050
+
 
 ; Bootloader buffer pointer
 BLBufPointer:	dw 0x00d0
