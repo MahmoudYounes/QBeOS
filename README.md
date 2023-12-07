@@ -1,8 +1,12 @@
 # Overview
-QBeOS is a hobby operating system for educational purposes with the goal of making a clean, easily accessible, powerful, & secure operating system.
+QBeOS is a hobby operating system for educational purposes with the goal of making a clean, easily accessible, powerful, & secure operating system. Too much, too big goals I know I know...
+
+# Development
+Currently, the only platform that supports building and developing the os is linux. This has been tried on Ubuntu 20.04, 22.04, pretty much any debian based linux distro should be good to go.
+To develop and or run this os please execute the script under scripts to install the cross compiler used to compile and build the kernel.
+Second step is to run make in the root folder to build the kernel iso
+Third step is to install the qemu/bochs/Oracle Virtual Box (Whatever hypervisor/emulator you are comfortable with) to run the generated iso.
+This has been tested on Bochs and Oracle Virtual Box.
 
 # Installation
-currently, the only platform that supports building and developing the os is linux. this has been tried on Ubuntu 20.04.
-to develop and or run this os please execute the script under scripts to install the cross compiler used to compile and build the kernel.
-second step is to run make build in the root folder to build the kernel iso
-third step is to install the qemu emulator to run the generated iso
+No release yet.
