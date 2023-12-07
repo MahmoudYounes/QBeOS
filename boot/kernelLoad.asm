@@ -56,7 +56,7 @@ fileFound:
 
 ; ========================================
 ; function to read kernel and load it at 
-; 0x0000:0x100000 (the above 1MB mark)
+; 0x0000:0x8400
 ; to avoid overwritting any BIOS Data
 ; args: none
 ; ========================================

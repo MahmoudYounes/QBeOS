@@ -7,7 +7,6 @@ it also describes the output files and their formats produced from the build pro
 
 QBeOS kernel : /src : c++
 QBeOS bootloader : /boot : assembly NASM
-QBeOS stage2     : /stage2 : c++
 
 QBeOS will only be iso bootable. ISO 9660 will be the first supported fs.
 This allows 2046 bytes bootloader; a 2kb boot loader to be loaded!! maybe no need for 2 stages?
