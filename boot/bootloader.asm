@@ -60,7 +60,7 @@ _start:
 	;   * use the PVD to locate the kernel correctly, read osdev articles
 	;   * you need to load the kernel above the 1 MB memory boundry in order not to
 	;     impact BIOS data and hardware mapped regions. notice you only have 14MBs
-	;   * the kernel can't be more than 14 MBs. if the kernel increases you need to
+	;   * the kernel can't be more than 14 MBs. if the kernel increases in size you need to
 	;     implement a 2 stage bootloader
 	mov eax, 500h
 	mov es, eax
