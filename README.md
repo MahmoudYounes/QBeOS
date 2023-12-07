@@ -10,3 +10,7 @@ This has been tested on Bochs and Oracle Virtual Box.
 
 # Installation
 No release yet.
+
+# Screenshots
+* My favorite Screenshot of QBeOS and my first (so-so) milestone
+![QueenBeIsHabeeba](https://github.com/MahmoudYounes/QBeOS/blob/master/screenshots/Screenshot%20from%202022-09-20%2001-39-44.png?raw=true)
