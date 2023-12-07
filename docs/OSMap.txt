@@ -1,26 +1,82 @@
-## What? 
+# What?
 
-this text file describes the output files and their formats produced from the build process step by step.
+this text file documents a lot of the design assumptions that are made for QBeOS.
+it also describes the output files and their formats produced from the build process step by step.
 
-## bootloader
+# QBeOS components and dir structure
 
-the bootloader in boot directory contains all assembly files required to build the bootloader. nasm is used for this task.
-the main file bootloader.asm contains all required files and is the main entry to the bootloader. inside this file, other files are
-imported that holds other functionalities. separation is good.
-the bootloader does the following:
-- setup the registers
-- reads the PVD
-- locates the kernel through the PVD
-- loads the kernel at 0x0000:0x9000
-- enables the A20 line
-- setup GDT
-- enables protected mode 
-- Jmps to kernel
+QBeOS kernel : /src : c++
+QBeOS bootloader : /boot : assembly NASM
+QBeOS stage2     : /stage2 : c++
 
-the output of this module is a binary file named bootloader.bin
+QBeOS will only be iso bootable. ISO 9660 will be the first supported fs.
+This allows 2046 bytes bootloader; a 2kb boot loader to be loaded!! maybe no need for 2 stages?
+we will see.
 
-## kernel
+# Bootloader
+
+the bootloader in boot directory contains all assembly files required to build the bootloader. NASM is used for this task.
+the main file bootloader.asm contains all required files and is the main entry to the bootloader. inside this file, other files
+are imported that holds other functionalities. separation is good.
+The bootloader file is heavily commented. This serves as the documentation for the bootloader. Eventually comments are stripped
+once the files go through the compiler.
+I know the good code is the one that never requires comments but this is assembly code we are talking about and I need to
+document my desgin assumptions for myself.
+
+## List of important assumptions made
+* the kernel and bootloader exist both in the root directory. There are no other directories on the CD
+
+
+## Memory Map during the bootloading time
+Lookup memory_layout.md first.
+
+START            END          SIZE           description
+0x00000          0x003ff      1Kb            RealMode IVT
+0x00400          0x004ff      256b           BIOS Data Area (BDA)
+0x00500          0x00d00      2kb            PVD of QBeOS ISO
+0x00d00          0x02d00      8kb            Bootloader buffers area
+0x02d00          0x07bff      19.75kb        QBeOS Bootloader (BL) stack
+0x07c00          0x083ff      2Kb            QBeOS BL
+0x08400          0x7ffff      479Kb          QBeOS Kernel
+0x80000          0x100000     512Kb          Bios Data <- don't mess with this
+0x100000         0x110000     64Kb           High Memory Area in Real mode
+
+
+
+
+
+# QBeOS Kernel
 
 for now, this is just one cpp file.
 
 the output of this module is the KERNEL.IMG binary file.
+
+## Important
+.. keep this here. important learning
+I have discovered that if I want to write a kernel that is bigger than 400KBs (conventional memory available below 1Mib Boundry)
+I need to load it into memory beyond the 1Mib boundry. in real mode, beyond the 1Mib boundry only 64Kbs available so that means
+the size of my kernel can't be bigger than 464Kbs. at the time of writing this, my basic, not so good, kernel that only writes
+stuff to screen is 1.2Kb. I have naively thought I could trick the BIOS bytes setting the pointer to the buffer where the
+kernel is loaded to the 1Mib boundary exactly, hoping the BIOS will be able to do so itself (i.e, access memory beyond 1Mib +
+64Kb) but the BIOS was.. well.. smarter or dumber than me.. eventually I researched osdev and found out that BIOS is not reliable in loading
+stuff above 1Mib, but I can load below 1Mib and relocate data there.
+
+so taking a pause here to evaluate these two decisions:
+
+* Continue as I am now, and leave this problem for future me.
+**Changes:
+*** I will restructure the memory layout to load the kernel in a lower address.
+
+** Pros:
+*** short - no changes really
+*** get to the good stuff (the actual OS things)
+
+** Cons:
+*** may struggle when I hit the limits of the 1Mib memory while loading the kernel
+
+* Implement a solution for this.
+**Changes:
+*** to talk to higher memroy I need to be in protected mode. When I am in protected mode, I will not be able to use BIOS
+    Interrupts which means I will not be able to load the kernel while in real mode before jumping to protected mode. That means,
+    to load the kernel I will have to jump to protected mode and load the kernel via a driver. this is already smelling like 2
+    stage bootloader.

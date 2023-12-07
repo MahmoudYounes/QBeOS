@@ -24,10 +24,11 @@ _start:
 	mov fs, ax
 	mov gs, ax
 	;;  setup stack
-	mov ax, 0x0500
+	mov ax, 0x02d0
 	mov ss, ax
 	xor ax, ax
-	mov sp, 0x2bff    		; for reference to why this value check docs/memory_layout.md
+	mov sp, 0x4eff    		; for reference to why this value check docs/memory_layout.md or docs/OSMap.txt
+							; 0x02d0 * 16 + 0x4eff = 0x7bff
 	sti
 
 	; far jmp to make sure that cs and ip are the correct values
@@ -39,7 +40,9 @@ _start:
 
 	; print loading msg
 	mov si, BootLoadingMsg
-	call func_biosPrintf
+	call func_biosPrint
+
+	call func_EnableA20
 
 	; resetting boot drive
 	mov dl, [BootDrive]
@@ -62,21 +65,19 @@ _start:
 	;     impact BIOS data and hardware mapped regions. notice you only have 14MBs
 	;   * the kernel can't be more than 14 MBs. if the kernel increases in size you need to
 	;     implement a 2 stage bootloader
-	mov eax, 500h
+	mov eax, [PVDBeginAddress]
 	mov es, eax
 	xor edi, edi
 	call func_ReadPrimaryVolumeDescriptor
 
 	; search for kernel file	
-	mov eax, 100h
+	mov eax, [PVDBeginAddress]
 	mov es, eax
 	xor edi, edi
 	call func_LocateKernelImage
 
 	call func_LoadKernel
 
-	call func_EnableA20
-	
 	call func_PrepareGDT
 
 	call func_EnableProtectedModeAndJmpKernel
@@ -85,11 +86,12 @@ _start:
 	hlt
 bootFailure:
 	mov si, BootFailureMsg
-	call func_biosPrintf
+	call func_biosPrint
 bootloaderEnd:
 	cli
 	hlt
 
+; includes sorted please!
 %include "./screen.asm"
 %include "./isoUtilities.asm"
 %include "./kernelLoad.asm"
@@ -101,7 +103,7 @@ bootloaderEnd:
 ; boot loader data
 BootDrive:					db 0
 BootFailureMsg:				db "Booting sequence failed", 0
-BootLoadingMsg:				db "loading BeOS...", 0
+BootLoadingMsg:				db "loading QBeOS...", 0
 BytesPerSector:				dw 0
 
 ; kernel info
@@ -110,8 +112,10 @@ KernelLBA:					dd 0
 KernelLength:				dd 0
 
 ; PVD begining address
-PVDBeginSegment:	dw 0
-PVDBegingOffset:	dw 0
+PVDBeginAddress:	dw 0x0050
+
+; Bootloader buffer pointer
+BLBufPointer:	dw 0x00d0
 
 ; gdtr
 gdtData:
@@ -153,8 +157,8 @@ rowsLimit:					equ 80
 colsLimit:					equ 25
 
 ;;; Check if bootloader is bigger than 512 bytes emit error
-%if 512-($-$$) > 0
-	%error "bootloader exceeded 512 bytes"
+%if 2046-($-$$) < 0
+	%error "bootloader exceeded 2046 bytes"
 %endif
 
 ;;; fill in the rest of the output file for isofs compatability

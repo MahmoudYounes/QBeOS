@@ -3,17 +3,17 @@
 ; args: 
 ; si: address of first character in stack
 ; ========================================
-func_biosPrintf:
+func_biosPrint:
 	pushad
 
-loop_biosPrintf:		; printing loop
+loop_biosPrint:		; printing loop
 	lodsb
 	cmp al, 0
-	je end_biosPrintf
+	je end_biosPrint
 	mov ah, 0x0e
 	int 0x10
-	jmp loop_biosPrintf
-end_biosPrintf:
+	jmp loop_biosPrint
+end_biosPrint:
 	popad
 	ret
 
