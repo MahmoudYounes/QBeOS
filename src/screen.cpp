@@ -24,16 +24,17 @@ void Screen::ClearScreen()
  */
 void Screen::WriteString(const char *str)
 {
+    for(int i=0; str[i]!='\0';++i){
+        WriteCharacterToScreen(str[i]);
+    }
+
     if (_Ddebug) {
         _Ddebug = false;
         WriteString("currCursorPos is ");
         WriteIntToScreen(currCursorPos);
         WriteString("\n");
         _Ddebug = true;
-    }
 
-    for(int i=0; str[i]!='\0';++i){
-        WriteCharacterToScreen(str[i]);
     }
 }
 

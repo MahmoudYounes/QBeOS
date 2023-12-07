@@ -1,5 +1,5 @@
 class Screen {
-    private:
+        private:
         // VideoMemory is the address of the video memory to write to
         unsigned short* VideoMemory=(unsigned short*)0xb8000;
 
@@ -17,7 +17,7 @@ class Screen {
         int _DcallCounts = 0;
 
 
-public:
+        public:
         void ClearScreen();
 
         void ScrollUp();
@@ -29,4 +29,5 @@ public:
         void WriteIntToScreen(int num);
 
         void _DenableSelfDebug();
+
 };

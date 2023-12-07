@@ -23,8 +23,11 @@ _start:
 	mov es, ax
 	mov fs, ax
 	mov gs, ax
+	;;  setup stack
+	mov ax, 0x0500
 	mov ss, ax
-	mov sp, 0xffff	
+	xor ax, ax
+	mov sp, 0x2bff    		; for reference to why this value check docs/memory_layout.md
 	sti
 
 	; far jmp to make sure that cs and ip are the correct values
@@ -47,7 +50,19 @@ _start:
 
 	; reading primary volume descriptor to locate the kernel files
 	; first 32kb (16 sectors) are empty start at sector 16
-	mov eax, 100h
+	; the es contains the begining of the buffer to load into
+	; setting this explicitly to 500h. same address as stack boundry
+	; we are at the begining of the bootloader and stack is supposedly not full
+	;
+	; TODO: You stopped here Dec 7th.
+	; your next steps were fixing the isoUtilities:
+	;   * load the PVD at the begining of the stack and keep it there
+	;   * use the PVD to locate the kernel correctly, read osdev articles
+	;   * you need to load the kernel above the 1 MB memory boundry in order not to
+	;     impact BIOS data and hardware mapped regions. notice you only have 14MBs
+	;   * the kernel can't be more than 14 MBs. if the kernel increases you need to
+	;     implement a 2 stage bootloader
+	mov eax, 500h
 	mov es, eax
 	xor edi, edi
 	call func_ReadPrimaryVolumeDescriptor
@@ -94,6 +109,10 @@ KernelName:					db "KERNEL.IMG", 0x3b, 0x31
 KernelLBA:					dd 0
 KernelLength:				dd 0
 
+; PVD begining address
+PVDBeginSegment:	dw 0
+PVDBegingOffset:	dw 0
+
 ; gdtr
 gdtData:
 	dd 0x0000
@@ -133,5 +152,11 @@ whiteOnBlackConst:			equ 0x0f		; const added to video memory
 rowsLimit:					equ 80
 colsLimit:					equ 25
 
+;;; Check if bootloader is bigger than 512 bytes emit error
+%if 512-($-$$) > 0
+	%error "bootloader exceeded 512 bytes"
+%endif
+
+;;; fill in the rest of the output file for isofs compatability
 TIMES 2046-($-$$) db 0
 dw 0xaa55

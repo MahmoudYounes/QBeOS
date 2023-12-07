@@ -1,4 +1,28 @@
 ; ========================================
+; Function that reads the primary volume descriptor from the cd
+; args:
+; es: segment to load the pvd in
+; di: offset to load the pvd in
+; after the end of this function, the PVD will be at ds:100h in memory
+; ========================================
+func_ReadPrimaryVolumeDescriptor:
+rpvd_read:
+	pushad
+
+	; PVD is always at sector 16 (10h) and is always 1 sector
+	mov ebx, 10h
+	mov cx, 1
+	call func_ReadISOSector
+
+	mov al, BYTE[es:di]
+	cmp al, 1
+	je rpvd_ret
+	jmp bootFailure
+rpvd_ret:
+	popad
+	ret
+
+; ========================================
 ; Reset the drive passed in as argument
 ; args: 
 ; dl: drive number as byte in stack
