@@ -1,58 +1,31 @@
-; ========================================
-; Function that reads the primary volume descriptor from the cd
-; args:
-; es: segment to load the pvd in
-; di: offset to load the pvd in
-; after the end of this function, the PVD will be at ds:100h in memory
-; ========================================
-func_ReadPrimaryVolumeDescriptor:
-rpvd_read:
-	pushad
-	
-	; PVD is always at sector 16 (10h) and is always 1 sector
-	mov ebx, 10h
-	mov cx, 1
-	call func_ReadISOSector
-
-	mov al, BYTE[es:di]
-	cmp al, 1
-	je rpvd_ret
-	jmp bootFailure
-rpvd_ret:
-	popad
-	ret
+;; KernelLoad.asm library contains kernel loading utility.
 
 ; ========================================
 ; function to locate the kernel Image
 ; args:
 ; es: segment in which the pvd is loaded
-; di: offset of which the pvd is loaded
 ; after this function completes the LBA that contains the file will be in KernelLBA and size will be in KernelLength
 ; ========================================
 func_LocateKernelImage:
 	pushad
-	
-	; this address has the LBA of boot record
-	mov edx, [es:di + 158]
 
-	; setting up new buffer for the new volume
-	; push es
-	; push di
-	mov ax, 200h
-	mov es, ax
-	xor di, di
+	; this address has the LBA of root directory; byte offset 156 contains the root directory record. byte offset 2 contains LBA
+	; of this root directory
+	; preserving the LBA location in ebx (4bytes LSB LBA) before messing up es
+	mov ebx, [es:di + 158]
 
 	; preparing to read new sector
-	mov ebx, edx
+	; setting up new buffer for the new volume
+	xor di, di  				; reseting the offset pointer
+	mov ax, [BLBufPointer]
+	mov es, ax
 	mov cx, 1
 	call func_ReadISOSector
 
-
-	mov di, 0			; reset buffer
-	mov bx, di			; bx used to point to beginning of the directory entry. while, di is used to compare names
-; TODO: there is a bug here (pointer out of buffer bounds "need to fix this")
-; es:di points to the beginning of the root directory entries
-; first two entries of the root directory are the .(current dir) and ..(parent dir)
+	xor di, di			; reset buffer pointer
+	mov bx, di			; bx used as a pointer to beginning of the directory entry. while, di is used to compare names
+	;; TODO: for separation of concerns, this part should be extracted to isoUtilities library and be as generic as possible.
+	;; an abstraction like func_LocateFile with arguments being pointer to buffer is in need.
 loopLocateKernelFile:
 	xor edx, edx
 	mov dl, BYTE [es:bx]			; size of entry in buffer
@@ -61,7 +34,7 @@ loopLocateKernelFile:
 	add di, 33						; first byte of file identifier
 	mov si, KernelName
 cmpStr:
-	cmp cx, 0
+	cmp cx, 0					    ; loop ended and file found
 	je fileFound
 	dec cx
 	cld
@@ -83,7 +56,8 @@ fileFound:
 
 ; ========================================
 ; function to read kernel and load it at 
-; 0x0000:0x9000
+; 0x0000:0x8400
+; to avoid overwritting any BIOS Data
 ; args: none
 ; ========================================
 func_LoadKernel:
@@ -99,9 +73,9 @@ func_LoadKernel:
 	div bx
 
 	mov cl, al
-	mov di, 0x9000
-	mov eax, 0
+	mov ax, 0x0840
 	mov es, eax
+	xor di, di
 	mov ebx, [KernelLBA]
 	call func_ReadISOSector
 	popad

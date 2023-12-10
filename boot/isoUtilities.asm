@@ -1,3 +1,33 @@
+;; This is a library for isofs parsing.
+;; Adhere to the function descriptions and expected arguments
+;;
+
+
+; ========================================
+; Function that reads the primary volume descriptor of a cd
+; args:
+; es: segment to load the pvd in
+; di: offset to load the pvd in
+;
+; after the end of this function, the PVD will be at es:di in memory
+; ========================================
+func_ReadPrimaryVolumeDescriptor:
+rpvd_read:
+	pushad
+
+	; PVD is always at sector 16 (10h) and is always 1 sector
+	mov ebx, 10h
+	mov cx, 1
+	call func_ReadISOSector
+
+	mov al, BYTE[es:di]
+	cmp al, 1
+	je rpvd_ret
+	jmp bootFailure
+rpvd_ret:
+	popad
+	ret
+
 ; ========================================
 ; Reset the drive passed in as argument
 ; args: 
@@ -18,11 +48,11 @@ rd_ResetFail:
 
 ; ========================================
 ; Read Sector from cd rom
-; args: 
+; args:
 ; cx: number of sectors to read (2 bytes), 
 ; di: offset of buffer (2 bytes), 
 ; es: segment of buffer (2 bytes)
-; ebx: absolute number of start sector to read (LBA) (4 bytes)
+; ebx: absolute inumber of start sector to read (LBA) (4 bytes)
 ; ========================================
 func_ReadISOSector:
 	; filling DAP

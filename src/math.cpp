@@ -1,4 +1,4 @@
-#include "math.h";
+#include "math.h"
 
 int Max(int a, int b){
     return a >= b ? a:b;

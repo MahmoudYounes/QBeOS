@@ -13,7 +13,7 @@ checkIfEnabled:
 	; if not enabled carry flag will be set
 	clc
 	call func_testA20
-	jne EnableA20End
+	jnz EnableA20End
 
 
 EnableA20:
@@ -66,8 +66,6 @@ func_testA20:
 	push ds
 	push es
 
-	cli
-
 	xor ax, ax 				; ax = 0
 	mov es, ax
 
@@ -93,8 +91,6 @@ func_testA20:
 
 	pop ax
 	mov byte [es:di], al
-	
-	sti
 
 	; restoring ds and es
 	pop es
@@ -173,7 +169,6 @@ func_keyboardControllerEnableA20:
 	out 0x64, al
 
 	call func_a20WaitAl2
-	sti
 controllerEnd:
 	popad
 	ret
@@ -199,3 +194,4 @@ func_a20WaitAl1:
 	test    al,1
 	jz      func_a20WaitAl1
 	ret
+
