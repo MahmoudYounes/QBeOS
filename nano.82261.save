@@ -1,0 +1,6 @@
+Addr                          Size                  Type
+0x0000000000000000            64Kb                  1 Usable
+0x000000000009f000            4kb                   2 Reserved
+0x00000000000e8000            96kb                  2 Reserved
+0x0000100000000000            255MB                 1 Usable
+0x00000000fffc0000            265kb                 2 Unusable
