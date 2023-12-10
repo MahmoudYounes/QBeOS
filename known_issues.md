@@ -10,4 +10,4 @@ List of known issues in QBeOS that needs handling:
 * Loading the kernel when it spans more than 1 sector.
 -> Currently, there is code to calculate how many sectors does the kernel span, but it does not act upon the results :D. currently the kernel is 1.2Kb. once we move beyond the 2kb limit which is soon
    I need to resolve this issue. the issue is resolved by loading consecutive sectors and taking care of the buffer addresses.
-* a decent ISO 9660 fs driver
+* a decent ISO 9660 fs implementation
