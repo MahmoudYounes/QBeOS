@@ -66,6 +66,8 @@ _start:
 
 	call func_LoadKernel
 
+	call func_DiscoverMemory
+
 	call func_PrepareGDT
 
 	call func_EnableProtectedModeAndJmpKernel
@@ -81,9 +83,10 @@ bootloaderEnd:
 
 ; includes sorted please!
 %include "./screen.asm"
+%include "./enableA20.asm"
 %include "./isoUtilities.asm"
 %include "./kernelLoad.asm"
-%include "./enableA20.asm"
+%include "./memory.asm"
 %include "./gdt.asm"
 %include "./protectedMode.asm"
 
@@ -91,6 +94,7 @@ bootloaderEnd:
 ; boot loader data
 BootDrive:					db 0
 BootFailureMsg:				db "Booting sequence failed", 0
+MemDiscoveryFailureMsg:	    db "Memory discover failed", 0
 BootLoadingMsg:				db "loading QBeOS...", 0
 BytesPerSector:				dw 0
 
@@ -102,9 +106,11 @@ KernelLength:				dd 0
 ; PVD begining address
 PVDBufAddress:	dw 0x0050
 
-
 ; Bootloader buffer pointer
 BLBufPointer:	dw 0x00d0
+
+; Memory Layout Table Buf
+MLTBufAddress:	dw 0x7000
 
 ; gdtr
 gdtData:

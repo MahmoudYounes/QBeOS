@@ -89,6 +89,10 @@ void Screen::ScrollUp()
 void Screen::WriteIntToScreen(int num) {
     char bf[10];
     int li = 9;
+    if (num == 0){
+        WriteCharacterToScreen('0');
+        return;
+    }
     for (;num > 0;) {
         int res = num % 10;
         num = num / 10;

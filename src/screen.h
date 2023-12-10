@@ -1,3 +1,7 @@
+#ifndef SCREEN_H
+#define SCREEN_H
+
+
 class Screen {
         private:
         // VideoMemory is the address of the video memory to write to
@@ -31,3 +35,6 @@ class Screen {
         void _DenableSelfDebug();
 
 };
+
+
+#endif /* SCREEN_H */

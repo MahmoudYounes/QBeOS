@@ -4,18 +4,21 @@
 ***/
 
 #include "screen.h"
+#include "memory.h"
 
 void kmain()
 {
     Screen screen = Screen();
     screen.ClearScreen();
-    screen._DenableSelfDebug();
+    screen.WriteString("Initializing system...\n");
 
-    const char *message = "Welcome to QBeOS...";
+    Memory sysMemory = Memory(&screen);
+
+    const char *message = "Welcome to QBeOS...\n";
+    screen.WriteString(message);
+    message = "QBeOS is just and educational OS, created by myounes just for fun.\n";
     screen.WriteString(message);
 
-    message = "QBeOS is just and educational OS, created by myounes just for fun.";
-    screen.WriteString(message);
-
+    sysMemory.PrintMemory(&screen);
     asm("hlt");
 }

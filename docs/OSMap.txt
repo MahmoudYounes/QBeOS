@@ -36,7 +36,8 @@ START            END          SIZE           description
 0x00d00          0x02d00      8kb            Bootloader buffers area
 0x02d00          0x07bff      19.75kb        QBeOS Bootloader (BL) stack
 0x07c00          0x083ff      2Kb            QBeOS BL
-0x08400          0x7ffff      479Kb          QBeOS Kernel
+0x08400          0x6ffff      479Kb          QBeOS Kernel
+0x70000          0x7ffff      64kb           Memory Layout Table
 0x80000          0x100000     512Kb          Bios Data <- don't mess with this
 0x100000         0x110000     64Kb           High Memory Area in Real mode
 
