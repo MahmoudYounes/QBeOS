@@ -6,6 +6,14 @@
 #include "math.h"
 
 /**
+ * @brief initializes the screen
+ *
+ */
+Screen::Screen(){
+    // initialize the cursor
+}
+
+/**
  * @brief fills the screen buffer with white spaces
  * 
  */

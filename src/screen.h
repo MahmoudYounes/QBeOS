@@ -4,37 +4,36 @@
 
 class Screen {
         private:
-        // VideoMemory is the address of the video memory to write to
-        unsigned short* VideoMemory=(unsigned short*)0xb8000;
+                // VideoMemory is the address of the video memory to write to
+                unsigned short* VideoMemory=(unsigned short*)0xb8000;
 
-        // Screen management vars
-        const short rowCount = 24;
-        const short colCount = 80;
-        const short format = 0x0002;
-        const char whiteSpace = 0x0020;
-        int currCursorPos = 0;
+                // Screen management vars
+                const short rowCount = 24;
+                const short colCount = 80;
+                const short format = 0x0002;
+                const char whiteSpace = 0x0020;
+                int currCursorPos = 0;
 
-        // Debug vars
-
-        // debug enables using this library to debug it self
-        bool _Ddebug = false;
-        int _DcallCounts = 0;
+                // debug enables using this library to debug it self
+                bool _Ddebug = false;
+                int _DcallCounts = 0;
 
 
         public:
-        void ClearScreen();
+                Screen();
 
-        void ScrollUp();
+                void ClearScreen();
 
-        void WriteString(const char* stringPtr);
+                void ScrollUp();
 
-        void WriteCharacterToScreen(const char characterToPrint);
+                void WriteString(const char* stringPtr);
 
-        void WriteIntToScreen(int num);
+                void WriteCharacterToScreen(const char characterToPrint);
 
-        void _DenableSelfDebug();
+                void WriteIntToScreen(int num);
+
+                void _DenableSelfDebug();
 
 };
-
 
 #endif /* SCREEN_H */
