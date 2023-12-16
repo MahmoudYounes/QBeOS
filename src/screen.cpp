@@ -1,12 +1,25 @@
 /***
  * screen is the class responsible for managing write to screen operations
+ *
 ***/
 
 #include "screen.h"
 #include "math.h"
+#include "common.cpp"
 
 /**
- * @brief fills the screen buffer with white spaces
+ * @brief initializes the screen
+ *
+ */
+Screen::Screen(){
+    // disable the cursor
+    outb(0x3d4, 0x0a);
+    outb(0x3d5, 0x20);
+
+}
+
+/**
+ * @0x01 fills the screen buffer with white spaces
  * 
  */
 void Screen::ClearScreen()
@@ -60,24 +73,21 @@ void Screen::WriteCharacterToScreen(const char characterToPrint)
 
 /**
  * @brief Scrolls the screen up
- * This is a very ill implemented method that doesn't correctly scroll up in the standard expected way
- * this will be more imporved when input from user is added
  */
 void Screen::ScrollUp() 
 {
-    if (currCursorPos <= colCount) {
-        for (int j = 0; j < colCount;j++){
-            VideoMemory[j] = format << 8 | whiteSpace;
-        }
-        currCursorPos = 0;
-    }
-
+    // scroll one line up
     int i = 0, j = colCount;
     while (j < currCursorPos) {
         VideoMemory[i] = VideoMemory[j];
         i++;
         j++;
     }
+
+    while (i < currCursorPos) {
+        VideoMemory[i++] = format << 8 | whiteSpace;
+    }
+
     currCursorPos = Max(currCursorPos - colCount, 0);
 }
 

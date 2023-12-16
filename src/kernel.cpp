@@ -20,5 +20,8 @@ void kmain()
     screen.WriteString(message);
 
     sysMemory.PrintMemory(&screen);
+    sysMemory.PrintMemory(&screen);
+    screen.WriteString("Hello, After scrolling\n");
+    screen.WriteString("Hello, after scrolling2");
     asm("hlt");
 }

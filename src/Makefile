@@ -7,14 +7,14 @@ LD = i686-elf-ld
 .PHONY: build srcs $(CPP_SOURCES) setupEnvironment clean
 
 build: setupEnvironment srcs
-	$(LD) -melf_i386 -T../linker.ld --oformat binary -o build/KERNEL.IMG $(OBJ_SOURCES)
+	$(LD) -nostdlib -melf_i386 -T../linker.ld --oformat binary -o build/KERNEL.IMG $(OBJ_SOURCES)
 	mv *.o build
 	cp build/KERNEL.IMG ../build/
 
 srcs: $(CPP_SOURCES)
 
 $(CPP_SOURCES):
-	$(GCC) -ffreestanding -c $@ -Wall -Wextra -fno-exceptions -fno-rtti
+	$(GCC) -masm=intel -ffreestanding -c $@ -Wall -Wextra -fno-exceptions -fno-rtti
 
 setupEnvironment:
 	if [ ! -d build ]; then mkdir build; fi
