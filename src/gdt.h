@@ -16,7 +16,7 @@ struct GDTEntry {
 class GDT {
     private:
         static const uint32_t gdtBaseAddress = 0x00400000;
-        uint8_t *lastEntryAddress = (uint8_t *)0x00400000;
+        uint8_t *lastEntryAddress;
         uint8_t countEntries = 0;
 
         void encodeEntry(GDTEntry *entry);

@@ -29,6 +29,7 @@ Memory::Memory(){
         newRegion.baseAddress = (unsigned long *)baseAddr;
         newRegion.size = size;
         newRegion.type = (enum memType)type;
+        newRegion.id = availableRegions;
 
         memoryRegions[availableRegions++] = newRegion;
     } while(1);

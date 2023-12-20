@@ -8,7 +8,7 @@ void panic(const char * errMsg){
     asm("hlt");
 }
 
-void printInfo(char *msg){
+void printInfo(const char *msg){
     screen.WriteString("info: ");
     screen.WriteString(msg);
     screen.WriteString("\n");

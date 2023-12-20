@@ -4,6 +4,7 @@ extern Screen screen;
 
 GDT::GDT(){
     screen.WriteString("initializing GDT...\n");
+    lastEntryAddress = (uint8_t *)gdtBaseAddress;
     GDTEntry nullDescriptor = ConstructGDTEntry(0x00000000, 0x00000000, 0x0000, 0x0000);
     GDTEntry kernelCodeDescriptor = ConstructGDTEntry(0x00000000, 0xfffff, 0x9a, 0xc);
     GDTEntry kernelDataDescriptor = ConstructGDTEntry(0x00000000, 0xfffff, 0x92, 0xc);
@@ -52,6 +53,8 @@ GDTEntry GDT::ConstructGDTEntry(uint32_t base, uint32_t limit, uint8_t access, u
 
 void GDT::RefreshGDT(){
     asm volatile(
+        "cli\n\t"
+        "pushad\n\t"
         "mov [esp-6], %0\n\t"
         "mov [esp-4], %1\n\t"
         "lgdt [esp-6]\n\t"
@@ -63,8 +66,9 @@ void GDT::RefreshGDT(){
         "mov gs, eax\n\t"
         "jmp 0x8:.reload_gdt\n\t"
         ".reload_gdt:\n\t"
+        "popad\n\t"
         :
-        : "a"(sizeof(short) * 8 * countEntries), "r"(gdtBaseAddress)
+        : "a"(8 * 8 * countEntries), "r"(gdtBaseAddress)
         : "memory");
 }
 

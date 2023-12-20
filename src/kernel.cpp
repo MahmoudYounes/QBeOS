@@ -7,12 +7,13 @@
 #include "memory.h"
 #include "gdt.h"
 
+void kmain() __attribute__ ((noreturn));
+
 extern Screen screen;
 extern Memory sysMemory;
 extern GDT gdt;
 
-void kmain()
-{
+void kmain() {
     screen = Screen();
     screen.ClearScreen();
     screen.WriteString("Initializing system...\n");
@@ -20,6 +21,7 @@ void kmain()
     sysMemory = Memory();
     gdt = GDT();
 
+    // at this point interrupts are disabled... need to setup IDT to renable them.
     const char *message = "Welcome to QBeOS...\n";
     screen.WriteString(message);
     message = "QBeOS is just and educational OS, created by myounes just for fun.\n";
@@ -27,6 +29,7 @@ void kmain()
 
     sysMemory.PrintMemory();
 
-    screen.WriteString("booting done...halting...\n");
+    screen.WriteString("booting done...\n");
+    screen.WriteString("halting PC...\n");
     asm("hlt");
 }

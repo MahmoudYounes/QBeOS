@@ -5,8 +5,10 @@ it also describes the output files and their formats produced from the build pro
 
 # road map
 Highlevel overview of the road map of development for QBeOS
-* GDT
+* GDT // done
 * IDT
+* LDT
+* TSS
 * SIMD
 * PMM
 * VMM
@@ -23,7 +25,7 @@ Highlevel overview of the road map of development for QBeOS
 * Userspace
 * The fun begin
 
-TODOs:
+TODOs - Technical Debt stemming from the fact of how excited I am to go to user mode:
 * Implement EFI loading
 * Switch to CMake at some point
 
@@ -65,8 +67,9 @@ START            END          SIZE           description
 0x80000          0x100000     512Kb          Bios Data <- don't mess with this
 0x100000         0x10ffff     64Kb           High Memory Area in Real mode
 ------------------------------  Protected Mode -------------------------------
-0x00110000       0x003fffff   4MBs           Kernel code segment
+0x00110000       0x003fffff   2MB            Memory Hole
 0x00400000       0x004fffff   1Mb            GDT table
+....
 
 
 

@@ -1,4 +1,5 @@
 #include "mem_region.h"
+#include "common.h"
 
 long MemoryRegion::GetSize(){
     return size;
@@ -11,14 +12,14 @@ void MemoryRegion::PrintRegionInfo(){
     if(size <= 1024){
         screen.WriteIntToScreen(size);
         screen.WriteString("bytes");
-    } else if (size <= 1024 * 1024) {
-        screen.WriteIntToScreen(size / 1024);
+    } else if (size <= KB_SIZE()) {
+        screen.WriteIntToScreen(BYTE_TO_KB(size));
         screen.WriteString("Kbs");
-    } else if (size <= 1024 * 1024 * 1024){
-        screen.WriteIntToScreen(size / 1024 / 1024);
+    } else if (size <= MB_SIZE()){
+        screen.WriteIntToScreen(BYTE_TO_MB(size));
         screen.WriteString("Mbs");
     } else {
-        screen.WriteIntToScreen(size / 1024 / 1024 / 1024);
+        screen.WriteIntToScreen(BYTE_TO_GB(size));
         screen.WriteString("Gbs");
     }
 

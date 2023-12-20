@@ -4,7 +4,7 @@
 #include "common.h"
 #include "screen.h"
 
-void panic(char *msg);
-void printInfo(char *msg);
+void panic(const char *msg);
+void printInfo(const char *msg);
 
 #endif

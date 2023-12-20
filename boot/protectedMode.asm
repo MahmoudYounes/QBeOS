@@ -19,7 +19,7 @@ func_EnableProtectedModeAndJmpKernel:
     mov gs, eax
     mov ss, eax
     mov es, eax
-    mov esp, 0xFFFFFF
+    mov esp, 0x3fffff
 
     ; a far jump to flush the processor's pipeline
     ; and fix cs and ip (since we entered 32 bit mode)
