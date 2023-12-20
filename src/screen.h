@@ -8,10 +8,10 @@ class Screen {
                 unsigned short* VideoMemory=(unsigned short*)0xb8000;
 
                 // Screen management vars
-                const short rowCount = 24;
-                const short colCount = 80;
-                const short format = 0x0002;
-                const char whiteSpace = 0x0020;
+                static const short rowCount = 24;
+                static const short colCount = 80;
+                static const short format = 0x0002;
+                static const char whiteSpace = 0x0020;
                 int currCursorPos = 0;
 
                 // debug enables using this library to debug it self

@@ -3,8 +3,10 @@
 
 #define CONCAT_INTS(low, high) (high << 4) | low
 
-Memory::Memory(Screen *screen){
-    screen->WriteString("Initializing memory...\n");
+extern Screen screen;
+
+Memory::Memory(){
+    screen.WriteString("Initializing memory...\n");
     availableRegions = 0;
     do{
         // every memory region record is 5 bytes
@@ -33,65 +35,67 @@ Memory::Memory(Screen *screen){
 
 }
 
-void Memory::PrintMemory(Screen *screen){
+void Memory::PrintMemory(){
     long memSizeBytes = 0;
     for (int i = 0; i < availableRegions; i++){
         memSizeBytes += memoryRegions[i].GetSize();
     }
 
-    screen->WriteString("System ram size is ");
-    screen->WriteIntToScreen(memSizeBytes / 1024 / 1024);
-    screen->WriteString("MBs.\n");
+    screen.WriteString("System ram size is ");
+    screen.WriteIntToScreen(memSizeBytes / 1024 / 1024);
+    screen.WriteString("MBs.\n");
 
-    screen->WriteString("Memory regions: \n");
+    screen.WriteString("Memory regions: \n");
     for (int i = 0; i < availableRegions; i++){
-        screen->WriteString("Memory region ");
-        screen->WriteIntToScreen(i + 1);
+        screen.WriteString("Memory region ");
+        screen.WriteIntToScreen(i + 1);
 
-        screen->WriteString("\n  region size: ");
+        screen.WriteString("\n  region size: ");
         long size = memoryRegions[i].GetSize();
         if(size <= 1024){
-            screen->WriteIntToScreen(size);
-            screen->WriteString("bytes");
+            screen.WriteIntToScreen(size);
+            screen.WriteString("bytes");
         } else if (size <= 1024 * 1024) {
-            screen->WriteIntToScreen(size / 1024);
-            screen->WriteString("Kbs");
+            screen.WriteIntToScreen(size / 1024);
+            screen.WriteString("Kbs");
         } else if (size <= 1024 * 1024 * 1024){
-            screen->WriteIntToScreen(size / 1024 / 1024);
-            screen->WriteString("Mbs");
+            screen.WriteIntToScreen(size / 1024 / 1024);
+            screen.WriteString("Mbs");
         } else {
-            screen->WriteIntToScreen(size / 1024 / 1024 / 1024);
-            screen->WriteString("Gbs");
+            screen.WriteIntToScreen(size / 1024 / 1024 / 1024);
+            screen.WriteString("Gbs");
         }
 
-        screen->WriteString("\n  region type: ");
+        screen.WriteString("\n  region type: ");
         switch (memoryRegions[i].type) {
             case 0:
-                screen->WriteString("invalid");
+                screen.WriteString("invalid");
                 break;
             case 1:
-                screen->WriteString("usable");
+                screen.WriteString("usable");
                 break;
             case 2:
-                screen->WriteString("reserved");
+                screen.WriteString("reserved");
                 break;
             case 3:
-                screen->WriteString("reclaimable");
+                screen.WriteString("reclaimable");
                 break;
             case 4:
-                screen->WriteString("nvs");
+                screen.WriteString("nvs");
                 break;
             case 5:
-                screen->WriteString("badmem");
+                screen.WriteString("badmem");
                 break;
             default:
-                screen->WriteString("unknown memory type");
+                screen.WriteString("unknown memory type");
                 break;
         }
-        screen->WriteString("\n");
+        screen.WriteString("\n");
     }
 }
 
 long MemoryRegion::GetSize(){
     return length;
 }
+
+Memory sysMemory;
