@@ -118,3 +118,5 @@ void Screen::WriteIntToScreen(int num) {
 void Screen::_DenableSelfDebug(){
     _Ddebug = true;
 }
+
+Screen screen;

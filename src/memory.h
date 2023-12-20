@@ -26,14 +26,13 @@ class Memory{
     public:
 
         const static int countRegions = 1024;
-        int availableRegions = 0;
+        volatile int availableRegions = 0;
         MemoryRegion memoryRegions[countRegions];
 
         unsigned long *memoryTableAddress = (unsigned long *)0x70000;
 
-        Memory(Screen *screen);
-
-        void PrintMemory(Screen *screen);
+        Memory();
+        void PrintMemory();
 };
 
 

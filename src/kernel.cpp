@@ -6,21 +6,24 @@
 #include "screen.h"
 #include "memory.h"
 
+extern Screen screen;
+extern Memory sysMemory;
+
 void kmain()
 {
-    Screen screen = Screen();
+    screen = Screen();
     screen.ClearScreen();
     screen.WriteString("Initializing system...\n");
 
-    Memory sysMemory = Memory(&screen);
+    sysMemory = Memory();
 
     const char *message = "Welcome to QBeOS...\n";
     screen.WriteString(message);
     message = "QBeOS is just and educational OS, created by myounes just for fun.\n";
     screen.WriteString(message);
 
-    sysMemory.PrintMemory(&screen);
-    sysMemory.PrintMemory(&screen);
+    sysMemory.PrintMemory();
+    sysMemory.PrintMemory();
     screen.WriteString("Hello, After scrolling\n");
     screen.WriteString("Hello, after scrolling2");
     asm("hlt");
