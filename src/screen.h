@@ -30,7 +30,7 @@ class Screen {
 
                 void WriteCharacterToScreen(const char characterToPrint);
 
-                void WriteIntToScreen(int num);
+                void WriteIntToScreen(unsigned int num);
 
                 void _DenableSelfDebug();
 

@@ -5,6 +5,7 @@ SECTIONS
     . = 0x00008400;
     .text :
     {
+        *(.text.*kmain*)
         *(.text)
         *(.text.*)
     }

@@ -2,25 +2,7 @@
 #define MEMORY_H
 
 #include "screen.h"
-
-enum memType{
-invalid,
-usable,
-reserved,
-acpiReclaim,
-acpiNVS,
-badMem
-};
-
-class MemoryRegion{
-    public:
-        unsigned long *baseAddress;
-        unsigned long length;
-        enum memType type;
-
-        long GetSize();
-
-};
+#include "mem_region.h"
 
 class Memory{
     public:

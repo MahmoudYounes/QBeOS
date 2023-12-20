@@ -13,3 +13,11 @@ inline uint8_t inb(uint16_t port) {
                           : "dN" (port));
     return retval;
 }
+
+inline void cli() {
+    __asm__ __volatile__ ("cli");
+}
+
+inline void sti() {
+    __asm__ __volatile__ ("sti");
+}

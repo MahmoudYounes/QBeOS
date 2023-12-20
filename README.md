@@ -8,6 +8,9 @@ Second step is to run make in the root folder to build the kernel iso
 Third step is to install the qemu/bochs/Oracle Virtual Box (Whatever hypervisor/emulator you are comfortable with) to run the generated iso.
 This has been tested on Bochs and Oracle Virtual Box.
 
+# Documentation
+documentation is found under docs/. you can start at OSMap.txt
+
 # Installation
 No release yet.
 

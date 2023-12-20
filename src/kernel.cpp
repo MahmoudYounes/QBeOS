@@ -5,9 +5,11 @@
 
 #include "screen.h"
 #include "memory.h"
+#include "gdt.h"
 
 extern Screen screen;
 extern Memory sysMemory;
+extern GDT gdt;
 
 void kmain()
 {
@@ -16,6 +18,7 @@ void kmain()
     screen.WriteString("Initializing system...\n");
 
     sysMemory = Memory();
+    gdt = GDT();
 
     const char *message = "Welcome to QBeOS...\n";
     screen.WriteString(message);
@@ -23,8 +26,7 @@ void kmain()
     screen.WriteString(message);
 
     sysMemory.PrintMemory();
-    sysMemory.PrintMemory();
-    screen.WriteString("Hello, After scrolling\n");
-    screen.WriteString("Hello, after scrolling2");
+
+    screen.WriteString("booting done...halting...\n");
     asm("hlt");
 }

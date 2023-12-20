@@ -3,6 +3,30 @@
 this text file documents a lot of the design assumptions that are made for QBeOS.
 it also describes the output files and their formats produced from the build process step by step.
 
+# road map
+Highlevel overview of the road map of development for QBeOS
+* GDT
+* IDT
+* SIMD
+* PMM
+* VMM
+* PAGING
+* ACPI
+* APIC
+* IOAPIC
+* LAPIC
+* HPET
+* APIC-TIMER
+* SMP
+* Multitasking
+* Syscalls
+* Userspace
+* The fun begin
+
+TODOs:
+* Implement EFI loading
+* Switch to CMake at some point
+
 # QBeOS components and dir structure
 
 QBeOS kernel : /src : c++
@@ -39,7 +63,10 @@ START            END          SIZE           description
 0x08400          0x6ffff      479Kb          QBeOS Kernel
 0x70000          0x7ffff      64kb           Memory Layout Table
 0x80000          0x100000     512Kb          Bios Data <- don't mess with this
-0x100000         0x110000     64Kb           High Memory Area in Real mode
+0x100000         0x10ffff     64Kb           High Memory Area in Real mode
+------------------------------  Protected Mode -------------------------------
+0x00110000       0x003fffff   4MBs           Kernel code segment
+0x00400000       0x004fffff   1Mb            GDT table
 
 
 
@@ -80,3 +107,62 @@ so taking a pause here to evaluate these two decisions:
     Interrupts which means I will not be able to load the kernel while in real mode before jumping to protected mode. That means,
     to load the kernel I will have to jump to protected mode and load the kernel via a driver. this is already smelling like 2
     stage bootloader.
+
+# Memory management
+The essential objective of memory management is to implement how addresses are
+translated and memory access control. There are three types of addresses into
+memory.
+Virtual address(AKA logical address), linear address, physical address.
+At the end of the day physical address is the address used to access the memory.
+If we have a flat memory model, i.e, Code Segment == Data Segment == The whole
+whole memory as a limit (this is set by having 2 GDT entries spanning the whole
+memory limits), then, Virtual address is the same as a linear address.
+this is because linear address is produced from virtual address by means of
+segmentation. The virtual address consists of 16 bit selector and 32 bit offset.
+The selectors are selectors into the GDT or LDT depending on the context.
+LDT is associated with tasks. When in flat memory model, the selectors
+are preloaded during boot after switching to protected mode from real mode.
+The physical address is calculated from the linear address via paging. the linear
+address is split into 10 10 12 bits. The first 10 bits point into page directory.
+it is the index of a page directory entry. A page directory entry then points to
+a page table. The second 10 bits point into the index of a page table entry.
+A page table entry points to the start of a page in physical memory. the last 12
+bits is the index of the byte in the page. That means each page can be 4096 byte
+or 4kbs.
+likewise, if paging is disabled then Virtual address maps to linear address via
+the GDT and linear address in this case is the same as physical address.
+
+in conclusion, segmentation and paging are two different memory protection modes.
+they can be used together or one can be used but not the other. segemntation can
+be used to isolate tasks in a multitasking or multiprocess environments. the
+latter is the environment you get when the CPU has multicores.
+
+
+Note: All of this information can be found in intel manuals Vol3 Chapter 3.
+# QBeOS Memory Management model
+Right after the bootloader is done and before jumping to the kernel, the memory
+model is flat memory model. i.e, both code and data descriptors in GDT map to
+the whole available memory address space.
+
+QBeOS for the time being is 32 bit OS (TODO: Switch to 64 bits)
+
+After booting, QBeOS defines 4 segments in GDT spanning the whole memory, 2 for
+kernel code and data, and 2 for user code and data + 1 null descriptor:
+index          | Base           | LIMIT         | Description
+0              | 0              | 0             | null descriptor
+1              | 0x00000000     | 0xFFFFF       | executable kernel code
+2              | 0x00000000     | 0xFFFFF       | nonexecutable kernel data
+3              | 0x00000000     | 0xFFFFFF      | user executable
+4              | 0x00000000     | 0xFFFFFF      | user data
+
+The purpose of this segmentation model is just to disable segmentation and rely
+completely on paging to protect kernel and user code from each other.
+
+GDT will be used for LDT and TSS as well.
+
+# MemoryManager
+the memory manager is responsible for the memory. The memory manager is just that
+a memory manager. It should not know how low level things are done. For that there
+should be components that does that. It should also be the only gateway to memory
+operations. The memory manager understands how to manage the memory components to
+fulfill the APIs implementation.
