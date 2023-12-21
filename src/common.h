@@ -11,9 +11,10 @@
 #include <stdalign.h>
 
 // when switching to 64 bits this should be read as config
-#define WORD_SIZE = 32;
+#define WORD_SIZE 32
+#define BITS_PER_BYTE 8
 
-#define CONCAT_INTS(low, high) (high << 4) | low;
+#define CONCAT_INTS(low, high) (high << 4) | low
 #define GET_BYTE(val, n)  (val >> (n*8)) & 0xff
 #define BYTE_TO_KB(val) val >> 10
 #define BYTE_TO_MB(val) val >> 20

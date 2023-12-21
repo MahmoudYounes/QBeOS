@@ -1,15 +1,18 @@
 #include "gdt.h"
+#include "common.h"
+
 
 extern Screen screen;
 
 GDT::GDT(){
     screen.WriteString("initializing GDT...\n");
+
     lastEntryAddress = (uint8_t *)gdtBaseAddress;
     GDTEntry nullDescriptor = ConstructGDTEntry(0x00000000, 0x00000000, 0x0000, 0x0000);
-    GDTEntry kernelCodeDescriptor = ConstructGDTEntry(0x00000000, 0xfffff, 0x9a, 0xc);
-    GDTEntry kernelDataDescriptor = ConstructGDTEntry(0x00000000, 0xfffff, 0x92, 0xc);
-    GDTEntry restCodeDescriptor = ConstructGDTEntry(0x00c00000, 0xfffff, 0xfa, 0xc);
-    GDTEntry restDataDescriptor = ConstructGDTEntry(0x00c00000, 0xfffff, 0xf2, 0xc);
+    GDTEntry kernelCodeDescriptor = ConstructGDTEntry(0x00000000, 0xfffff, SEGMENT_KERNEL_CODE, SEGMENT_FLAGS_DEFAULT);
+    GDTEntry kernelDataDescriptor = ConstructGDTEntry(0x00000000, 0xfffff, SEGMENT_KERNEL_DATA, SEGMENT_FLAGS_DEFAULT);
+    GDTEntry restCodeDescriptor = ConstructGDTEntry(0x00c00000, 0xfffff, SEGMENT_USER_CODE, SEGMENT_FLAGS_DEFAULT);
+    GDTEntry restDataDescriptor = ConstructGDTEntry(0x00c00000, 0xfffff, SEGMENT_USER_DATA, SEGMENT_FLAGS_DEFAULT);
 
     encodeEntry(&nullDescriptor);
     encodeEntry(&kernelCodeDescriptor);
@@ -44,14 +47,46 @@ void GDT::encodeEntry(GDTEntry *entry) {
 
 GDTEntry GDT::ConstructGDTEntry(uint32_t base, uint32_t limit, uint8_t access, uint8_t flags){
     return GDTEntry{
-    limit=limit,
-    base = base,
-    access = access,
-    flags = flags
+        .limit=limit,
+        .base = base,
+        .access = access,
+        .flags = flags
+    };
+}
+
+
+GDTEntry GDT::ConstructLDTEntry(uint32_t base, uint32_t limit) {
+    uint8_t access =  SEGMENT_PRESENT | SEGMENT_PRIVLG_3 | SEGMENT_SYSTEM_TYPE_LDT;
+    return GDTEntry{
+        .limit = limit,
+        .base = base,
+        .access = access,
+        .flags = SEGMENT_FLAGS_DEFAULT
+    };
+}
+
+GDTEntry GDT::ConstructTSSKernEntry(uint32_t base, uint32_t limit) {
+    uint8_t access = SEGMENT_PRESENT | SEGMENT_PRIVLG_0 | SEGMENT_SYSTEM_TYPE_3264TSS_AVAILABLE;
+    return GDTEntry{
+        .limit = limit,
+        .base = base,
+        .access = access,
+        .flags = SEGMENT_FLAGS_DEFAULT
+    };
+}
+
+GDTEntry GDT::ConstructTSSUserEntry(uint32_t base, uint32_t limit) {
+    uint8_t access = SEGMENT_PRESENT | SEGMENT_PRIVLG_3 | SEGMENT_SYSTEM_TYPE_3264TSS_AVAILABLE;
+    return GDTEntry{
+        .limit = limit,
+        .base = base,
+        .access = access,
+        .flags = SEGMENT_FLAGS_DEFAULT
     };
 }
 
 void GDT::RefreshGDT(){
+    uint16_t gdtSize = BITS_PER_BYTE * GDT_ENTRY_SIZE_BYTES * countEntries;
     asm volatile(
         "cli\n\t"
         "pushad\n\t"
@@ -68,7 +103,7 @@ void GDT::RefreshGDT(){
         ".reload_gdt:\n\t"
         "popad\n\t"
         :
-        : "a"(8 * 8 * countEntries), "r"(gdtBaseAddress)
+        : "a"(gdtSize), "r"(gdtBaseAddress)
         : "memory");
 }
 
