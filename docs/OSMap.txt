@@ -67,7 +67,7 @@ START            END          SIZE           description
 0x80000          0x100000     512Kb          Bios Data <- don't mess with this
 0x100000         0x10ffff     64Kb           High Memory Area in Real mode
 ------------------------------  Protected Mode -------------------------------
-0x00110000       0x003fffff   2MB            Memory Hole
+0x00110000       0x003fffff   2MB            OS Stack
 0x00400000       0x004fffff   1Mb            GDT table
 ....
 
