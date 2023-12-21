@@ -155,12 +155,11 @@ index          | Base           | LIMIT         | Description
 0              | 0              | 0             | null descriptor
 1              | 0x00000000     | 0xFFFFF       | executable kernel code
 2              | 0x00000000     | 0xFFFFF       | nonexecutable kernel data
-3              | 0x00000000     | 0xFFFFFF      | user executable
-4              | 0x00000000     | 0xFFFFFF      | user data
+3              | 0x00c00000     | 0xFFFFFF      | user executable
+4              | 0x00c00000     | 0xFFFFFF      | user data
 
-The purpose of this segmentation model is just to disable segmentation and rely
-completely on paging to protect kernel and user code from each other.
-
+The purpose of this segmentation model is just to protect kernel area from user
+area and rely on paging to protect kernel and user code from each other as well.
 GDT will be used for LDT and TSS as well.
 
 # MemoryManager

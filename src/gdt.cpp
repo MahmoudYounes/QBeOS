@@ -8,8 +8,8 @@ GDT::GDT(){
     GDTEntry nullDescriptor = ConstructGDTEntry(0x00000000, 0x00000000, 0x0000, 0x0000);
     GDTEntry kernelCodeDescriptor = ConstructGDTEntry(0x00000000, 0xfffff, 0x9a, 0xc);
     GDTEntry kernelDataDescriptor = ConstructGDTEntry(0x00000000, 0xfffff, 0x92, 0xc);
-    GDTEntry restCodeDescriptor = ConstructGDTEntry(0x00000000, 0xfffff, 0xfa, 0xc);
-    GDTEntry restDataDescriptor = ConstructGDTEntry(0x00000000, 0xfffff, 0xf2, 0xc);
+    GDTEntry restCodeDescriptor = ConstructGDTEntry(0x00c00000, 0xfffff, 0xfa, 0xc);
+    GDTEntry restDataDescriptor = ConstructGDTEntry(0x00c00000, 0xfffff, 0xf2, 0xc);
 
     encodeEntry(&nullDescriptor);
     encodeEntry(&kernelCodeDescriptor);

@@ -23,6 +23,8 @@
 #define MB_SIZE() 1024 << 20
 #define GB_SIZE() 1024 << 30
 
+#define HLT() for(;;) asm("hlt")
+
 inline void outb(uint16_t port, uint8_t val);
 inline uint8_t inb(uint16_t port);
 inline void cli();

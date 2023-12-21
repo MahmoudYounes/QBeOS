@@ -31,5 +31,5 @@ void kmain() {
 
     screen.WriteString("booting done...\n");
     screen.WriteString("halting PC...\n");
-    asm("hlt");
+    HLT();
 }
