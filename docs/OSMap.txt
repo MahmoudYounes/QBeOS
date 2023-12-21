@@ -6,13 +6,13 @@ it also describes the output files and their formats produced from the build pro
 # road map
 Highlevel overview of the road map of development for QBeOS
 * GDT // done
+* PMM
+* VMM
+* PAGING
 * IDT
 * LDT
 * TSS
 * SIMD
-* PMM
-* VMM
-* PAGING
 * ACPI
 * APIC
 * IOAPIC
@@ -163,8 +163,18 @@ area and rely on paging to protect kernel and user code from each other as well.
 GDT will be used for LDT and TSS as well.
 
 # MemoryManager
-the memory manager is responsible for the memory. The memory manager is just that
+the memory manager is responsible for the physical memory. The memory manager is just that
 a memory manager. It should not know how low level things are done. For that there
 should be components that does that. It should also be the only gateway to memory
 operations. The memory manager understands how to manage the memory components to
-fulfill the APIs implementation.
+fulfill the APIs implementation. The component implementing the memory manager is Memory.
+Memory is initialized by reading the memory tables placed by the bootloader at 0x70000.
+It then initializes the memory allocator to be able to allocate physical pages of memory.
+Each page will be of size PAGE_SIZE(4k).
+Post initialization, Memory marks the pages used by the OS as reserved for os.
+
+Memory Public API (Size is in bytes):
+AllocatePage(): searches for the first free page and allocates it. return pointer to base of page
+Allocate(size): allocates X + (X + PAGE_SIZE) % PAGE_SIZE pages and returns pointer to first page.
+FreePage(pagePointer): given a page pointer that begins on the page boundary, free corresponding page.
+Free(pagePointer): given a pointer that begins on the page boundary, free all corresponding pages.
