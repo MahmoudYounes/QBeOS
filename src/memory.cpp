@@ -1,7 +1,4 @@
 #include "memory.h"
-#include "screen.h"
-
-#define CONCAT_INTS(low, high) (high << 4) | low
 
 extern Screen screen;
 
@@ -27,8 +24,9 @@ Memory::Memory(){
 
         MemoryRegion newRegion = MemoryRegion();
         newRegion.baseAddress = (unsigned long *)baseAddr;
-        newRegion.length = size;
+        newRegion.size = size;
         newRegion.type = (enum memType)type;
+        newRegion.id = availableRegions;
 
         memoryRegions[availableRegions++] = newRegion;
     } while(1);
@@ -47,55 +45,9 @@ void Memory::PrintMemory(){
 
     screen.WriteString("Memory regions: \n");
     for (int i = 0; i < availableRegions; i++){
-        screen.WriteString("Memory region ");
-        screen.WriteIntToScreen(i + 1);
-
-        screen.WriteString("\n  region size: ");
-        long size = memoryRegions[i].GetSize();
-        if(size <= 1024){
-            screen.WriteIntToScreen(size);
-            screen.WriteString("bytes");
-        } else if (size <= 1024 * 1024) {
-            screen.WriteIntToScreen(size / 1024);
-            screen.WriteString("Kbs");
-        } else if (size <= 1024 * 1024 * 1024){
-            screen.WriteIntToScreen(size / 1024 / 1024);
-            screen.WriteString("Mbs");
-        } else {
-            screen.WriteIntToScreen(size / 1024 / 1024 / 1024);
-            screen.WriteString("Gbs");
-        }
-
-        screen.WriteString("\n  region type: ");
-        switch (memoryRegions[i].type) {
-            case 0:
-                screen.WriteString("invalid");
-                break;
-            case 1:
-                screen.WriteString("usable");
-                break;
-            case 2:
-                screen.WriteString("reserved");
-                break;
-            case 3:
-                screen.WriteString("reclaimable");
-                break;
-            case 4:
-                screen.WriteString("nvs");
-                break;
-            case 5:
-                screen.WriteString("badmem");
-                break;
-            default:
-                screen.WriteString("unknown memory type");
-                break;
-        }
-        screen.WriteString("\n");
+        memoryRegions[i].PrintRegionInfo();
     }
 }
 
-long MemoryRegion::GetSize(){
-    return length;
-}
-
+// Global Memory Variable;
 Memory sysMemory;

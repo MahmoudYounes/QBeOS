@@ -4,8 +4,6 @@
 ***/
 
 #include "screen.h"
-#include "math.h"
-#include "common.cpp"
 
 /**
  * @brief initializes the screen
@@ -96,7 +94,7 @@ void Screen::ScrollUp()
  * 
  * @param num 
  */
-void Screen::WriteIntToScreen(int num) {
+void Screen::WriteIntToScreen(unsigned int num) {
     char bf[10];
     int li = 9;
     if (num == 0){
@@ -119,4 +117,5 @@ void Screen::_DenableSelfDebug(){
     _Ddebug = true;
 }
 
+// Global Screen variable
 Screen screen;

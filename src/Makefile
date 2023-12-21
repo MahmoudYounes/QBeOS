@@ -14,7 +14,7 @@ build: setupEnvironment srcs
 srcs: $(CPP_SOURCES)
 
 $(CPP_SOURCES):
-	$(GCC) -masm=intel -ffreestanding -Wall -Wextra -fno-exceptions -fno-rtti -nostdlib -O0 -c $@
+	$(GCC) -masm=intel -ffreestanding -Wall -Wextra -fno-exceptions -fno-rtti -nostdlib -ffunction-sections -fno-builtin -c $@
 
 setupEnvironment:
 	if [ ! -d build ]; then mkdir build; fi

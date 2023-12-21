@@ -1,6 +1,8 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
+#include "math.h"
+#include "common.h"
 
 class Screen {
         private:
@@ -30,7 +32,7 @@ class Screen {
 
                 void WriteCharacterToScreen(const char characterToPrint);
 
-                void WriteIntToScreen(int num);
+                void WriteIntToScreen(unsigned int num);
 
                 void _DenableSelfDebug();
 
