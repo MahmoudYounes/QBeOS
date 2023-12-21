@@ -1,6 +1,7 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
+#include "common.h"
 #include "screen.h"
 #include "mem_region.h"
 

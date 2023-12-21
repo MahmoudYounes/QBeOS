@@ -1,7 +1,4 @@
 #include "memory.h"
-#include "screen.h"
-
-#define CONCAT_INTS(low, high) (high << 4) | low
 
 extern Screen screen;
 

@@ -4,8 +4,6 @@
 ***/
 
 #include "screen.h"
-#include "math.h"
-#include "common.cpp"
 
 /**
  * @brief initializes the screen

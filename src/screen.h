@@ -1,6 +1,8 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
+#include "math.h"
+#include "common.h"
 
 class Screen {
         private:

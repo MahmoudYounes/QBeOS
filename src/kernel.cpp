@@ -6,6 +6,7 @@
 #include "screen.h"
 #include "memory.h"
 #include "gdt.h"
+#include "common.h"
 
 void kmain() __attribute__ ((noreturn));
 
@@ -14,6 +15,7 @@ extern Memory sysMemory;
 extern GDT gdt;
 
 void kmain() {
+    cli();
     screen = Screen();
     screen.ClearScreen();
     screen.WriteString("Initializing system...\n");
