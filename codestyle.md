@@ -8,6 +8,9 @@ description for the coding style used in QBeOS
   for linux fx, unless you are a linux internal guru. In linux, if you see a function
   with a name you don't understand, you go on and read the function implementation
   and then you figure out that "Oh! ABC meant Allow Binary Combat" or whatever.
+  using such abbreviations was OK during the time when variable names were limited in size,
+  screens were small, and you needed to optimize in variable names to write readable code.
+  This is not the case for the recent times.
 * this one I guess is a basic c++ convention. all imports should happen in the .h
   file and only the .h file is imported to the cpp file corresponding to component.
 * QBeOS follows an OOP paradigm. The linux kernel community dislikes c++ for some
