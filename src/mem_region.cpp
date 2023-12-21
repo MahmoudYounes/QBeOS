@@ -9,13 +9,13 @@ void MemoryRegion::PrintRegionInfo(){
     screen.WriteString("Memory region ");
     screen.WriteIntToScreen(id);
     screen.WriteString("\n  region size: ");
-    if(size <= 1024){
+    if(size <= MAX_B_SIZE()){
         screen.WriteIntToScreen(size);
         screen.WriteString("bytes");
-    } else if (size <= KB_SIZE()) {
+    } else if (size <= MAX_KB_SIZE()) {
         screen.WriteIntToScreen(BYTE_TO_KB(size));
         screen.WriteString("Kbs");
-    } else if (size <= MB_SIZE()){
+    } else if (size <= MAX_MB_SIZE()){
         screen.WriteIntToScreen(BYTE_TO_MB(size));
         screen.WriteString("Mbs");
     } else {

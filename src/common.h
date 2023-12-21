@@ -19,9 +19,10 @@
 #define BYTE_TO_MB(val) val >> 20
 #define BYTE_TO_GB(val) val >> 30
 
-#define KB_SIZE() 1024 << 10
-#define MB_SIZE() 1024 << 20
-#define GB_SIZE() 1024 << 30
+#define MAX_B_SIZE() 1 << 10
+#define MAX_KB_SIZE() 1 << 20
+#define MAX_MB_SIZE() 1 << 30
+#define MAX_GB_SIZE() 1 << 40
 
 #define HLT() for(;;) asm("hlt")
 
