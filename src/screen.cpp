@@ -94,7 +94,8 @@ void Screen::ScrollUp()
  * 
  * @param num 
  */
-void Screen::WriteIntToScreen(unsigned int num) {
+void Screen::WriteIntToScreen(const uint64_t numToPrint) {
+    uint64_t num = numToPrint;
     char bf[10];
     int li = 9;
     if (num == 0){

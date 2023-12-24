@@ -3,7 +3,7 @@
 
 #include "stddef.h"
 
-
+// TODO: restructure
 extern "C" void memcpy(void *dstpp, void *srcpp, size_t count);
 
 

@@ -2,10 +2,11 @@
 #define MEM_REGION_H
 
 #include "screen.h"
+#include "common.h"
 
 extern Screen screen;
 
-enum memType{
+enum memState{
     invalid,
     usable,
     reserved,
@@ -17,10 +18,12 @@ enum memType{
 // class that holds physical memory region info
 class MemoryRegion{
      public:
-        unsigned long *baseAddress;
-        unsigned long size;
-        unsigned long id;
-        enum memType type;
+        uint8_t *baseAddress;
+        uint64_t size;
+        uint64_t bootRegionID;
+        uint64_t regionID;
+        enum memState state;
+        MemoryRegion *next;
 
         long GetSize();
         void PrintRegionInfo();

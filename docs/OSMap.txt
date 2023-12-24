@@ -56,20 +56,20 @@ document my desgin assumptions for myself.
 Lookup memory_layout.md first.
 
 START            END          SIZE           description
-0x00000          0x003ff      1Kb            RealMode IVT
-0x00400          0x004ff      256b           BIOS Data Area (BDA)
-0x00500          0x00d00      2kb            PVD of QBeOS ISO
-0x00d00          0x02d00      8kb            Bootloader buffers area
-0x02d00          0x07bff      19.75kb        QBeOS Bootloader (BL) stack
-0x07c00          0x083ff      2Kb            QBeOS BL
+0x00000          0x003ff      1KB            RealMode IVT
+0x00400          0x004ff      256B           BIOS Data Area (BDA)
+0x00500          0x00d00      2KB            PVD of QBeOS ISO
+0x00d00          0x02d00      8KB            Bootloader buffers area
+0x02d00          0x07bff      19.75KB        QBeOS Bootloader (BL) stack
+0x07c00          0x083ff      2KB            QBeOS BL
 0x08400          0x6ffff      479Kb          QBeOS Kernel
-0x70000          0x7ffff      64kb           Memory Layout Table
-0x80000          0x100000     512Kb          Bios Data <- don't mess with this
-0x100000         0x10ffff     64Kb           High Memory Area in Real mode
+0x70000          0x7ffff      64KB           Memory Layout Table
+0x80000          0x100000     512KB          Bios Data <- don't mess with this
+0x100000         0x10ffff     64KB           High Memory Area in Real mode
 ------------------------------  Protected Mode -------------------------------
 0x00110000       0x003fffff   2MB            OS Stack
-0x00400000       0x004fffff   1Mb            GDT table
-....
+0x00400000       0x004fffff   1MB            GDT table
+0x00500000       0x04500000   64MB           Memory tables
 
 
 

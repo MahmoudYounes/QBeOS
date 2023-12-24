@@ -7,7 +7,9 @@ long MemoryRegion::GetSize(){
 
 void MemoryRegion::PrintRegionInfo(){
     screen.WriteString("Memory region ");
-    screen.WriteIntToScreen(id);
+    screen.WriteIntToScreen(bootRegionID);
+    screen.WriteString("\n  memory starts at: ");
+    screen.WriteIntToScreen((uint64_t)baseAddress);
     screen.WriteString("\n  region size: ");
     if(size <= MAX_B_SIZE()){
         screen.WriteIntToScreen(size);
@@ -24,7 +26,7 @@ void MemoryRegion::PrintRegionInfo(){
     }
 
     screen.WriteString("\n  region type: ");
-    switch (type) {
+    switch (state) {
         case 0:
             screen.WriteString("invalid");
             break;
