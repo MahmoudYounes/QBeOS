@@ -25,6 +25,11 @@
 #define MAX_MB_SIZE() 1 << 30
 #define MAX_GB_SIZE() 1 << 40
 
+#define GET_LOWER_WORD(val) val & 0x00000000ffffffff
+#define GET_HIGHER_WORD(val) val & 0xffffffff00000000
+#define SET_LOWER_WORD(var, val) var | val
+#define SET_HIGHER_WORD(var, val) var | ((uint64_t)val << WORD_SIZE)
+
 #define HLT() for(;;) asm("hlt")
 
 inline void outb(uint16_t port, uint8_t val){
