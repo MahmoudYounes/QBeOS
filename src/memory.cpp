@@ -80,6 +80,7 @@ void Memory::reserverKernelMemory(){
     uint64_t actualReserved = 0;
     while (sizeToReserver > 0) {
         ptr->state = reserved;
+        ptr->allocRequestID = -2;
         actualReserved += ptr->GetSize();
         sizeToReserver -= ptr->GetSize();
         ptr = ptr->next;
@@ -98,6 +99,26 @@ void Memory::setupFreePagePtr(){
     freePagePtr = ptr;
 }
 
+MemoryRegion *Memory::findEmptyRegionFor(uint64_t pages){
+    MemoryRegion *ptr = freePagePtr;
+    MemoryRegion *walker = ptr;
+    uint64_t countScannedPages = pages;
+    while(countScannedPages > 0 && walker != NULL){
+        if (walker->state == usable){
+            countScannedPages--;
+            walker++;
+        } else {
+            countScannedPages = pages;
+            ptr = walker;
+            walker = ptr;
+        }
+    }
+    if (countScannedPages != 0) {
+        panic("failed to find a contigious area of memory");
+    }
+    return ptr;
+}
+
 Memory::Memory(){
     screen.WriteString("Initializing memory...\n");
     uint64_t bootMemRegionsCount = 0;
@@ -114,6 +135,7 @@ Memory::Memory(){
 
     reserverKernelMemory();
     setupFreePagePtr();
+    nextAllocID = 1;
 }
 
 void Memory::PrintMemory(){
@@ -143,30 +165,49 @@ void Memory::PrintMemory(){
 }
 
 void *Memory::AllocPhysicalPage(){
-    if (freePagePtr == NULL){
-        panic("out of memory...");
-    }
-
-    freePagePtr->state = reserved;
-    uint8_t * address = freePagePtr->baseAddress;
-    freePagePtr = freePagePtr->next;
-    while (freePagePtr != NULL && freePagePtr->state != usable){
-        freePagePtr = freePagePtr->next;
-    }
-
-    return address;
+    return Allocate(PHYSICAL_PAGE_SIZE);
 }
 
-void Memory::FreePage(void *pageAddr){
+void *Memory::Allocate(uint64_t sizeBytes){
+    if (sizeBytes == 0)
+        return NULL;
+
+    nextAllocID++;
+    uint64_t numPagesToAllocate;
+    if (sizeBytes % PHYSICAL_PAGE_SIZE > 0)
+        numPagesToAllocate = (sizeBytes + PHYSICAL_PAGE_SIZE) / PHYSICAL_PAGE_SIZE;
+    else
+        numPagesToAllocate = sizeBytes / PHYSICAL_PAGE_SIZE;
+
+    MemoryRegion *beginAddress = findEmptyRegionFor(numPagesToAllocate);
+    screen.WriteString("begin alloc address: ");
+    screen.WriteIntToScreen((uint64_t) beginAddress);
+    screen.WriteString("\n");
+
+    volatile MemoryRegion *ptr = beginAddress;
+    for(volatile uint64_t i = 0; i < numPagesToAllocate; i++){
+        if (ptr->state != usable){
+            panic("trying to allocate reserved page in contigious region");
+        }
+
+        ptr->state = reserved;
+        ptr->allocRequestID = nextAllocID;
+        ptr = ptr->next;
+    }
+
+    nextAllocID++;
+    return beginAddress->baseAddress;
+}
+
+void Memory::Free(void *pageAddr){
+    if (pageAddr == NULL)
+        return;
+
     uint8_t *addr = (uint8_t *)pageAddr;
     MemoryRegion *ptr = memoryListHead;
-    while(ptr->next != NULL){
-        uint8_t *regionAddrLimit = ptr->baseAddress + ptr->GetSize();
-        if (addr >= ptr->baseAddress && addr < regionAddrLimit){
-            if (ptr->state != reserved){
-                panic("trying to free an unreserved page");
-            }
-            ptr->state = usable;
+    while(ptr != NULL){
+        if (addr == ptr->baseAddress){
+            freePageString(ptr);
             setupFreePagePtr();
             return;
         }
@@ -174,6 +215,20 @@ void Memory::FreePage(void *pageAddr){
         ptr = ptr->next;
     }
     panic("trying to free an incorrect address");
+}
+
+
+void Memory::freePageString(MemoryRegion *start){
+    uint64_t allocID = start->allocRequestID;
+    while (start != NULL && start->allocRequestID == allocID) {
+        if (start->state != reserved){
+            panic("trying to free an unreserved page");
+        }
+
+        start->state = usable;
+        start->allocRequestID = 0;
+        start = start->next;
+    }
 }
 
 // Global Memory Variable;

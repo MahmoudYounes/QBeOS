@@ -22,6 +22,7 @@ class MemoryRegion{
         uint64_t size;
         uint64_t bootRegionID;
         uint64_t regionID;
+        uint64_t allocRequestID = 0;
         enum memState state;
         MemoryRegion *next;
 

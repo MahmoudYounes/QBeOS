@@ -28,6 +28,11 @@ class Memory{
         // Pointer to first free Physical Page
         MemoryRegion *freePagePtr;
 
+        // Keeps track of number of allocation requests.
+        // TODO: if you ever get an md5 encryption, generate a checksum
+        // to avoid hitting int64 boundary limit.
+        uint64_t nextAllocID = 0;
+
         // Validates the memory list size is the size expected
         void assertMemoryListSize();
 
@@ -47,11 +52,20 @@ class Memory{
         // Sets the free page pointer to the first free page
         void setupFreePagePtr();
 
-    public:
+        // Given a memory region to free, free all memory regions
+        // with the same allocation id as the given one.
+        void freePageString(MemoryRegion *start);
+
+        // Searches for a contigious region of pages, return a pointer
+        // to the first available page in the region
+        MemoryRegion *findEmptyRegionFor(uint64_t pages);
+
+     public:
         Memory();
         void PrintMemory();
         void *AllocPhysicalPage();
-        void FreePage(void *pageAddr);
+        void *Allocate(uint64_t sizeBytes);
+        void Free(void *pageAddr);
 };
 
 
