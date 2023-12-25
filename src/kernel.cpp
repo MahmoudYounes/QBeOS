@@ -31,15 +31,15 @@ void kmain() {
 
     sysMemory.PrintMemory();
 
-    // screen.WriteString("allocating 1 page of physical memory.\n");
-    // uint64_t *memPtr = (uint64_t *)sysMemory.AllocPhysicalPage();
-    // screen.WriteString("allocated memory\n");
+    screen.WriteString("allocating 1 page of physical memory.\n");
+    uint64_t *memPtr = (uint64_t *)sysMemory.AllocPhysicalPage();
+    screen.WriteString("allocated memory\n");
 
-    // screen.WriteString("freeing allocated page\n");
-    // sysMemory.Free(memPtr);
+    screen.WriteString("freeing allocated page\n");
+    sysMemory.Free(memPtr);
 
     screen.WriteString("allocating 16KBs i.e 4 Pages of memory\n");
-    uint64_t *memPtr = (uint64_t *)sysMemory.Allocate(16 << 10);
+    memPtr = (uint64_t *)sysMemory.Allocate(16 << 10);
     screen.WriteString("allocated memory\n");
     sysMemory.PrintMemory();
 
