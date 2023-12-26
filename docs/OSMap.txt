@@ -33,6 +33,7 @@ TODOs - Technical Debt stemming from the fact of how excited I am to go to user 
 * Refactor testing to be automated with asserts
 * Implement EFI loading
 * Switch to CMake at some point
+* Compile libgcc with no-red-zone and mcmodel=kernel. This is a must in long mode and/or x86_64 modes.
 
 
 # QBeOS components and dir structure
@@ -197,3 +198,36 @@ There will be two stages for paging to avoid issues.
 if memory is 4GBs (Max on 32 bits), 1024 PDTEntries with, 1024 PTEntries
 every PDTEntry is 32bits and each PTEntry is 32bits
 That's PDT Size = 1024 * 32 = 4096 bytes (4kb)
+
+# IDT
+I implemented the PMM and was about to implement the VMM and paging but stopped for a second with the question, Assume we have a working VMM
+and paging, if a page fault happens (major or minor) how it will be handled? It's through Exceptions, which is part of the IDT. So I decided
+okay, maybe its a good idea to implement IDT before VMM and paging. so this section is about IDT symantics and desgin in QBeOS Kern.
+
+Interrupts are signals coming to the CPU instructing it to stop whatever it is doing and service them. Interrupts service 3 purposes:
+* informing the kernel there is an Exception that happened (page faults, double faults, general protection fault, etc.)
+* informing the kernel there is a hardware that wants to send/recieve data (hardware interrupt generated externally)
+* informing the kernel there is a process that requires its attention via system call (software interrupts).
+
+## PIC: Programmable interrupt controller
+on x86 architecture the hardware interrupts are handled via an external chip named PIC. this has a layout of a master and slave chip. Each chip
+provides 8 interrupts but a total of 15 interrupts can be handled becuase there is one interrupt line to connect the master chip with the slave chip.
+
+## APIC: Advanced programmable interrupt controller
+This is the next generation succeeding PIC. This is used for more sophisticated interrupt redirection mechanisms and allows CPUs interrupting each other.
+This is a necessity in SMP/SIMD envs.
+
+## IVT
+This is the interrupt table that exists in real mode. The BIOS sets this table up. This is a 4 byte per table entry table where each entry has 2 bytes
+referencing segment and 2 bytes referencing offset, both mark the address of the routine to run when this interrupt happens. These are the routines that
+run when we do for example int 15h in real mode.
+
+
+# IDT in QBeOS Kern
+QBeOS Kern will support PIC and upon discovery of APIC functionalities it will rely on APIC.
+
+## PIC
+
+## ACPI
+* first, kernel checks if CPU supports APIC or not. if not rely on PIC.
+* if yes, search the ram for the RSDP (Root System Description Pointer).
