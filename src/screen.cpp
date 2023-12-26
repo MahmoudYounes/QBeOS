@@ -42,7 +42,7 @@ void Screen::WriteString(const char *str)
     if (_Ddebug) {
         _Ddebug = false;
         WriteString("currCursorPos is ");
-        WriteIntToScreen(currCursorPos);
+        WriteInt(currCursorPos);
         WriteString("\n");
         _Ddebug = true;
 
@@ -94,7 +94,7 @@ void Screen::ScrollUp()
  * 
  * @param num 
  */
-void Screen::WriteIntToScreen(const uint64_t numToPrint) {
+void Screen::WriteInt(const uint64_t numToPrint) {
     uint64_t num = numToPrint;
     char bf[10];
     int li = 9;
