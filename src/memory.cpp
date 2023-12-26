@@ -62,6 +62,7 @@ void Memory::reserverKernelMemory(){
         sizeToReserver -= ptr->GetSize();
         ptr = ptr->next;
     }
+
     printf(buf, "reserved %dMBs for kernel\n\0", BYTE_TO_MB(actualReserved));
 }
 
