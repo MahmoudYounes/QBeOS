@@ -7,21 +7,21 @@ long MemoryRegion::GetSize(){
 
 void MemoryRegion::PrintRegionInfo(){
     screen.WriteString("Memory region ");
-    screen.WriteIntToScreen(bootRegionID);
+    screen.WriteInt(bootRegionID);
     screen.WriteString("\n  memory starts at: ");
-    screen.WriteIntToScreen((uint64_t)baseAddress);
+    screen.WriteInt((uint64_t)baseAddress);
     screen.WriteString("\n  region size: ");
     if(size <= MAX_B_SIZE()){
-        screen.WriteIntToScreen(size);
+        screen.WriteInt(size);
         screen.WriteString("bytes");
     } else if (size <= MAX_KB_SIZE()) {
-        screen.WriteIntToScreen(BYTE_TO_KB(size));
+        screen.WriteInt(BYTE_TO_KB(size));
         screen.WriteString("Kbs");
     } else if (size <= MAX_MB_SIZE()){
-        screen.WriteIntToScreen(BYTE_TO_MB(size));
+        screen.WriteInt(BYTE_TO_MB(size));
         screen.WriteString("Mbs");
     } else {
-        screen.WriteIntToScreen(BYTE_TO_GB(size));
+        screen.WriteInt(BYTE_TO_GB(size));
         screen.WriteString("Gbs");
     }
 

@@ -32,7 +32,7 @@ class Screen {
 
                 void WriteCharacterToScreen(const char characterToPrint);
 
-                void WriteIntToScreen(const uint64_t numToPrint);
+                void WriteInt(const uint64_t numToPrint);
 
                 void _DenableSelfDebug();
 

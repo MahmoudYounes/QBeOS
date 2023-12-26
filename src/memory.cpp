@@ -27,6 +27,9 @@ uint64_t Memory::processMemoryTableEntry(uint64_t entry){
     uint64_t size = 0;
     size = SET_LOWER_WORD(size, sizel);
     size = SET_HIGHER_WORD(size, sizeh);
+    if (size == 0) {
+        return size;
+    }
 
     uint64_t baseAddr = 0;
     baseAddr = SET_LOWER_WORD(baseAddr, baseAddrl);
@@ -86,7 +89,7 @@ void Memory::reserverKernelMemory(){
         ptr = ptr->next;
     }
     screen.WriteString("reserved ");
-    screen.WriteIntToScreen(BYTE_TO_MB(actualReserved));
+    screen.WriteInt(BYTE_TO_MB(actualReserved));
     screen.WriteString(" MBs for kernel...\n");
 }
 
@@ -152,15 +155,15 @@ void Memory::PrintMemory(){
     }
 
     screen.WriteString("System ram size is ");
-    screen.WriteIntToScreen(BYTE_TO_MB(memSizeBytes));
+    screen.WriteInt(BYTE_TO_MB(memSizeBytes));
     screen.WriteString("MBs.\n");
 
     screen.WriteString("Usable memory: ");
-    screen.WriteIntToScreen(BYTE_TO_MB(availableMemory));
+    screen.WriteInt(BYTE_TO_MB(availableMemory));
     screen.WriteString("MBs.\n");
 
     screen.WriteString("Reserved memory: ");
-    screen.WriteIntToScreen(BYTE_TO_KB(reservedMemory));
+    screen.WriteInt(BYTE_TO_KB(reservedMemory));
     screen.WriteString("KBs.\n");
 }
 
@@ -180,9 +183,6 @@ void *Memory::Allocate(uint64_t sizeBytes){
         numPagesToAllocate = sizeBytes / PHYSICAL_PAGE_SIZE;
 
     MemoryRegion *beginAddress = findEmptyRegionFor(numPagesToAllocate);
-    screen.WriteString("begin alloc address: ");
-    screen.WriteIntToScreen((uint64_t) beginAddress);
-    screen.WriteString("\n");
 
     volatile MemoryRegion *ptr = beginAddress;
     for(volatile uint64_t i = 0; i < numPagesToAllocate; i++){
@@ -195,7 +195,7 @@ void *Memory::Allocate(uint64_t sizeBytes){
         ptr = ptr->next;
     }
 
-    nextAllocID++;
+    setupFreePagePtr();
     return beginAddress->baseAddress;
 }
 
