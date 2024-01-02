@@ -7,8 +7,9 @@
 #define COMMON_H
 
 #include <stdint.h>
-#include <stdint.h>
 #include <stdalign.h>
+#include <stdarg.h>
+#include <stddef.h>
 
 // when switching to 64 bits this should be read as config
 #define WORD_SIZE 32
@@ -32,6 +33,7 @@
 
 #define HLT() for(;;) asm("hlt")
 
+// TODO: <todo> this code should go into arch folder
 inline void outb(uint16_t port, uint8_t val){
     __asm__ __volatile__ ("outb %0, %1"
                   :
@@ -53,5 +55,5 @@ inline void cli() {
 inline void sti() {
     __asm__ __volatile__ ("sti");
 }
-
+// </todo>
 #endif /* COMMON_H */
