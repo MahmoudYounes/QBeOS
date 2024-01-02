@@ -12,7 +12,9 @@ enum memState{
     reserved,
     acpiReclaim,
     acpiNVS,
-    badMem
+    badMem,
+    // any new types additions start here
+    KERN,
 };
 
 // class that holds physical memory region info

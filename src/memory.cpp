@@ -82,15 +82,20 @@ void Memory::reserverKernelMemory(){
     MemoryRegion *ptr = memoryListHead;
     uint64_t actualReserved = 0;
     while (sizeToReserver > 0) {
-        ptr->state = reserved;
-        ptr->allocRequestID = -2;
-        actualReserved += ptr->GetSize();
+        if (ptr->state != reserved){
+            ptr->state = KERN;
+            actualReserved += ptr->GetSize();
+        }
+
+        ptr->allocRequestID = 0;
         sizeToReserver -= ptr->GetSize();
         ptr = ptr->next;
     }
-    screen.WriteString("reserved ");
+    screen.WriteString("reserved 8MBs for kernel of which \0");
     screen.WriteInt(BYTE_TO_MB(actualReserved));
-    screen.WriteString(" MBs for kernel...\n");
+    screen.WriteString(" MBs are reserved as KERN and \0");
+    screen.WriteInt(BYTE_TO_KB(KERNEL_MEMORY_REGION_SIZE_BYTES - actualReserved));
+    screen.WriteString(" KBs are reserved for system...\n\0");
 }
 
 void Memory::setupFreePagePtr(){
@@ -190,7 +195,7 @@ void *Memory::Allocate(uint64_t sizeBytes){
             panic("trying to allocate reserved page in contigious region");
         }
 
-        ptr->state = reserved;
+        ptr->state = KERN;
         ptr->allocRequestID = nextAllocID;
         ptr = ptr->next;
     }
@@ -221,7 +226,7 @@ void Memory::Free(void *pageAddr){
 void Memory::freePageString(MemoryRegion *start){
     uint64_t allocID = start->allocRequestID;
     while (start != NULL && start->allocRequestID == allocID) {
-        if (start->state != reserved){
+        if (start->state != KERN){
             panic("trying to free an unreserved page");
         }
 
