@@ -29,6 +29,7 @@ struct MemTableEntry{
         uint32_t state;
 };
 
+
 class Memory{
     private:
         // Number of memory regions with size PHYSICAL_PAGE_SIZE
