@@ -203,9 +203,9 @@ void kmain() {
     // testing that systems are initialized and booted correctly.
 
     screen.WriteString("Running self tests\n\0");
-    // testMemoryInitialization();
-    // testMemoryAllocation();
-    // testFormater();
+    testMemoryInitialization();
+    //testMemoryAllocation();
+    //testFormater();
     testPDTEntry();
     testPTEntry();
 

@@ -16,6 +16,17 @@
 #define KERNEL_MEMORY_REGION_SIZE_MBS 8 // TODO: figure out a way to dynamically calculate this
 #define KERNEL_MEMORY_REGION_SIZE_BYTES (KERNEL_MEMORY_REGION_SIZE_MBS << 20)
 
+struct MemoryInfo{
+        uint64_t memSizeBytes;
+        uintptr_t pagesWalker;
+};
+
+struct MemTableEntry{
+        uint64_t baseAddr;
+        uint64_t size;
+        uint32_t state;
+};
+
 class Memory{
     private:
         // Number of memory regions with size PHYSICAL_PAGE_SIZE
@@ -35,6 +46,9 @@ class Memory{
         // to avoid hitting int64 boundary limit.
         uint64_t nextAllocID = 0;
 
+        // Keeps Metadata about physical memory cached
+        static MemoryInfo memInfo;
+
         // Validates the memory list size is the size expected
         void assertMemoryListSize();
 
@@ -43,10 +57,8 @@ class Memory{
         uint64_t processMemoryTableEntry(uint64_t entry);
 
         // Splits the memory region into physical pages
-        void splitRegion(const uint64_t regionBaseAddr,
-                     const uint64_t size,
-                     const uint32_t state,
-                     const uint64_t bootMemRegionsCount);
+        void splitRegion(const MemTableEntry *mtentry,
+                     const uint64_t bootMemRegionIdx);
 
         // Marks the memory regions of the kernel as used
         void reserverKernelMemory();
@@ -61,14 +73,13 @@ class Memory{
         // Searches for a contigious region of pages, return a pointer
         // to the first available page in the region
         MemoryRegion *findEmptyRegionFor(uint64_t pages);
-
      public:
         Memory();
         void PrintMemory();
         void *AllocPhysicalPage();
         void *Allocate(uint64_t sizeBytes);
         void Free(void *pageAddr);
+        MemoryInfo *GetMemoryInfo();
 };
-
 
 #endif /* MEMORY_H */

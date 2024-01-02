@@ -191,3 +191,8 @@ There will be two stages for paging to avoid issues.
 * First 8MBs after 0xc0000000 will point to first 8MBs of physical addresses.
 * Paging Enabled, jump absolute (jmp <from reg>)
 * First 8MBs gets unmapped to zero.
+
+if memory is 4GBs (Max on 32 bits), 1024 PDTEntries with, 1024 PTEntries
+every PDTEntry is 32bits and each PTEntry is 32bits
+That's
+PDT Size = 1024 * 32 = 4096 bytes (4kb)
