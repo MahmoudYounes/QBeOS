@@ -9,14 +9,12 @@
 
 // 4 KB physical pages
 #define PHYSICAL_PAGE_SIZE 4096
-
 // Expected size of Physical Memory Table size
 #define MEMORY_LIST_EXPECTED_SIZE_MBS 32
 #define MEMORY_LIST_EXPECTED_SIZE_BYTES MEMORY_LIST_EXPECTED_SIZE_MBS << 20
-
 // Size of memory reserved by the kernel
 #define KERNEL_MEMORY_REGION_SIZE_MBS 8 // TODO: figure out a way to dynamically calculate this
-#define KERNEL_MEMORY_REGION_SIZE_BYTES KERNEL_MEMORY_REGION_SIZE_MBS << 20
+#define KERNEL_MEMORY_REGION_SIZE_BYTES (KERNEL_MEMORY_REGION_SIZE_MBS << 20)
 
 class Memory{
     private:

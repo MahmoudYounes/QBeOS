@@ -17,9 +17,9 @@
 
 #define CONCAT_INTS(low, high) (high << 4) | low
 #define GET_BYTE(val, n)  (val >> (n*8)) & 0xff
-#define BYTE_TO_KB(val) val >> 10
-#define BYTE_TO_MB(val) val >> 20
-#define BYTE_TO_GB(val) val >> 30
+#define BYTE_TO_KB(val) (val) >> 10
+#define BYTE_TO_MB(val) (val) >> 20
+#define BYTE_TO_GB(val) (val) >> 30
 
 #define MAX_B_SIZE() 1 << 10
 #define MAX_KB_SIZE() 1 << 20
