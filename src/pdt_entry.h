@@ -37,7 +37,6 @@ class PDTEntry : public MemoryEncodeable {
         uint64_t EncodeEntryAt(uintptr_t addr);
 
         void PrintEntryInfo(char *buf);
-
 };
 
 #endif /* PDT_ENTRY_H */

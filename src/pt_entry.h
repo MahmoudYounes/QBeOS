@@ -4,6 +4,7 @@
 #include "common.h"
 #include "mem_encodeable.h"
 
+
 #define KERN_PT PTEntry().SetPresent()->SetIsReadWrite()
 #define USER_PT PTEntry().SetPresent()->SetIsUserAccessible()->SetIsReadWrite()
 

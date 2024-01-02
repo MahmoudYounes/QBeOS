@@ -19,17 +19,18 @@ PDTEntry *PDTEntry::SetPresent(){
     return this;
 }
 
-PDTEntry *PDTEntry::SetIsReadWrite(){
+
+PDTEntry* PDTEntry::SetIsReadWrite(){
     this->entry |= (1 << 1);
     return this;
 }
 
-PDTEntry *PDTEntry::SetIsUserAccessible(){
+PDTEntry* PDTEntry::SetIsUserAccessible(){
     this->entry |= (1 << 2);
     return this;
 }
 
-PDTEntry *PDTEntry::SetPageWriteThrough(){
+PDTEntry* PDTEntry::SetPageWriteThrough(){
     this->entry |= (1 << 3);
     return this;
 }
@@ -53,21 +54,21 @@ PDTEntry *PDTEntry::SetDirty(){
 
 // If set, the processor will not invalidate TLB entry corresponding
 // to page
-PDTEntry *PDTEntry::SetGlobal(){
+PDTEntry* PDTEntry::SetGlobal(){
     if (isMBPage()){
         this->entry |= (1 << 8);
     }
     return this;
 }
 
-PDTEntry *PDTEntry::SetPageAttrTable(){
+PDTEntry* PDTEntry::SetPageAttrTable(){
     if (isMBPage()){
         this->entry |= (1 << 12);
     }
     return this;
 }
 
-PDTEntry *PDTEntry::SetPTAddress(uint64_t addr){
+PDTEntry* PDTEntry::SetPTAddress(uint64_t addr){
     if (isMBPage()){
         uint64_t lowAddr = (addr >> 22) & 0x3ff; // bit 22 -> 31 = 10 bits
         uint64_t highAddr = (addr >> 32) & 0xff; // bits 32 -> 39 = 8 bits
@@ -85,6 +86,7 @@ uint64_t PDTEntry::EncodeEntryAt(uintptr_t addr){
     *(uint32_t *)addr = entry;
     return sizeof(entry);
 }
+
 
 void PDTEntry::PrintEntryInfo(char *buf){
     printf(buf, "entry info %b\n\0", entry);

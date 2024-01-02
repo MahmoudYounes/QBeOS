@@ -58,11 +58,12 @@ void testFormater(){
 
     formater.Format(buf, "\n\ntwo new lines\n\0");
     screen.WriteString(buf);
-    memset((uint8_t *)buf, ' ', FORMATER_BUFFER_SIZE_BYTES);
 
+    memset((uint8_t *)buf, ' ', FORMATER_BUFFER_SIZE_BYTES);
 
     formater.Format(buf, "num in decimal: %d\n\0", 123);
     screen.WriteString(buf);
+
     memset((uint8_t *)buf, ' ', FORMATER_BUFFER_SIZE_BYTES);
 
     formater.Format(buf, "%d formater at the begining\n\0", 123);
@@ -81,9 +82,9 @@ void testFormater(){
     screen.WriteString(buf);
     memset((uint8_t *)buf, ' ', FORMATER_BUFFER_SIZE_BYTES);
 
-
     formater.Format(buf, "Multiform: %d %b %x %l\n\0", 123, 123, 123, 123333333LL);
     screen.WriteString(buf);
+
     memset((uint8_t *)buf, ' ', FORMATER_BUFFER_SIZE_BYTES);
 
     // FIXME: a bug here, printing x x x and x makes last x output zero
@@ -230,7 +231,6 @@ void testPTEntry(){
 
     memset((uint8_t *)buf, ' ', 4096);
     memset((uint8_t *)pp, ' ', 4096);
-
 
     sysMemory.Free((void *)pp);
     sysMemory.Free((void *)buf);
