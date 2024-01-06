@@ -6,6 +6,7 @@
 #include "mem_region.h"
 #include "pdt_entry.h"
 #include "pt_entry.h"
+#include "vmm.h"
 #include "screen.h"
 #include "memory.h"
 #include "gdt.h"
@@ -19,6 +20,7 @@ void bootEnd() __attribute__ ((noreturn));
 // Global system vars.. only one should exist
 extern Screen screen;
 extern Memory sysMemory;
+extern VirtualMemory vmm;
 extern GDT gdt;
 
 // For now it's easier for me to just look at the screen. I have a way in mind
@@ -192,6 +194,8 @@ void kmain() {
     screen.WriteString("Initializing all systems...\n\0");
     sysMemory = Memory();
     gdt = GDT();
+    vmm = VirtualMemory();
+
     // at this point interrupts are disabled... need to setup IDT to renable them.
 
 
@@ -204,10 +208,10 @@ void kmain() {
 
     screen.WriteString("Running self tests\n\0");
     testMemoryInitialization();
-    //testMemoryAllocation();
+    testMemoryAllocation();
     //testFormater();
-    testPDTEntry();
-    testPTEntry();
+    //testPDTEntry();
+    //testPTEntry();
 
     bootEnd();
 }

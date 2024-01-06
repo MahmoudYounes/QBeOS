@@ -11,6 +11,7 @@
 #define TABLE_SIZE_BYTES ENTRIES_COUNT * ENTRY_SIZE_BYTES
 
 extern Memory sysMemory;
+extern Screen screen;
 
 class VirtualMemory{
     // PDT address, check OSMap.txt
@@ -21,14 +22,17 @@ class VirtualMemory{
     // Set up the page directory tables and page tables
     void setupPageTables();
 
-    // Creates a virtual page and encodes it
+    // creates a virtual page directory table entry and encodes it
+    void createPDTEntry(uintptr_t pdtPtr, uintptr_t ptPtr);
+
+    // Creates a virtual page entry and encodes it
     void createPTEntry(uintptr_t ptPtr, MemoryRegion *memPtr);
 
     // Identity maps the lower kern memory and system memory
-    void mapSystemMemory();
+    void mapKernHigherHalf();
 
     // Unmap the lower kern memory and system memory from lower pages
-    void unmapSystemMemory();
+    void unmapKernLowerHalf();
 
     // Enables paging
     void enablePaging();

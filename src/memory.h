@@ -19,6 +19,7 @@
 struct MemoryInfo{
         uint64_t memSizeBytes;
         uintptr_t pagesWalker;
+        uint64_t pagesCount;
 };
 
 struct MemTableEntry{
@@ -30,7 +31,7 @@ struct MemTableEntry{
 class Memory{
     private:
         // Number of memory regions with size PHYSICAL_PAGE_SIZE
-        uint64_t regionsCount = 0;
+        uint64_t physicalPagesCount = 0;
 
         // Address of the begining of memory regions list
         MemoryRegion *memoryListHead = (MemoryRegion *)0x500000;
@@ -47,7 +48,7 @@ class Memory{
         uint64_t nextAllocID = 0;
 
         // Keeps Metadata about physical memory cached
-        static MemoryInfo memInfo;
+        MemoryInfo memInfo;
 
         // Validates the memory list size is the size expected
         void assertMemoryListSize();
@@ -79,7 +80,7 @@ class Memory{
         void *AllocPhysicalPage();
         void *Allocate(uint64_t sizeBytes);
         void Free(void *pageAddr);
-        MemoryInfo *GetMemoryInfo();
+        MemoryInfo GetMemoryInfo();
 };
 
 #endif /* MEMORY_H */

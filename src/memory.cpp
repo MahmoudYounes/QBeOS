@@ -6,7 +6,7 @@
 extern Screen screen;
 
 void Memory::assertMemoryListSize() {
-    uint64_t memoryListSizeBytes =  (memoryListHead + regionsCount) - memoryListHead;
+    uint64_t memoryListSizeBytes =  (memoryListHead + physicalPagesCount) - memoryListHead;
     if (memoryListSizeBytes * sizeof(MemoryRegion) >= MEMORY_LIST_EXPECTED_SIZE_BYTES){
         panic("memory tables overflow\n");
     }
@@ -32,20 +32,20 @@ uint64_t Memory::processMemoryTableEntry(uint64_t entryIdx){
 
 void Memory::splitRegion(const MemTableEntry *mtentry, uint64_t bootMemRegionIdx){
     MemoryRegion bufRegion = MemoryRegion();
-    MemoryRegion *currMemListPointer = memoryListHead + regionsCount;
+    MemoryRegion *currMemListPointer = memoryListHead + physicalPagesCount;
     uint64_t i = 0;
     for (; i < (mtentry->size / PHYSICAL_PAGE_SIZE); i++){
         bufRegion.baseAddress = (uint8_t *)(mtentry->baseAddr + i * PHYSICAL_PAGE_SIZE);
         bufRegion.size = PHYSICAL_PAGE_SIZE;
         bufRegion.state = (enum memState)mtentry->state;
         bufRegion.bootRegionID = bootMemRegionIdx;
-        bufRegion.regionID = regionsCount;
+        bufRegion.regionID = physicalPagesCount;
         bufRegion.next = currMemListPointer + 1; // the next Memory region would be here.
 
         memcpy(currMemListPointer, &bufRegion, sizeof(MemoryRegion));
 
         currMemListPointer++;
-        regionsCount++;
+        physicalPagesCount++;
     }
 
     // a left over memory here means the memory can't be contigious
@@ -55,9 +55,9 @@ void Memory::splitRegion(const MemTableEntry *mtentry, uint64_t bootMemRegionIdx
     if (mtentry->size % PHYSICAL_PAGE_SIZE != 0){
         bufRegion.baseAddress = (uint8_t *)(mtentry->baseAddr + i * PHYSICAL_PAGE_SIZE);
         bufRegion.size = PHYSICAL_PAGE_SIZE;
-        bufRegion.state = (enum memState)mtentry->state;
+        bufRegion.state = (enum memState)KERN;
         bufRegion.bootRegionID = bootMemRegionIdx;
-        bufRegion.regionID = regionsCount++;
+        bufRegion.regionID = physicalPagesCount++;
         bufRegion.next = currMemListPointer + 1; // the next Memory region would be here.
         memcpy(currMemListPointer, &bufRegion, sizeof(MemoryRegion));
     }
@@ -126,7 +126,7 @@ Memory::Memory(){
         }
 
     } while(1);
-    memoryListHead[regionsCount - 1].next = NULL;
+    memoryListHead[physicalPagesCount - 1].next = NULL;
 
     reserverKernelMemory();
     setupFreePagePtr();
@@ -139,7 +139,8 @@ Memory::Memory(){
 
     memInfo = MemoryInfo{
         .memSizeBytes = memSizeBytes,
-        .pagesWalker = (uintptr_t)memoryTableAddress
+        .pagesWalker = (uintptr_t)memoryListHead,
+        .pagesCount = physicalPagesCount,
     };
 }
 
@@ -231,8 +232,8 @@ void Memory::freePageString(MemoryRegion *start){
     }
 }
 
-MemoryInfo *Memory::GetMemoryInfo(){
-    return &memInfo;
+MemoryInfo Memory::GetMemoryInfo(){
+    return memInfo;
 }
 
 // Global Memory Variable;

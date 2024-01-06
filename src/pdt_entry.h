@@ -3,6 +3,10 @@
 
 #include "common.h"
 #include "mem_encodeable.h"
+#include "pt_entry.h"
+
+#define KERN_PDT PDTEntry(KB).SetPresent()->SetIsReadWrite()
+#define USER_PDT PDTEntry(KB).SetPresent()->SetIsReadWrite()->SetIsUserAccessible()
 
 enum PageSize{
     KB,
@@ -15,16 +19,16 @@ class PDTEntry : public MemoryEncodeable {
         bool isMBPage();
     public:
         PDTEntry(PageSize ps);
-        PDTEntry* SetPresent();
-        PDTEntry* SetGlobal();
-        PDTEntry* SetAccessed();
-        PDTEntry* SetPageAttrTable();
-        PDTEntry* SetDirty();
-        PDTEntry* SetDisableCache();
-        PDTEntry* SetPageWriteThrough();
-        PDTEntry* SetIsUserAccessible();
-        PDTEntry* SetIsReadWrite();
-        PDTEntry* SetPTAddress(uint64_t addr);
+        PDTEntry *SetPresent();
+        PDTEntry *SetGlobal();
+        PDTEntry *SetAccessed();
+        PDTEntry *SetPageAttrTable();
+        PDTEntry *SetDirty();
+        PDTEntry *SetDisableCache();
+        PDTEntry *SetPageWriteThrough();
+        PDTEntry *SetIsUserAccessible();
+        PDTEntry *SetIsReadWrite();
+        PDTEntry *SetPTAddress(uint64_t addr);
         uint64_t EncodeEntryAt(uintptr_t addr);
 
 };
