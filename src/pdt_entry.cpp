@@ -85,3 +85,7 @@ uint64_t PDTEntry::EncodeEntryAt(uintptr_t addr){
     *(uint32_t *)addr = entry;
     return sizeof(entry);
 }
+
+void PDTEntry::PrintEntryInfo(char *buf){
+    printf(buf, "entry info %b\n\0", entry);
+}

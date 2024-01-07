@@ -1,6 +1,8 @@
 /*
  * List of common functionalities across the kernel
- *
+ * TODO: this is a bad practice. Once completed, this file should be split
+ * into multiple files with specific functionalities and descriptive
+ * namings
  **/
 
 #ifndef COMMON_H
@@ -13,6 +15,7 @@
 
 // when switching to 64 bits this should be read as config
 #define WORD_SIZE 32
+#define SIZE_OF_WORD sizeof(uint32_t)
 #define BITS_PER_BYTE 8
 
 #define CONCAT_INTS(low, high) (high << 4) | low

@@ -26,12 +26,16 @@ void Formater::Format(char res[FORMATER_BUFFER_SIZE_BYTES], const char *str, ...
                     buffi += putNumber(res, buffi, num);
                     break;
                 case HEX_SIGN:
-                    num = va_arg(argPtr, int);
+                    num = va_arg(argPtr, uint64_t);
                     buffi += putNumberAsHex(res, buffi, num);
                     break;
                 case BIN_SIGN:
                     num = va_arg(argPtr, int);
                     buffi += putNumberAsBin(res, buffi, num);
+                    break;
+                case PTR_SIGN:
+                    num = va_arg(argPtr, uintptr_t);
+                    buffi += putNumberAsHex(res, buffi, num);
                     break;
             }
             prevChar = currChar;
@@ -120,7 +124,8 @@ uint32_t Formater::putNumberAsHex(char *buf, uint8_t startIdx, uint64_t num){
         changes++;
     }
 
-    for (li++;li < 64; li++){
+    li++;
+    for (;li < 64; li++){
         buf[startIdx++] = bf[li];
     }
     return changes;

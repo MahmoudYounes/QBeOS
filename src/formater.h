@@ -10,6 +10,7 @@
 #define HEX_SIGN 'x'
 #define BIN_SIGN 'b'
 #define LONG_SIGN 'l'
+#define PTR_SIGN 'p'
 
 
 // TODO: There is a bad, a very bad practice here. I am doing conversion to string
@@ -29,5 +30,11 @@ class Formater {
 
 };
 
+#define sprintf(resBuf, str, ...) Formater().Format(resBuf, str, __VA_ARGS__)
+#define printf(resBuf, str, ...)                \
+    do {                                        \
+    sprintf(resBuf, str, __VA_ARGS__);          \
+    screen.WriteString(resBuf);                 \
+    } while (0)
 
 #endif /* FORMATER_H */

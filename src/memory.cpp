@@ -1,7 +1,5 @@
 #include "memory.h"
-#include "common.h"
 #include "mem_region.h"
-#include "strings.h"
 
 extern Screen screen;
 
@@ -10,24 +8,6 @@ void Memory::assertMemoryListSize() {
     if (memoryListSizeBytes * sizeof(MemoryRegion) >= MEMORY_LIST_EXPECTED_SIZE_BYTES){
         panic("memory tables overflow\n");
     }
-}
-
-uint64_t Memory::processMemoryTableEntry(uint64_t entryIdx){
-    // TODO: sometimes int15h eax e820 returns 24 bytes instead of 20 bytes.
-    // this needs to be passed as argument to the kernel from boot loader.
-
-    // every memory region record is 20 or 24 bytes
-    // base address in 8 bytes, size in 8 bytes, type in 4 bytes, & ACPI Attr. 4 bytes
-    MemTableEntry mtentry;
-    memcpy(&mtentry, memoryTableAddress + entryIdx * 5, sizeof(mtentry));
-
-    if (mtentry.size == 0) {
-        return 0;
-    }
-
-    splitRegion(&mtentry, entryIdx);
-
-    return mtentry.size;
 }
 
 void Memory::splitRegion(const MemTableEntry *mtentry, uint64_t bootMemRegionIdx){
@@ -115,18 +95,69 @@ MemoryRegion *Memory::findEmptyRegionFor(uint64_t pages){
 }
 
 Memory::Memory(){
+    char buf[4096];
     screen.WriteString("Initializing memory...\n");
     uint64_t bootMemRegionsCount = 0;
-    do{
-        uint64_t size = processMemoryTableEntry(bootMemRegionsCount++);
+    uint64_t endAddr = 0;
 
-        // This is not a reliable exit condition.
-        if (size == 0){
-            break;
+    do{
+        // TODO: sometimes int15h eax e820 returns 24 bytes instead of 20 bytes.
+        // this needs to be passed as argument to the kernel from boot loader.
+
+        // every memory region record is 20 or 24 bytes
+        // base address in 8 bytes, size in 8 bytes, type in 4 bytes, & ACPI Attr. 4 bytes
+        MemTableEntry mtentry;
+        memcpy(&mtentry, memoryTableAddress + bootMemRegionsCount * 5, sizeof(mtentry));
+
+        if(mtentry.size != 0 && endAddr != mtentry.baseAddr){
+            MemTableEntry memHole = {
+                .baseAddr = endAddr,
+                .size = mtentry.baseAddr - endAddr,
+                .state = reserved
+            };
+            splitRegion(&memHole, bootMemRegionsCount);
+            uint64_t memHoleEndAddr = memHole.baseAddr + memHole.size;
+            printf(buf, "found memory hole. start: %x end: at %x\n\0", memHole.baseAddr, memHoleEndAddr);
         }
 
+        if (mtentry.size != 0) {
+            splitRegion(&mtentry, bootMemRegionsCount);
+        }
+
+        endAddr = mtentry.baseAddr + mtentry.size;
+
+        printf(buf, "found memory region. start: %x end: at %x\n\0", mtentry.baseAddr, endAddr);
+
+        // This is not a reliable exit condition.
+        if (mtentry.size == 0){
+            break;
+        }
+        bootMemRegionsCount++;
     } while(1);
+
     memoryListHead[physicalPagesCount - 1].next = NULL;
+    for (uint64_t i = 0; i < physicalPagesCount; i++){
+        if((i != physicalPagesCount - 1 && memoryListHead[i].next == NULL) ||
+           (i == physicalPagesCount - 1 && memoryListHead[i].next != NULL)){
+            screen.WriteString("failed to set list pointers correctly at \0");
+            screen.WriteInt(i);
+            screen.WriteString("\n\0");
+            panic("none");
+        }
+    }
+
+    int i = 0;
+    MemoryRegion *ptr = memoryListHead;
+    while(ptr->next->next != NULL){
+        if(ptr->next->baseAddress - ptr->baseAddress != 4096){
+            panic("memory is not sorted");
+        }
+        ptr = ptr->next;
+        i++;
+    }
+    screen.WriteString("walked the memory \0");
+    screen.WriteInt(i+1);
+    screen.WriteString("times \n\0");
 
     reserverKernelMemory();
     setupFreePagePtr();

@@ -3,7 +3,7 @@
 extern Screen screen;
 
 void panic(const char * errMsg){
-    screen.WriteString("panic: ");
+    screen.WriteString("panic: \0");
     screen.WriteString(errMsg);
     asm("hlt");
 }

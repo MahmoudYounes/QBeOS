@@ -6,6 +6,7 @@
 #include "mem_region.h"
 #include "strings.h"
 #include "logger.h"
+#include "formater.h"
 
 // 4 KB physical pages
 #define PHYSICAL_PAGE_SIZE 4096
@@ -52,10 +53,6 @@ class Memory{
 
         // Validates the memory list size is the size expected
         void assertMemoryListSize();
-
-        // Parse memory region data and split into physical pages
-        // returns the size of parsed region.
-        uint64_t processMemoryTableEntry(uint64_t entry);
 
         // Splits the memory region into physical pages
         void splitRegion(const MemTableEntry *mtentry,

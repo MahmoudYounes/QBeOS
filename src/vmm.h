@@ -26,7 +26,7 @@ class VirtualMemory{
     void createPDTEntry(uintptr_t pdtPtr, uintptr_t ptPtr);
 
     // Creates a virtual page entry and encodes it
-    void createPTEntry(uintptr_t ptPtr, MemoryRegion *memPtr);
+    void createPTEntry(uintptr_t ptPtr, uintptr_t ofPtr, bool isKern);
 
     // Identity maps the lower kern memory and system memory
     void mapKernHigherHalf();
