@@ -4,8 +4,8 @@
 extern Screen screen;
 
 void Memory::assertMemoryListSize() {
-    uint64_t memoryListSizeBytes =  (memoryListHead + physicalPagesCount) - memoryListHead;
-    if (memoryListSizeBytes * sizeof(MemoryRegion) >= MEMORY_LIST_EXPECTED_SIZE_BYTES){
+    uint64_t memoryListSizeBytes =  physicalPagesCount * sizeof(MemoryRegion);
+    if (memoryListSizeBytes >= MEMORY_LIST_EXPECTED_SIZE_BYTES){
         panic("memory tables overflow\n");
     }
 }

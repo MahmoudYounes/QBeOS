@@ -26,8 +26,11 @@ Highlevel overview of the road map of development for QBeOS
 * The fun begin
 
 TODOs - Technical Debt stemming from the fact of how excited I am to go to user mode:
+* Implement config for kernel features (Should self test or no fx)
+* Refactor testing to be automated with asserts
 * Implement EFI loading
 * Switch to CMake at some point
+
 
 # QBeOS components and dir structure
 
@@ -179,10 +182,10 @@ Allocate(size): allocates X + (X + PAGE_SIZE) % PAGE_SIZE pages and returns poin
 Free(pagePointer): given a page pointer that begins on the page boundary, free the string of pages marked with allocation ID.
 
 # VirtualMemory and virtual memory management
-QBe-kern will place PDT entries starting address 0x2500000. In 32 bit mode we have 2 levels only (PDT, PT) each is 1024 entries.
+QBeKern will place PDT entries starting address 0x2500000. In 32 bit mode we have 2 levels only (PDT, PT) each is 1024 entries.
 each entry is 8 bytes so ideally 16KBs should be sufficient for such tables. However, in 64 bits long mode, we need to expand
 this memory requirement to include a max of 5 levels (5 * 1024 * 8 = 40KBs).
-Since QBe kern is 32 bits for now, we will stick with only 2 levels of page tables. Once paging is enabled, even the kernel
+Since QBeKern is 32 bits for now, we will stick with only 2 levels of page tables. Once paging is enabled, even the kernel
 memory locations will be accessed via MMU.
 QBeKern will be a higher half kernel. That means on 32 bits we map the kernel starting address 0xc0000000. For now, the
 kernel and all of its everything exist in the lower 8MBs of the kernel.
@@ -194,5 +197,4 @@ There will be two stages for paging to avoid issues.
 
 if memory is 4GBs (Max on 32 bits), 1024 PDTEntries with, 1024 PTEntries
 every PDTEntry is 32bits and each PTEntry is 32bits
-That's
-PDT Size = 1024 * 32 = 4096 bytes (4kb)
+That's PDT Size = 1024 * 32 = 4096 bytes (4kb)
