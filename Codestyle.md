@@ -16,3 +16,5 @@ description for the coding style used in QBeOS
 * QBeOS follows an OOP paradigm. The linux kernel community dislikes c++ for some
   reason that I don't understand and probably will not. For now let's do OOP with
   c++ and see what the fuss is about.
+* For the rest of coding style guides use: https://google.github.io/styleguide/cppguide.html.
+Any point mentioned here outside the guide supersedes the referenced style guide.

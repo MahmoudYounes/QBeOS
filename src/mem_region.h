@@ -4,6 +4,8 @@
 #include "screen.h"
 #include "common.h"
 
+#define IS_SYS_REGION(memPtr) memPtr->state != usable
+
 extern Screen screen;
 
 enum memState{

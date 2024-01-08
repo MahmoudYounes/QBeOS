@@ -6,18 +6,34 @@
 #include "mem_region.h"
 #include "strings.h"
 #include "logger.h"
+#include "formater.h"
 
 // 4 KB physical pages
 #define PHYSICAL_PAGE_SIZE 4096
-#define MEMORY_LIST_EXPECTED_SIZE_MBS 64
-#define MEMORY_LIST_EXPECTED_SIZE_BYTES (MEMORY_LIST_EXPECTED_SIZE_MBS << 20)
+// Expected size of Physical Memory Table size
+#define MEMORY_LIST_EXPECTED_SIZE_MBS 32
+#define MEMORY_LIST_EXPECTED_SIZE_BYTES MEMORY_LIST_EXPECTED_SIZE_MBS << 20
+// Size of memory reserved by the kernel
 #define KERNEL_MEMORY_REGION_SIZE_MBS 8 // TODO: figure out a way to dynamically calculate this
 #define KERNEL_MEMORY_REGION_SIZE_BYTES (KERNEL_MEMORY_REGION_SIZE_MBS << 20)
+
+struct MemoryInfo{
+        uint64_t memSizeBytes;
+        uintptr_t pagesWalker;
+        uint64_t pagesCount;
+};
+
+struct MemTableEntry{
+        uint64_t baseAddr;
+        uint64_t size;
+        uint32_t state;
+};
+
 
 class Memory{
     private:
         // Number of memory regions with size PHYSICAL_PAGE_SIZE
-        uint64_t regionsCount = 0;
+        uint64_t physicalPagesCount = 0;
 
         // Address of the begining of memory regions list
         MemoryRegion *memoryListHead = (MemoryRegion *)0x500000;
@@ -33,18 +49,15 @@ class Memory{
         // to avoid hitting int64 boundary limit.
         uint64_t nextAllocID = 0;
 
+        // Keeps Metadata about physical memory cached
+        MemoryInfo memInfo;
+
         // Validates the memory list size is the size expected
         void assertMemoryListSize();
 
-        // Parse memory region data and split into physical pages
-        // returns the size of parsed region.
-        uint64_t processMemoryTableEntry(uint64_t entry);
-
         // Splits the memory region into physical pages
-        void splitRegion(const uint64_t regionBaseAddr,
-                     const uint64_t size,
-                     const uint32_t state,
-                     const uint64_t bootMemRegionsCount);
+        void splitRegion(const MemTableEntry *mtentry,
+                     const uint64_t bootMemRegionIdx);
 
         // Marks the memory regions of the kernel as used
         void reserverKernelMemory();
@@ -59,14 +72,13 @@ class Memory{
         // Searches for a contigious region of pages, return a pointer
         // to the first available page in the region
         MemoryRegion *findEmptyRegionFor(uint64_t pages);
-
      public:
         Memory();
         void PrintMemory();
         void *AllocPhysicalPage();
         void *Allocate(uint64_t sizeBytes);
         void Free(void *pageAddr);
+        MemoryInfo GetMemoryInfo();
 };
-
 
 #endif /* MEMORY_H */

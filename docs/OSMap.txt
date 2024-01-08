@@ -26,8 +26,11 @@ Highlevel overview of the road map of development for QBeOS
 * The fun begin
 
 TODOs - Technical Debt stemming from the fact of how excited I am to go to user mode:
+* Implement config for kernel features (Should self test or no fx)
+* Refactor testing to be automated with asserts
 * Implement EFI loading
 * Switch to CMake at some point
+
 
 # QBeOS components and dir structure
 
@@ -69,7 +72,9 @@ START            END          SIZE           description
 ------------------------------  Protected Mode -------------------------------
 0x00110000       0x003fffff   2MB            OS Stack
 0x00400000       0x004fffff   1MB            GDT table
-0x00500000       0x04500000   64MB           Memory tables
+0x00500000       0x024fffff   32MB           Physical Memory tables
+0x02500000       0x0250ffff   64KB           Virtual Memory Tables (PDT, PT) -- for 64 bits tables as well
+
 
 
 
@@ -175,3 +180,20 @@ Memory Public API (Size is in bytes):
 AllocPhysicalPage(): searches for the first free page and allocates it. return pointer to base of page
 Allocate(size): allocates X + (X + PAGE_SIZE) % PAGE_SIZE pages and returns pointer to first page.
 Free(pagePointer): given a page pointer that begins on the page boundary, free the string of pages marked with allocation ID.
+
+# VirtualMemory and virtual memory management
+QBeKern will place PDT entries starting address 0x2500000. In 32 bit mode we have 2 levels only (PDT, PT) each is 1024 entries.
+each entry is 8 bytes so ideally 16KBs should be sufficient for such tables. However, in 64 bits long mode, we need to expand
+this memory requirement to include a max of 5 levels (5 * 1024 * 8 = 40KBs).
+Since QBeKern is 32 bits for now, we will stick with only 2 levels of page tables. Once paging is enabled, even the kernel
+memory locations will be accessed via MMU.
+QBeKern will be a higher half kernel. That means on 32 bits we map the kernel starting address 0xc0000000. For now, the
+kernel and all of its everything exist in the lower 8MBs of the kernel.
+There will be two stages for paging to avoid issues.
+* First 8MBs of virtual address will point to first 8MBs of physical addresses.
+* First 8MBs after 0xc0000000 will point to first 8MBs of physical addresses.
+* Paging Enabled, jump absolute (jmp <from reg>)
+* First 8MBs gets unmapped to zero.
+if memory is 4GBs (Max on 32 bits), 1024 PDTEntries with, 1024 PTEntries
+every PDTEntry is 32bits and each PTEntry is 32bits
+That's PDT Size = 1024 * 32 = 4096 bytes (4kb)

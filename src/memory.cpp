@@ -1,76 +1,43 @@
 #include "memory.h"
-#include "common.h"
 #include "mem_region.h"
 
 extern Screen screen;
 
-
 void Memory::assertMemoryListSize() {
-    uint64_t memoryListSizeBytes =  (memoryListHead + regionsCount) - memoryListHead;
-    if (memoryListSizeBytes * sizeof(MemoryRegion) >= MEMORY_LIST_EXPECTED_SIZE_BYTES){
+    uint64_t memoryListSizeBytes =  physicalPagesCount * sizeof(MemoryRegion);
+    if (memoryListSizeBytes >= MEMORY_LIST_EXPECTED_SIZE_BYTES){
         panic("memory tables overflow\n");
     }
 }
 
-uint64_t Memory::processMemoryTableEntry(uint64_t entry){
-    // TODO: sometimes int15h eax e820 returns 24 bytes instead of 20 bytes.
-    // this needs to be passed as argument to the kernel from boot loader.
-
-    // every memory region record is 20 or 24 bytes
-    // base address in 8 bytes, size in 8 bytes, type in 4 bytes, & ACPI Attr. 4 bytes
-    uint32_t baseAddrl = memoryTableAddress[entry * 5];
-    uint32_t baseAddrh = memoryTableAddress[entry * 5 + 1];
-    uint32_t sizel =  memoryTableAddress[entry * 5 + 2];
-    uint32_t sizeh = memoryTableAddress[entry * 5 + 3];
-    uint32_t state = memoryTableAddress[entry * 5 + 4];
-
-    uint64_t size = 0;
-    size = SET_LOWER_WORD(size, sizel);
-    size = SET_HIGHER_WORD(size, sizeh);
-    if (size == 0) {
-        return size;
-    }
-
-    uint64_t baseAddr = 0;
-    baseAddr = SET_LOWER_WORD(baseAddr, baseAddrl);
-    baseAddr = SET_HIGHER_WORD(baseAddr, baseAddrh);
-
-    splitRegion(baseAddr, size, state, entry);
-
-    return size;
-}
-
-void Memory::splitRegion(const uint64_t regionBaseAddr,
-                         uint64_t size,
-                         uint32_t state,
-                         uint64_t bootMemRegionsCount){
+void Memory::splitRegion(const MemTableEntry *mtentry, uint64_t bootMemRegionIdx){
     MemoryRegion bufRegion = MemoryRegion();
-    MemoryRegion *currMemListPointer = memoryListHead + regionsCount;
+    MemoryRegion *currMemListPointer = memoryListHead + physicalPagesCount;
     uint64_t i = 0;
-    for (; i < (size / PHYSICAL_PAGE_SIZE); i++){
-        bufRegion.baseAddress = (uint8_t *)(regionBaseAddr + i * PHYSICAL_PAGE_SIZE);
+    for (; i < (mtentry->size / PHYSICAL_PAGE_SIZE); i++){
+        bufRegion.baseAddress = (uint8_t *)(mtentry->baseAddr + i * PHYSICAL_PAGE_SIZE);
         bufRegion.size = PHYSICAL_PAGE_SIZE;
-        bufRegion.state = (enum memState)state;
-        bufRegion.bootRegionID = bootMemRegionsCount;
-        bufRegion.regionID = regionsCount;
+        bufRegion.state = (enum memState)mtentry->state;
+        bufRegion.bootRegionID = bootMemRegionIdx;
+        bufRegion.regionID = physicalPagesCount;
         bufRegion.next = currMemListPointer + 1; // the next Memory region would be here.
 
         memcpy(currMemListPointer, &bufRegion, sizeof(MemoryRegion));
 
         currMemListPointer++;
-        regionsCount++;
+        physicalPagesCount++;
     }
 
     // a left over memory here means the memory can't be contigious
     // this is because a state change from usable to something else implies
     // the next memory region is not usable. the only usable memory is the one
     // marked explicitly as usable.
-    if (size % PHYSICAL_PAGE_SIZE != 0){
-        bufRegion.baseAddress = (uint8_t *)(regionBaseAddr + i * PHYSICAL_PAGE_SIZE);
+    if (mtentry->size % PHYSICAL_PAGE_SIZE != 0){
+        bufRegion.baseAddress = (uint8_t *)(mtentry->baseAddr + i * PHYSICAL_PAGE_SIZE);
         bufRegion.size = PHYSICAL_PAGE_SIZE;
-        bufRegion.state = (enum memState)state;
-        bufRegion.bootRegionID = bootMemRegionsCount;
-        bufRegion.regionID = regionsCount++;
+        bufRegion.state = (enum memState)KERN;
+        bufRegion.bootRegionID = bootMemRegionIdx;
+        bufRegion.regionID = physicalPagesCount++;
         bufRegion.next = currMemListPointer + 1; // the next Memory region would be here.
         memcpy(currMemListPointer, &bufRegion, sizeof(MemoryRegion));
     }
@@ -128,30 +95,90 @@ MemoryRegion *Memory::findEmptyRegionFor(uint64_t pages){
 }
 
 Memory::Memory(){
+    char buf[4096];
     screen.WriteString("Initializing memory...\n");
     uint64_t bootMemRegionsCount = 0;
-    do{
-        uint64_t size = processMemoryTableEntry(bootMemRegionsCount++);
+    uint64_t endAddr = 0;
 
-        // This is not a reliable exit condition.
-        if (size == 0){
-            break;
+    do{
+        // TODO: sometimes int15h eax e820 returns 24 bytes instead of 20 bytes.
+        // this needs to be passed as argument to the kernel from boot loader.
+
+        // every memory region record is 20 or 24 bytes
+        // base address in 8 bytes, size in 8 bytes, type in 4 bytes, & ACPI Attr. 4 bytes
+        MemTableEntry mtentry;
+        memcpy(&mtentry, memoryTableAddress + bootMemRegionsCount * 5, sizeof(mtentry));
+
+        if(mtentry.size != 0 && endAddr != mtentry.baseAddr){
+            MemTableEntry memHole = {
+                .baseAddr = endAddr,
+                .size = mtentry.baseAddr - endAddr,
+                .state = reserved
+            };
+            splitRegion(&memHole, bootMemRegionsCount);
+            uint64_t memHoleEndAddr = memHole.baseAddr + memHole.size;
+            printf(buf, "found memory hole. start: %x end: at %x\n\0", memHole.baseAddr, memHoleEndAddr);
         }
 
+        if (mtentry.size != 0) {
+            splitRegion(&mtentry, bootMemRegionsCount);
+        }
+
+        endAddr = mtentry.baseAddr + mtentry.size;
+
+        printf(buf, "found memory region. start: %x end: at %x\n\0", mtentry.baseAddr, endAddr);
+
+        // This is not a reliable exit condition.
+        if (mtentry.size == 0){
+            break;
+        }
+        bootMemRegionsCount++;
     } while(1);
-    memoryListHead[regionsCount - 1].next = NULL;
+
+    memoryListHead[physicalPagesCount - 1].next = NULL;
+    for (uint64_t i = 0; i < physicalPagesCount; i++){
+        if((i != physicalPagesCount - 1 && memoryListHead[i].next == NULL) ||
+           (i == physicalPagesCount - 1 && memoryListHead[i].next != NULL)){
+            screen.WriteString("failed to set list pointers correctly at \0");
+            screen.WriteInt(i);
+            screen.WriteString("\n\0");
+            panic("none");
+        }
+    }
+
+    int i = 0;
+    MemoryRegion *ptr = memoryListHead;
+    while(ptr->next->next != NULL){
+        if(ptr->next->baseAddress - ptr->baseAddress != 4096){
+            panic("memory is not sorted");
+        }
+        ptr = ptr->next;
+        i++;
+    }
+    screen.WriteString("walked the memory \0");
+    screen.WriteInt(i+1);
+    screen.WriteString("times \n\0");
 
     reserverKernelMemory();
     setupFreePagePtr();
     nextAllocID = 1;
+
+    uint64_t memSizeBytes = 0;
+    for (MemoryRegion *ptr = memoryListHead; ptr != NULL; ptr = ptr->next){
+        memSizeBytes += ptr->GetSize();
+    }
+
+    memInfo = MemoryInfo{
+        .memSizeBytes = memSizeBytes,
+        .pagesWalker = (uintptr_t)memoryListHead,
+        .pagesCount = physicalPagesCount,
+    };
 }
 
 void Memory::PrintMemory(){
-    uint64_t memSizeBytes = 0;
     uint64_t availableMemory = 0;
     uint64_t reservedMemory = 0;
     for (MemoryRegion *ptr = memoryListHead; ptr != NULL; ptr = ptr->next){
-        memSizeBytes += ptr->GetSize();
         if (ptr->state == usable) {
             availableMemory += ptr->GetSize();
         } else {
@@ -160,7 +187,7 @@ void Memory::PrintMemory(){
     }
 
     screen.WriteString("System ram size is ");
-    screen.WriteInt(BYTE_TO_MB(memSizeBytes));
+    screen.WriteInt(BYTE_TO_MB(memInfo.memSizeBytes));
     screen.WriteString("MBs.\n");
 
     screen.WriteString("Usable memory: ");
@@ -234,6 +261,10 @@ void Memory::freePageString(MemoryRegion *start){
         start->allocRequestID = 0;
         start = start->next;
     }
+}
+
+MemoryInfo Memory::GetMemoryInfo(){
+    return memInfo;
 }
 
 // Global Memory Variable;
