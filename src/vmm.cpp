@@ -16,7 +16,7 @@ void VirtualMemory::testVirtualMemory(){
     }
 
     screen.WriteString("Hi\n\0");
-    for (uintptr_t i = 0x10000; i < 0xffffffff;i += 4){
+    for (uintptr_t i = 0x0; i < 0xffffffff;i += 4){
         testAddrTranslation(i, PDTAddress);
     }
 }
