@@ -26,6 +26,7 @@ extern GDT gdt;
 // For now it's easier for me to just look at the screen. I have a way in mind
 // to automate this, so guess what... here is another TODO!
 // TODO: automate testcases
+// TODO: move unit tests to separate files
 void testMemoryInitialization(){
     sysMemory.PrintMemory();
 }
@@ -261,7 +262,7 @@ void kmain() {
     screen.WriteString("Initializing all systems...\n\0");
     sysMemory = Memory();
     gdt = GDT();
-    vmm = VirtualMemory();
+    vmm = VirtualMemory(false /* should run vmm self tests before paging */);
 
     // at this point interrupts are disabled... need to setup IDT to renable them.
 

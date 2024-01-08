@@ -18,6 +18,14 @@ class VirtualMemory{
     // When moving to 64 bits PDTs will exist.
     static const uintptr_t PDTAddress = 0x2500000;
     static const uintptr_t PTAddress = PDTAddress + (sizeof(uint32_t) * ENTRIES_COUNT);
+    bool shouldTestMemoryBeforePaging = false;
+
+    // Implementing unit tests for paging
+    void testVirtualMemory();
+    void testAddrTranslation(uintptr_t expectedAddr, uintptr_t PDTAddress);
+
+    // Runs vmm initialization routine
+    void initializeMemory();
 
     // Set up the page directory tables and page tables
     void setupPageTables();
@@ -39,6 +47,8 @@ class VirtualMemory{
 
     public:
         VirtualMemory();
+        VirtualMemory(bool shouldTestMemory);
+
 };
 
 

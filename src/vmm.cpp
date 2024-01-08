@@ -8,8 +8,20 @@
 
 static char *buf;
 
+void VirtualMemory::testVirtualMemory(){
+    screen.WriteString("should test memory?\0");
+    screen.WriteString(shouldTestMemoryBeforePaging ? " YES\n\0":" NO\n\0");
+    if (!shouldTestMemoryBeforePaging){
+        return;
+    }
 
-void testAddrTranslation(uintptr_t expectedAddr, uintptr_t PDTAddress){
+    screen.WriteString("Hi\n\0");
+    for (uintptr_t i = 0x10000; i < 0xffffffff;i += 4){
+        testAddrTranslation(i, PDTAddress);
+    }
+}
+
+void VirtualMemory::testAddrTranslation(uintptr_t expectedAddr, uintptr_t PDTAddress){
     printf(buf, "vmm test: resolving vmm mapping for %p\n\0", expectedAddr);
     uint64_t firstTen = expectedAddr >> 22;
     uint64_t nextTen = (expectedAddr & 0x3ff000) >> 12;
@@ -38,12 +50,21 @@ void testAddrTranslation(uintptr_t expectedAddr, uintptr_t PDTAddress){
     }
 }
 
-VirtualMemory::VirtualMemory(){
+void VirtualMemory::initializeMemory(){
     screen.WriteString("Initializing virtual memory module...\n\0");
     setupPageTables();
     mapKernHigherHalf();
     enablePaging();
     unmapKernLowerHalf();
+}
+
+VirtualMemory::VirtualMemory(){
+    initializeMemory();
+}
+
+VirtualMemory::VirtualMemory(bool shouldTestMemory){
+    shouldTestMemoryBeforePaging = shouldTestMemory;
+    initializeMemory();
 }
 
 void VirtualMemory::setupPageTables(){
@@ -67,7 +88,6 @@ void VirtualMemory::setupPageTables(){
         }
         pdtPtr++;
     }
-    screen.WriteString("not found\n\0");
 }
 
 void VirtualMemory::mapKernHigherHalf(){
@@ -75,11 +95,8 @@ void VirtualMemory::mapKernHigherHalf(){
 }
 
 void VirtualMemory::enablePaging(){
-    // test translate
-
-    // for (uintptr_t i = 0x10000; i < 0xffffffff;i += 4){
-    //     testAddrTranslation(i, PDTAddress);
-    // }
+    // test translate if enabled
+    testVirtualMemory();
 
     screen.WriteString("Enabling paging, no return...\n\0");
     // TODO: if we want higher half kernel then after paging is enabled, must do a far jump to the next kernl address
