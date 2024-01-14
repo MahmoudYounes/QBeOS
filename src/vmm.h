@@ -2,10 +2,12 @@
 #define VMM_H
 
 #include "common.h"
+#include "formater.h"
+#include "mem_region.h"
+#include "memory.h"
 #include "pdt_entry.h"
 #include "pt_entry.h"
 
-#include "memory.h"
 
 #define ENTRIES_COUNT 1024
 #define ENTRY_SIZE_BYTES sizeof(uint32_t)
@@ -14,6 +16,7 @@
 // flags for mapping
 #define VMM_KERN  1
 #define VMM_RESV  2
+#define VMM_UNMAP 2       // same effect as RESV different naming
 
 extern Memory sysMemory;
 extern Screen screen;
@@ -44,19 +47,32 @@ class VirtualMemory{
     // Creates a virtual page entry and encodes it
     void createPTEntry(uintptr_t ptPtr, uintptr_t ofPtr, uint8_t flags);
 
+    // Given a virtual address return the page aligned physical address
+    uintptr_t virtualToPhysicalAddr(uintptr_t vaddr);
+
     // Enables paging
     void enablePaging();
+
+    // Flushes the TLB
+    void flushTLB();
+
+    // Maps a virtual address to a physical address
+    void map(uintptr_t vaddr, uintptr_t paddr, uint8_t flags);
+
+    // Unmaps a virtual address
+    void unmap(uintptr_t vaddr);
 
     public:
         VirtualMemory();
         VirtualMemory(bool shouldTestMemory);
 
-        // Maps a virtual address to a physical address
-        void Map(uintptr_t vaddr, uintptr_t paddr, uint8_t flags);
-
         // Allocates virtual memory. TODO: convert to lazy allocation
         void *Allocate(size_t size);
 
+        // Given a pointer to memory free memory
+        void Free(void *ptr);
+
+        // Given a virtual address return the Page Table Entry content
         uint32_t GetPageEntry(uintptr_t addr);
 
 };

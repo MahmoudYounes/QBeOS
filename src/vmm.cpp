@@ -1,10 +1,4 @@
 #include "vmm.h"
-#include "common.h"
-#include "formater.h"
-#include "mem_region.h"
-#include "pdt_entry.h"
-#include "pt_entry.h"
-
 
 static char *buf;
 
@@ -82,13 +76,13 @@ void VirtualMemory::mapSystemMemory(){
                 flags |= VMM_KERN;
             if (ptr->state == reserved)
                 flags |= VMM_RESV;
-            Map((uintptr_t)ptr->baseAddress, (uintptr_t)ptr->baseAddress, flags);
+            map((uintptr_t)ptr->baseAddress, (uintptr_t)ptr->baseAddress, flags);
         }
         ptr = ptr->next;
     }
 
     // mapping video memory
-    Map(0xb8000, 0xb8000, VMM_KERN);
+    map(0xb8000, 0xb8000, VMM_KERN);
 }
 
 void VirtualMemory::enablePaging(){
@@ -115,7 +109,7 @@ void VirtualMemory::createPDTEntry(uintptr_t atPDTPtr, uintptr_t ofPTPtr){
 void VirtualMemory::createPTEntry(uintptr_t atPTPtr, uintptr_t ofPtr, uint8_t flags){
     if(flags & VMM_KERN){
         KERN_PT->SetPageAddress(ofPtr)->EncodeEntryAt(atPTPtr);
-    } else if (flags & VMM_RESV){
+    } else if (flags & VMM_RESV || flags & VMM_UNMAP){
         INVALID_PT.SetPageAddress(ofPtr)->EncodeEntryAt(atPTPtr);
     } else {
         // TODO: once we have IDT, lazy create these virual pages on page faults?
@@ -123,7 +117,7 @@ void VirtualMemory::createPTEntry(uintptr_t atPTPtr, uintptr_t ofPtr, uint8_t fl
     }
 }
 
-void VirtualMemory::Map(uintptr_t vaddr, uintptr_t paddr, uint8_t flags){
+void VirtualMemory::map(uintptr_t vaddr, uintptr_t paddr, uint8_t flags){
     uint64_t pdtOffset = vaddr >> 22;
     uint64_t ptOffset = (vaddr >> 12) & 0x3ff;
     uintptr_t physicalPageBeginAddr = paddr & ~0xfff;
@@ -132,6 +126,7 @@ void VirtualMemory::Map(uintptr_t vaddr, uintptr_t paddr, uint8_t flags){
     uintptr_t ptEntryAddr = ptAddr + ptOffset * ENTRY_SIZE_BYTES;
 
     createPTEntry((uintptr_t)ptEntryAddr, physicalPageBeginAddr, flags);
+    flushTLB();
 }
 
 uint32_t VirtualMemory::GetPageEntry(uintptr_t vaddr){
@@ -141,6 +136,72 @@ uint32_t VirtualMemory::GetPageEntry(uintptr_t vaddr){
     uintptr_t ptAddr = ((*(uint32_t *)pdtAddr) >> 12) << 12;
     uintptr_t ptEntryAddr = ptAddr + ptOffset * ENTRY_SIZE_BYTES;
     return *(uint32_t*)ptEntryAddr;
+}
+
+
+// TODO: there are two ways to implement this. Either allocate the entire memory
+// physically then virtually map it, or allocate page by page. when you have
+// time tracers evaluate which is better.
+void *VirtualMemory::Allocate(size_t size){
+    if (size == 0){
+        // hathzar hanhazar
+        return NULL;
+    }
+
+    uint32_t numPages = (size + PHYSICAL_PAGE_SIZE) / PHYSICAL_PAGE_SIZE; // math.ciel
+    intptr_t allocatedPage = -1;
+    for(uint32_t i = 0; i < numPages; i++){
+        uintptr_t pptr = (uintptr_t)sysMemory.AllocPhysicalPage();
+        map(pptr, pptr, VMM_KERN);
+        if (allocatedPage == -1){
+            allocatedPage = pptr;
+        }
+    }
+    return (void *)allocatedPage;
+}
+
+void VirtualMemory::unmap(uintptr_t vaddr){
+    uint64_t pdtOffset = vaddr >> 22;
+    uint64_t ptOffset = (vaddr >> 12) & 0x3ff;
+    uintptr_t pdtAddr = PDTAddress + pdtOffset * ENTRY_SIZE_BYTES;
+    uintptr_t ptAddr = ((*(uint32_t *)pdtAddr) >> 12) << 12;
+    uintptr_t ptEntryAddr = ptAddr + ptOffset * ENTRY_SIZE_BYTES;
+
+    createPTEntry((uintptr_t)ptEntryAddr, 0, VMM_UNMAP);
+}
+
+void VirtualMemory::Free(void *ptr){
+    uintptr_t paddr = virtualToPhysicalAddr((uintptr_t)ptr);
+    uintptr_t vptr = (uintptr_t)ptr;
+    MemoryRegion startPage = sysMemory.GetPageAt(paddr);
+    MemoryRegion *endPage;
+    uint64_t allocId = startPage.allocRequestID;
+
+    for(MemoryRegion *walker = &startPage; walker != NULL; walker = walker->next){
+        unmap(vptr);
+        if (walker->allocRequestID != allocId){
+            break;
+        }
+
+        vptr += PHYSICAL_PAGE_SIZE;
+        walker = walker->next;
+    }
+    sysMemory.Free((void *)paddr);
+    flushTLB();
+}
+
+uintptr_t VirtualMemory::virtualToPhysicalAddr(uintptr_t vaddr){
+    uintptr_t paddr;
+    uint32_t ent = GetPageEntry(vaddr);
+    paddr = (ent >> 12) << 12;
+    return paddr;
+}
+
+// TODO: Consider implementing the signle version of TLB
+void VirtualMemory::flushTLB(){
+    __asm__ __volatile(
+        "mov eax, cr3\n\t"
+        "mov cr3, eax\n\t");
 }
 
 VirtualMemory vmm;

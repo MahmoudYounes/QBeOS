@@ -140,7 +140,7 @@ void testMemset() {
 }
 
 void testPDTEntry() {
-    uintptr_t pp = (uintptr_t)sysMemory.AllocPhysicalPage();
+    uintptr_t pp = (uintptr_t)vmm.Allocate(PHYSICAL_PAGE_SIZE);
 
     PDTEntry(MB).SetIsUserAccessible()
         ->SetPageAttrTable()
@@ -189,7 +189,7 @@ void testPDTEntry() {
         panic("Test PDTEntry failed");
     }
 
-    sysMemory.Free((void *)pp);
+    vmm.Free((void *)pp);
     print("PDTEntry tests succeeded\n\0");
 }
 
@@ -283,7 +283,7 @@ void kmain() {
     testMemoryAllocation();
     testMemoryPageAt();
     // these tests will not page until vmm.alloc is implemented
-    //testPDTEntry();
+    testPDTEntry();
     //testPTEntry();
     //testMemset();
     //testFormater();
