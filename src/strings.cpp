@@ -31,3 +31,31 @@ extern "C" void memset(void *dstpp, uint8_t val, size_t count) {
       : "D" (dst_bp), "a"(val), "c"(count)
    );
 }
+
+extern "C" uint64_t strlen(char *strp){
+   char *p = strp;
+   uint64_t count = 0;
+   while(*p != '\0'){
+      count++;
+      p++;
+   }
+   return count;
+}
+
+extern "C" int8_t strcmp(char *str1p, char *str2p){
+   char *str1pp = str1p;
+   char *str2pp = str2p;
+   uint64_t str1len = strlen(str1pp);
+   uint64_t str2len = strlen(str2pp);
+
+   for (int64_t i = 0; i < Min(str1len, str2len); i++){
+      if(str1pp[i] < str2pp[i]){
+         return -1;
+      } else if (str1pp[i] > str2pp[i]){
+         return 1;
+      }
+   }
+   if (str1len < str2len) return -1;
+   else if (str1len > str2len) return 1;
+   return 0;
+}

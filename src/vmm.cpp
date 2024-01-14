@@ -174,7 +174,6 @@ void VirtualMemory::Free(void *ptr){
     uintptr_t paddr = virtualToPhysicalAddr((uintptr_t)ptr);
     uintptr_t vptr = (uintptr_t)ptr;
     MemoryRegion startPage = sysMemory.GetPageAt(paddr);
-    MemoryRegion *endPage;
     uint64_t allocId = startPage.allocRequestID;
 
     for(MemoryRegion *walker = &startPage; walker != NULL; walker = walker->next){
