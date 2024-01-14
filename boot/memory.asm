@@ -2,7 +2,7 @@
 ; function to discover memory layout
 ; the resulting memory tables structured
 ; like the following:
-; - 4 bytes: count the number of memory regions
+; - 4 bytes: memory regions table length
 ; - c * 20 byte entries
 ;
 ; args: none
