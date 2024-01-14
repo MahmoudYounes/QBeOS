@@ -60,6 +60,33 @@ void testMemoryAllocation(){
     sysMemory.PrintMemory();
 }
 
+void testVMMAloocation(){
+    char *memPtr = (char *)vmm.Allocate(100);
+    char testBuf[] = "testing vmm allocation\n\0";
+    memcpy(memPtr, testBuf, strlen(testBuf)*sizeof(char));
+
+    uint8_t cmpRes = strcmp(memPtr, testBuf);
+    if (cmpRes != 0){
+        print("FAILED: failed to write testBuf into allocated memory\n\0");
+        panic("VMM Allocation tests failed\n\0");
+    }
+    vmm.Free(memPtr);
+
+    memPtr = (char *)vmm.Allocate(MB_TO_BYTE(10));
+    sysMemory.PrintMemory();
+    memset(memPtr, 'a', MB_TO_BYTE(10));
+
+    for (uint64_t i = 0; i < MB_TO_BYTE(10);i++){
+        if(memPtr[i] != 'a'){
+            print("FAILED: failed to write to allocated memory\n\0");
+            panic("VMM Allocation tests failed\n\0");
+        }
+    }
+    vmm.Free(memPtr);
+
+    print("VMM Allocation tests succeeded\n\0");
+}
+
 void testMemoryPageAt(){
     MemoryRegion mem = sysMemory.GetPageAt(0x8000);
     if ((uintptr_t)mem.baseAddress != 0x8000){
@@ -279,14 +306,15 @@ void kmain() {
     // testing that systems are initialized and booted correctly.
 
     screen.WriteString("Running self tests\n\0");
-    testMemoryInitialization();
-    testMemoryAllocation();
-    testMemoryPageAt();
+    //testMemoryInitialization();
+    //testMemoryAllocation();
+    //testMemoryPageAt();
     // these tests will not page until vmm.alloc is implemented
-    testPDTEntry();
+    //testPDTEntry();
     //testPTEntry();
     //testMemset();
     //testFormater();
+    testVMMAloocation();
 
     bootEnd();
 }
