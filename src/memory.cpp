@@ -1,6 +1,9 @@
 #include "memory.h"
+#include "common.h"
+#include "math.h"
 #include "mem_region.h"
 
+static char buf[512];
 extern Screen screen;
 
 void Memory::assertMemoryListSize() {
@@ -15,11 +18,12 @@ void Memory::splitRegion(const MemTableEntry *mtentry, uint64_t bootMemRegionIdx
     MemoryRegion *currMemListPointer = memoryListHead + physicalPagesCount;
     uint64_t i = 0;
     for (; i < (mtentry->size / PHYSICAL_PAGE_SIZE); i++){
-        bufRegion.baseAddress = (uint8_t *)(mtentry->baseAddr + i * PHYSICAL_PAGE_SIZE);
+        bufRegion.baseAddress = ((uint8_t *)mtentry->baseAddr + i * PHYSICAL_PAGE_SIZE);
         bufRegion.size = PHYSICAL_PAGE_SIZE;
         bufRegion.state = (enum memState)mtentry->state;
         bufRegion.bootRegionID = bootMemRegionIdx;
         bufRegion.regionID = physicalPagesCount;
+        bufRegion.allocRequestID = 0;
         bufRegion.next = currMemListPointer + 1; // the next Memory region would be here.
 
         memcpy(currMemListPointer, &bufRegion, sizeof(MemoryRegion));
@@ -38,6 +42,7 @@ void Memory::splitRegion(const MemTableEntry *mtentry, uint64_t bootMemRegionIdx
         bufRegion.state = (enum memState)KERN;
         bufRegion.bootRegionID = bootMemRegionIdx;
         bufRegion.regionID = physicalPagesCount++;
+        bufRegion.allocRequestID = 0;
         bufRegion.next = currMemListPointer + 1; // the next Memory region would be here.
         memcpy(currMemListPointer, &bufRegion, sizeof(MemoryRegion));
     }
@@ -54,15 +59,10 @@ void Memory::reserverKernelMemory(){
             actualReserved += ptr->GetSize();
         }
 
-        ptr->allocRequestID = 0;
         sizeToReserver -= ptr->GetSize();
         ptr = ptr->next;
     }
-    screen.WriteString("reserved 8MBs for kernel of which \0");
-    screen.WriteInt(BYTE_TO_MB(actualReserved));
-    screen.WriteString(" MBs are reserved as KERN and \0");
-    screen.WriteInt(BYTE_TO_KB(KERNEL_MEMORY_REGION_SIZE_BYTES - actualReserved));
-    screen.WriteString(" KBs are reserved for system...\n\0");
+    printf(buf, "reserved %dMBs for kernel\n\0", BYTE_TO_MB(actualReserved));
 }
 
 void Memory::setupFreePagePtr(){
@@ -95,12 +95,15 @@ MemoryRegion *Memory::findEmptyRegionFor(uint64_t pages){
 }
 
 Memory::Memory(){
-    char buf[4096];
     screen.WriteString("Initializing memory...\n");
     uint64_t bootMemRegionsCount = 0;
     uint64_t endAddr = 0;
 
-    do{
+    // memory tables structure has 4 bytes that contain the size of the table
+    uint32_t countRegions = *memoryTableAddress;
+    memoryTableAddress++;
+
+    while(bootMemRegionsCount < countRegions){
         // TODO: sometimes int15h eax e820 returns 24 bytes instead of 20 bytes.
         // this needs to be passed as argument to the kernel from boot loader.
 
@@ -110,14 +113,17 @@ Memory::Memory(){
         memcpy(&mtentry, memoryTableAddress + bootMemRegionsCount * 5, sizeof(mtentry));
 
         if(mtentry.size != 0 && endAddr != mtentry.baseAddr){
-            MemTableEntry memHole = {
+            mtentry = {
                 .baseAddr = endAddr,
                 .size = mtentry.baseAddr - endAddr,
                 .state = reserved
             };
-            splitRegion(&memHole, bootMemRegionsCount);
-            uint64_t memHoleEndAddr = memHole.baseAddr + memHole.size;
-            printf(buf, "found memory hole. start: %x end: at %x\n\0", memHole.baseAddr, memHoleEndAddr);
+            uint64_t memHoleEndAddr = mtentry.baseAddr + mtentry.size;
+            printf(buf, "found memory hole. start: %x end: at %x\n\0", mtentry.baseAddr, memHoleEndAddr);
+            splitRegion(&mtentry, bootMemRegionsCount);
+
+            endAddr = memHoleEndAddr;
+            continue;
         }
 
         if (mtentry.size != 0) {
@@ -133,16 +139,14 @@ Memory::Memory(){
             break;
         }
         bootMemRegionsCount++;
-    } while(1);
+    }
 
     memoryListHead[physicalPagesCount - 1].next = NULL;
     for (uint64_t i = 0; i < physicalPagesCount; i++){
         if((i != physicalPagesCount - 1 && memoryListHead[i].next == NULL) ||
            (i == physicalPagesCount - 1 && memoryListHead[i].next != NULL)){
-            screen.WriteString("failed to set list pointers correctly at \0");
-            screen.WriteInt(i);
-            screen.WriteString("\n\0");
-            panic("none");
+            printf(buf, "failed to set list pointers correctly at %d\n\0", i);
+            panic("memory self tests failed");
         }
     }
 
@@ -155,9 +159,6 @@ Memory::Memory(){
         ptr = ptr->next;
         i++;
     }
-    screen.WriteString("walked the memory \0");
-    screen.WriteInt(i+1);
-    screen.WriteString("times \n\0");
 
     reserverKernelMemory();
     setupFreePagePtr();
@@ -177,26 +178,22 @@ Memory::Memory(){
 
 void Memory::PrintMemory(){
     uint64_t availableMemory = 0;
+    uint64_t kernelMemory = 0;
     uint64_t reservedMemory = 0;
     for (MemoryRegion *ptr = memoryListHead; ptr != NULL; ptr = ptr->next){
         if (ptr->state == usable) {
             availableMemory += ptr->GetSize();
+        } else if (ptr->state == KERN) {
+            kernelMemory += ptr->GetSize();
         } else {
             reservedMemory += ptr->GetSize();
         }
     }
 
-    screen.WriteString("System ram size is ");
-    screen.WriteInt(BYTE_TO_MB(memInfo.memSizeBytes));
-    screen.WriteString("MBs.\n");
-
-    screen.WriteString("Usable memory: ");
-    screen.WriteInt(BYTE_TO_MB(availableMemory));
-    screen.WriteString("MBs.\n");
-
-    screen.WriteString("Reserved memory: ");
-    screen.WriteInt(BYTE_TO_KB(reservedMemory));
-    screen.WriteString("KBs.\n");
+    printf(buf, "system ram: %d MBs.\n\0", BYTE_TO_MB(memInfo.memSizeBytes));
+    printf(buf, "usable memory: %d MBs.\n\0", BYTE_TO_MB(availableMemory));
+    printf(buf, "kernel memory: %d MBs.\n\0", BYTE_TO_MB(kernelMemory));
+    printf(buf, "reserved memory: %d MBs.\n\0", BYTE_TO_MB(reservedMemory));
 }
 
 void *Memory::AllocPhysicalPage(){
@@ -265,6 +262,26 @@ void Memory::freePageString(MemoryRegion *start){
 
 MemoryInfo Memory::GetMemoryInfo(){
     return memInfo;
+}
+
+MemoryRegion Memory::GetPageAt(uintptr_t paddr){
+    uint8_t *paddrPageAligned = (uint8_t *)(paddr & ~0xfff);
+    int lidx = 0;
+    int ridx = physicalPagesCount;
+    int midIdx = (ridx - lidx) / 2;
+    while(lidx < ridx && Abs(memoryListHead[midIdx].baseAddress - paddrPageAligned) > PHYSICAL_PAGE_SIZE){
+        if (memoryListHead[midIdx].baseAddress <= paddrPageAligned){
+            // paddr on the right
+            lidx = midIdx;
+        } else {
+            // paddr on the left
+            ridx = midIdx;
+        }
+
+        midIdx = ((ridx - lidx) / 2) + lidx;
+    }
+
+    return memoryListHead[midIdx];
 }
 
 // Global Memory Variable;

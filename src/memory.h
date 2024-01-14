@@ -7,6 +7,7 @@
 #include "strings.h"
 #include "logger.h"
 #include "formater.h"
+#include "math.h"
 
 // 4 KB physical pages
 #define PHYSICAL_PAGE_SIZE 4096
@@ -14,7 +15,7 @@
 #define MEMORY_LIST_EXPECTED_SIZE_MBS 32
 #define MEMORY_LIST_EXPECTED_SIZE_BYTES MEMORY_LIST_EXPECTED_SIZE_MBS << 20
 // Size of memory reserved by the kernel
-#define KERNEL_MEMORY_REGION_SIZE_MBS 8 // TODO: figure out a way to dynamically calculate this
+#define KERNEL_MEMORY_REGION_SIZE_MBS 64 // TODO: figure out a way to dynamically calculate this
 #define KERNEL_MEMORY_REGION_SIZE_BYTES (KERNEL_MEMORY_REGION_SIZE_MBS << 20)
 
 struct MemoryInfo{
@@ -36,7 +37,7 @@ class Memory{
         uint64_t physicalPagesCount = 0;
 
         // Address of the begining of memory regions list
-        MemoryRegion *memoryListHead = (MemoryRegion *)0x500000;
+        MemoryRegion *memoryListHead = (MemoryRegion *)0x920000;
 
         // Address of memory info created by bootloader
         uint32_t *memoryTableAddress = (uint32_t *)0x70000;
@@ -79,6 +80,7 @@ class Memory{
         void *Allocate(uint64_t sizeBytes);
         void Free(void *pageAddr);
         MemoryInfo GetMemoryInfo();
+        MemoryRegion GetPageAt(uintptr_t paddr);
 };
 
 #endif /* MEMORY_H */

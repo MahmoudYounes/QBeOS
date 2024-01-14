@@ -6,6 +6,7 @@
 
 
 #define KERN_PT PTEntry().SetPresent()->SetIsReadWrite()
+#define INVALID_PT PTEntry()
 #define USER_PT PTEntry().SetPresent()->SetIsUserAccessible()->SetIsReadWrite()
 
 class PTEntry : public MemoryEncodeable {
