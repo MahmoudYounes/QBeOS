@@ -23,4 +23,6 @@ a working memory detector
 ![MemoryDetector](https://github.com/MahmoudYounes/QBeOS/blob/c5cfeaa632c4cefe3b472efe307d49a2324e915b/screenshots/Screenshot%20from%202023-12-10%2007-11-17.png)
 
 QBeOS in Action
-![QBeOS](https://drive.google.com/file/d/10M-1S-YEr4rP_PjCI0uqowkz6r2oP42E/view?usp=drive_link)
+https://github.com/MahmoudYounes/QBeOS/assets/16405597/e77b9343-492d-4c54-8c0d-9cabf8c5188d?raw=true
+
+
