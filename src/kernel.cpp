@@ -306,14 +306,14 @@ void kmain() {
     // testing that systems are initialized and booted correctly.
 
     screen.WriteString("Running self tests\n\0");
-    //testMemoryInitialization();
-    //testMemoryAllocation();
-    //testMemoryPageAt();
+    testMemoryInitialization();
+    testMemoryAllocation();
+    testMemoryPageAt();
     // these tests will not page until vmm.alloc is implemented
     //testPDTEntry();
     //testPTEntry();
     //testMemset();
-    //testFormater();
+    testFormater();
     testVMMAloocation();
 
     bootEnd();
