@@ -23,13 +23,16 @@
 #define BYTE_TO_KB(val) (val) >> 10
 #define BYTE_TO_MB(val) (val) >> 20
 #define BYTE_TO_GB(val) (val) >> 30
+#define GB_TO_BYTE(val) ((uint64_t)val) << 30
+#define MB_TO_BYTE(val) ((uint64_t)val) << 20
+#define KB_TO_BYTE(val) ((uint64_t)val) << 10
 
 #define MAX_B_SIZE() 1 << 10
 #define MAX_KB_SIZE() 1 << 20
 #define MAX_MB_SIZE() 1 << 30
 #define MAX_GB_SIZE() 1 << 40
 
-#define GET_LOWER_WORD(val) val & 0x00000000ffffffff
+#define GET_LOWER_WORD(val) val & 0xffffffff
 #define GET_HIGHER_WORD(val) val & 0xffffffff00000000
 #define SET_LOWER_WORD(var, val) var | val
 #define SET_HIGHER_WORD(var, val) var | ((uint64_t)val << WORD_SIZE)

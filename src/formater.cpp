@@ -1,10 +1,6 @@
 #include "formater.h"
 
-#include "screen.h"
-
-extern Screen screen;
-
-void Formater::Format(char res[FORMATER_BUFFER_SIZE_BYTES], const char *str, ...){
+void Formater::Format(char *res, const char *str, ...){
     if (str == NULL || str[0] == EOL) {
         return;
     }

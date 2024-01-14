@@ -26,7 +26,7 @@ class Formater {
         uint32_t putNumberAsHex(char *buf, uint8_t startIdx, uint64_t num);
         uint32_t putNumberAsBin(char *buf, uint8_t startIdx, uint64_t num);
     public:
-        void Format(char res[FORMATER_BUFFER_SIZE_BYTES], const char *str, ...);
+        void Format(char *res, const char *str, ...);
 
 };
 
@@ -36,5 +36,11 @@ class Formater {
     sprintf(resBuf, str, __VA_ARGS__);          \
     screen.WriteString(resBuf);                 \
     } while (0)
+
+#define print(str)                              \
+    do {                                        \
+    screen.WriteString(str);                    \
+    } while (0)
+
 
 #endif /* FORMATER_H */

@@ -108,8 +108,8 @@ PVDBufAddress:	dw 0x0050
 BLBufPointer:	dw 0x00d0
 
     ; Memory Layout Table Buf
-MLTBufAddress:	dw 0x7000
-
+MLTBufAddress:     dw 0x7000
+MemRegionsCount:   dd 0
     ; gdtr
 gdtData:
 	dd 0x0000

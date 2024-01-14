@@ -5,11 +5,14 @@ it also describes the output files and their formats produced from the build pro
 
 # road map
 Highlevel overview of the road map of development for QBeOS
-* GDT // done
-* PMM // done
+* GDT
+* PMM
 * VMM
-* PAGING
+  * Paging
+  * Public APIs
 * IDT
+  * IDT Structures
+  * ISRs
 * LDT
 * TSS
 * SIMD
@@ -70,15 +73,12 @@ START            END          SIZE           description
 0x80000          0x100000     512KB          Bios Data <- don't mess with this
 0x100000         0x10ffff     64KB           High Memory Area in Real mode
 ------------------------------  Protected Mode -------------------------------
-0x00110000       0x003fffff   2MB            OS Stack
+0x00100000       0x003fffff   2MB            OS Stack(s)
 0x00400000       0x004fffff   1MB            GDT table
-0x00500000       0x024fffff   32MB           Physical Memory tables
-0x02500000       0x0250ffff   64KB           Virtual Memory Tables (PDT, PT) -- for 64 bits tables as well
-
-
-
-
-
+0x00500000       0x0050ffff   4KB            PDT
+0x00510000       0x0090ffff   4MB            Page Tables
+0x00910000       0x0091ffff   64KB           IDT (2KB + 62 KB padding for future extension)
+0x00920000       ??????????   0.01% of Mem   Physical Memory tables
 
 # QBeOS Kernel
 

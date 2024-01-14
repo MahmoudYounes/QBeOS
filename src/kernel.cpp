@@ -17,6 +17,8 @@
 void kmain() __attribute__ ((noreturn));
 void bootEnd() __attribute__ ((noreturn));
 
+static char buf[1024];
+
 // Global system vars.. only one should exist
 extern Screen screen;
 extern Memory sysMemory;
@@ -28,15 +30,23 @@ extern GDT gdt;
 // TODO: automate testcases
 // TODO: move unit tests to separate files
 void testMemoryInitialization(){
-    sysMemory.PrintMemory();
+    MemoryInfo memInfo = sysMemory.GetMemoryInfo();
+    if (memInfo.memSizeBytes != GB_TO_BYTE(4)){
+        printf(buf, "FAILED: expected %d GBs found %d GBs\n\0", BYTE_TO_GB(4), BYTE_TO_GB(memInfo.memSizeBytes));
+        panic("Memory Initialization tests failed\n\0");
+    }
+
+    print("Memory Initialization tests succeeded\n\0");
 }
 
 void testMemoryAllocation(){
-    screen.WriteString("allocating 1 page of physical memory.\n\0");
+    // while these allocations will succeed, writing to any of them will fail
+    // sense these tests are run after paging is enabled. so they don't have
+    // a vmm allocation counter part.
     uint64_t *memPtr = (uint64_t *)sysMemory.AllocPhysicalPage();
-    screen.WriteString("allocated memory\n");
+    print("allocated memory\n");
 
-    screen.WriteString("freeing allocated page\n");
+    print("freeing allocated page\n");
     sysMemory.Free(memPtr);
 
     screen.WriteString("allocating 16KBs i.e 4 Pages of memory\n\0");
@@ -50,72 +60,86 @@ void testMemoryAllocation(){
     sysMemory.PrintMemory();
 }
 
+void testMemoryPageAt(){
+    MemoryRegion mem = sysMemory.GetPageAt(0x8000);
+    if ((uintptr_t)mem.baseAddress != 0x8000){
+        printf(buf, "FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
+        panic("Memory PageAt tests failed");
+    }
+
+    mem = sysMemory.GetPageAt(0x8020);
+    if ((uintptr_t)mem.baseAddress != 0x8000){
+        printf(buf, "FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
+        panic("Memory PageAt tests failed");
+    }
+
+    mem = sysMemory.GetPageAt(0x50000000);
+    if ((uintptr_t)mem.baseAddress != 0x50000000){
+        printf(buf, "FAILED: expected %p found %p\n\0", 0x50000000, mem.baseAddress);
+        panic("Memory PageAt tests failed");
+    }
+    print("Memory PageAt tests succeeded\n\0");
+}
+
 void testFormater(){
     Formater formater = Formater();
-    char buf[FORMATER_BUFFER_SIZE_BYTES];
 
-    screen.WriteString("Testing formatter\n\0");
+    print("Testing formatter\n\0");
 
     formater.Format(buf, "\n\ntwo new lines\n\0");
     screen.WriteString(buf);
 
-    memset((uint8_t *)buf, ' ', FORMATER_BUFFER_SIZE_BYTES);
+    memset(buf, ' ', 512);
 
     formater.Format(buf, "num in decimal: %d\n\0", 123);
     screen.WriteString(buf);
 
-    memset((uint8_t *)buf, ' ', FORMATER_BUFFER_SIZE_BYTES);
+    memset(buf, ' ', 512);
 
     formater.Format(buf, "%d formater at the begining\n\0", 123);
     screen.WriteString(buf);
-    memset((uint8_t *)buf, ' ', FORMATER_BUFFER_SIZE_BYTES);
+    memset(buf, ' ', 512);
 
     formater.Format(buf, "num in bin: %b\n\0", 123);
     screen.WriteString(buf);
-    memset((uint8_t *)buf, ' ', FORMATER_BUFFER_SIZE_BYTES);
+    memset(buf, ' ', 512);
 
     formater.Format(buf, "num in hex: %x\n\0", 123);
     screen.WriteString(buf);
-    memset((uint8_t *)buf, ' ', FORMATER_BUFFER_SIZE_BYTES);
+    memset(buf, ' ', 512);
 
     formater.Format(buf, "num in long: %l\n\0", 123333333333LL);
     screen.WriteString(buf);
-    memset((uint8_t *)buf, ' ', FORMATER_BUFFER_SIZE_BYTES);
+    memset(buf, ' ', 512);
 
-    formater.Format(buf, "Multiform: %d %b %x %l\n\0", 123, 123, 123, 123333333LL);
-    screen.WriteString(buf);
+    // FIXME: a bug here, when paging is enabled.
 
-    memset((uint8_t *)buf, ' ', FORMATER_BUFFER_SIZE_BYTES);
+    // formater.Format(buf, "Multiform: %d %b %x %l\n\0", 123, 123, 123, 123333333LL);
+    // screen.WriteString(buf);
+    // memset(buf, ' ', 512);
 
-    // FIXME: a bug here, printing x x x and x makes last x output zero
-    uintptr_t p1 = 123;
-    uintptr_t p2 = 123;
-    uint64_t p3 = 123;
-    uintptr_t p4 = 123;
-    formater.Format(buf, "four xs: %x %x %x %x\n\0", p1, p2, p3, p4);
-    screen.WriteString(buf);
-    memset((uint8_t *)buf, ' ', FORMATER_BUFFER_SIZE_BYTES);
+    // uint64_t p1 = 123;
+    // uint64_t p2 = 123;
+    // uint64_t p3 = 123;
+    // uint64_t p4 = 123;
+    // formater.Format(buf, "four xs: %x %x %x %x\n\0", p1, p2, p3, p4);
+    // screen.WriteString(buf);
+    // memset(buf, ' ', 512);
 
     screen.WriteString("Done testing formatter\n\0");
 }
 
 void testMemset() {
-    char buf[FORMATER_BUFFER_SIZE_BYTES];
-    memset(buf, 'a', FORMATER_BUFFER_SIZE_BYTES);
-    for (int i = 0; i < FORMATER_BUFFER_SIZE_BYTES; i++){
+    memset(buf, 'a', 512);
+    for (int i = 0; i < 512; i++){
         if (buf[i] != 'a'){
-            screen.WriteString("expected: 'a' found: \0");
-            screen.WriteInt(buf[i]);
-            screen.WriteString("\n\0");
-            panic("failed memset test");
+            panic("failed memset test\n\0");
         }
     }
-    screen.WriteString("memset tests passed\n\0");
+    print("Memset tests succeeded\n\0");
 }
 
 void testPDTEntry() {
-    screen.WriteString("testing PDTEntry\n\0");
-    char *buf = (char *) sysMemory.AllocPhysicalPage();
     uintptr_t pp = (uintptr_t)sysMemory.AllocPhysicalPage();
 
     PDTEntry(MB).SetIsUserAccessible()
@@ -127,13 +151,11 @@ void testPDTEntry() {
 
     uint32_t actual = *((uint32_t *)pp);
     uint32_t expectedEntry = 0b00000000100000010111000010000111;
-    const char *verdict = expectedEntry == actual? "OK\n\0":"FAILED\n\0";
-    Formater().Format(buf, "read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
-    screen.WriteString(buf);
-    screen.WriteString(verdict);
-
-    memset((uint8_t *)buf, ' ', 4096);
-    memset((uint8_t *)pp, ' ', 4096);
+    if (expectedEntry != actual){
+        print("FAILED:\0");
+        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        panic("Test PDTEntry failed");
+    }
 
     PDTEntry(KB).SetPresent()
         ->SetIsReadWrite()
@@ -143,43 +165,35 @@ void testPDTEntry() {
 
     actual = *((uint32_t *)pp);
     expectedEntry = 0b00000000101101010101000000000011;
-    verdict = expectedEntry == actual? "OK\n\0":"FAILED\n\0";
-    Formater().Format(buf, "read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
-    screen.WriteString(buf);
-    screen.WriteString(verdict);
-
-    memset((uint8_t *)buf, ' ', 4096);
-    memset((uint8_t *)pp, ' ', 4096);
+    if (expectedEntry != actual){
+        print("FAILED:\0");
+        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        panic("Test PDTEntry failed");
+    }
 
     KERN_PDT->SetPTAddress(0x2501000)->EncodeEntryAt(pp);
     actual = *((uint32_t *)pp);
     expectedEntry = 0b10010100000001000000000011;
-    verdict = expectedEntry == actual? "OK\n\0":"FAILED\n\0";
-    Formater().Format(buf, "read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
-    screen.WriteString(buf);
-    screen.WriteString(verdict);
-
-    memset((uint8_t *)buf, ' ', 4096);
-    memset((uint8_t *)pp, ' ', 4096);
+    if (expectedEntry != actual){
+        print("FAILED:\0");
+        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        panic("Test PDTEntry failed");
+    }
 
     USER_PDT->SetPTAddress(0x2501000)->EncodeEntryAt(pp);
     actual = *((uint32_t *)pp);
     expectedEntry = 0b10010100000001000000000111;
-    verdict = expectedEntry == actual? "OK\n\0":"FAILED\n\0";
-    Formater().Format(buf, "read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
-    screen.WriteString(buf);
-    screen.WriteString(verdict);
-
-    memset((uint8_t *)buf, ' ', 4096);
-    memset((uint8_t *)pp, ' ', 4096);
+    if (expectedEntry != actual){
+        print("FAILED:\0");
+        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        panic("Test PDTEntry failed");
+    }
 
     sysMemory.Free((void *)pp);
-    sysMemory.Free((void *)buf);
+    print("PDTEntry tests succeeded\n\0");
 }
 
 void testPTEntry(){
-    screen.WriteString("testing PTEntry\n\0");
-    char *buf = (char *) sysMemory.AllocPhysicalPage();
     uintptr_t pp = (uintptr_t)sysMemory.AllocPhysicalPage();
 
     PTEntry().SetPresent()
@@ -190,50 +204,41 @@ void testPTEntry(){
 
     uint32_t actual = *((uint32_t *)pp);
     uint32_t expectedEntry = 0b10110000000100000101;
-    const char *verdict = expectedEntry == actual? "OK\n\0":"FAILED\n\0";
-    Formater().Format(buf, "read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
-    screen.WriteString(buf);
-    screen.WriteString(verdict);
-
-    memset((uint8_t *)buf, ' ', 4096);
-    memset((uint8_t *)pp, ' ', 4096);
+    if (expectedEntry != actual){
+        print("FAILED:\0");
+        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        panic("Test PDTEntry failed");
+    }
 
     PTEntry().SetPageAddress(0xfffff000)->EncodeEntryAt(pp);
-
     actual = *((uint32_t *)pp);
     expectedEntry = 0b11111111111111111111000000000000;
-    verdict = expectedEntry == actual? "OK\n\0":"FAILED\n\0";
-    Formater().Format(buf, "read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
-    screen.WriteString(buf);
-    screen.WriteString(verdict);
-
-    memset((uint8_t *)buf, ' ', 4096);
-    memset((uint8_t *)pp, ' ', 4096);
+    if (expectedEntry != actual){
+        print("FAILED:\0");
+        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        panic("Test PDTEntry failed");
+    }
 
     KERN_PT->SetPageAddress(0x2501000)->EncodeEntryAt(pp);
     actual = *((uint32_t *)pp);
     expectedEntry = 0b10010100000001000000000011;
-    verdict = expectedEntry == actual? "OK\n\0":"FAILED\n\0";
-    Formater().Format(buf, "read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
-    screen.WriteString(buf);
-    screen.WriteString(verdict);
-
-    memset((uint8_t *)buf, ' ', 4096);
-    memset((uint8_t *)pp, ' ', 4096);
+    if (expectedEntry != actual){
+        print("FAILED:\0");
+        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        panic("Test PDTEntry failed");
+    }
 
     USER_PT->SetPageAddress(0x2501000)->EncodeEntryAt(pp);
     actual = *((uint32_t *)pp);
     expectedEntry = 0b10010100000001000000000111;
-    verdict = expectedEntry == actual? "OK\n\0":"FAILED\n\0";
-    Formater().Format(buf, "read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
-    screen.WriteString(buf);
-    screen.WriteString(verdict);
-
-    memset((uint8_t *)buf, ' ', 4096);
-    memset((uint8_t *)pp, ' ', 4096);
+    if (expectedEntry != actual){
+        print("FAILED:\0");
+        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        panic("Test PDTEntry failed");
+    }
 
     sysMemory.Free((void *)pp);
-    sysMemory.Free((void *)buf);
+    print("PTEntry tests succeeded\n\0");
 }
 
 void setupConsole(){
@@ -266,7 +271,6 @@ void kmain() {
 
     // at this point interrupts are disabled... need to setup IDT to renable them.
 
-
     // Systems initialized and we are booted yay!
     printHelloMessage();
 
@@ -275,12 +279,14 @@ void kmain() {
     // testing that systems are initialized and booted correctly.
 
     screen.WriteString("Running self tests\n\0");
-    //testMemoryInitialization();
-    //testMemoryAllocation();
-    //testFormater();
+    testMemoryInitialization();
+    testMemoryAllocation();
+    testMemoryPageAt();
+    // these tests will not page until vmm.alloc is implemented
     //testPDTEntry();
     //testPTEntry();
     //testMemset();
+    //testFormater();
 
     bootEnd();
 }

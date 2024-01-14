@@ -1,53 +1,40 @@
 #include "mem_region.h"
-#include "common.h"
+
+static char buf[512];
 
 long MemoryRegion::GetSize(){
     return size;
 }
 
 void MemoryRegion::PrintRegionInfo(){
-    screen.WriteString("Memory region ");
-    screen.WriteInt(bootRegionID);
-    screen.WriteString("\n  memory starts at: ");
-    screen.WriteInt((uint64_t)baseAddress);
-    screen.WriteString("\n  region size: ");
-    if(size <= MAX_B_SIZE()){
-        screen.WriteInt(size);
-        screen.WriteString("bytes");
-    } else if (size <= MAX_KB_SIZE()) {
-        screen.WriteInt(BYTE_TO_KB(size));
-        screen.WriteString("Kbs");
-    } else if (size <= MAX_MB_SIZE()){
-        screen.WriteInt(BYTE_TO_MB(size));
-        screen.WriteString("Mbs");
-    } else {
-        screen.WriteInt(BYTE_TO_GB(size));
-        screen.WriteString("Gbs");
-    }
-
-    screen.WriteString("\n  region type: ");
+    printf(buf, "memory region %d\n\0", bootRegionID);
+    printf(buf, "  start address: %p\n\0", baseAddress);
+    printf(buf, "  region size: %d Kbs\n\0", BYTE_TO_KB(size));
+    print("  region type: \0");
     switch (state) {
         case 0:
-            screen.WriteString("invalid");
+            print("invalid\n\0");
             break;
         case 1:
-            screen.WriteString("usable");
+            print("usable\n\0");
             break;
         case 2:
-            screen.WriteString("reserved");
+            print("reserved\n\0");
             break;
         case 3:
-            screen.WriteString("reclaimable");
+            print("reclaimable\n\0");
             break;
         case 4:
-            screen.WriteString("nvs");
+            print("nvs\n\0");
             break;
         case 5:
-            screen.WriteString("badmem");
+            print("badmem\n\0");
+            break;
+        case 6:
+            print("kernel\n\0");
             break;
         default:
-            screen.WriteString("unknown memory type");
+            print("unknown memory type\n\0");
             break;
     }
-    screen.WriteString("\n");
 }
