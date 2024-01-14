@@ -1,4 +1,5 @@
 #include "vmm.h"
+#include "memory.h"
 
 static char *buf;
 
@@ -148,14 +149,17 @@ void *VirtualMemory::Allocate(size_t size){
         return NULL;
     }
 
-    uint32_t numPages = (size + PHYSICAL_PAGE_SIZE) / PHYSICAL_PAGE_SIZE; // math.ciel
-    intptr_t allocatedPage = -1;
-    for(uint32_t i = 0; i < numPages; i++){
+    uint32_t numPages;
+    if (size % PHYSICAL_PAGE_SIZE != 0){
+        numPages = (size + PHYSICAL_PAGE_SIZE) / PHYSICAL_PAGE_SIZE; // math.ciel
+    } else {
+        numPages = size / PHYSICAL_PAGE_SIZE;
+    }
+
+    void *allocatedPage = (void *)sysMemory.AllocPhysicalPage();
+    for(uint32_t i = 0; i < numPages-1; i++){
         uintptr_t pptr = (uintptr_t)sysMemory.AllocPhysicalPage();
         map(pptr, pptr, VMM_KERN);
-        if (allocatedPage == -1){
-            allocatedPage = pptr;
-        }
     }
     return (void *)allocatedPage;
 }
@@ -196,7 +200,7 @@ uintptr_t VirtualMemory::virtualToPhysicalAddr(uintptr_t vaddr){
     return paddr;
 }
 
-// TODO: Consider implementing the signle version of TLB
+// TODO: Consider implementing the signle version of TLB flush
 void VirtualMemory::flushTLB(){
     __asm__ __volatile(
         "mov eax, cr3\n\t"
