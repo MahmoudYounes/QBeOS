@@ -73,7 +73,7 @@ void testVMMAloocation(){
     vmm.Free(memPtr);
 
     memPtr = (char *)vmm.Allocate(MB_TO_BYTE(10));
-    sysMemory.PrintMemory();
+
     memset(memPtr, 'a', MB_TO_BYTE(10));
 
     for (uint64_t i = 0; i < MB_TO_BYTE(10);i++){

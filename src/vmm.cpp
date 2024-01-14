@@ -156,7 +156,8 @@ void *VirtualMemory::Allocate(size_t size){
         numPages = size / PHYSICAL_PAGE_SIZE;
     }
 
-    void *allocatedPage = (void *)sysMemory.AllocPhysicalPage();
+    uintptr_t allocatedPage = (uintptr_t)sysMemory.AllocPhysicalPage();
+    map(allocatedPage, allocatedPage, VMM_KERN);
     for(uint32_t i = 0; i < numPages-1; i++){
         uintptr_t pptr = (uintptr_t)sysMemory.AllocPhysicalPage();
         map(pptr, pptr, VMM_KERN);
