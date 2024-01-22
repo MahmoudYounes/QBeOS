@@ -18,12 +18,14 @@
 #define KERNEL_MEMORY_REGION_SIZE_MBS 64 // TODO: figure out a way to dynamically calculate this
 #define KERNEL_MEMORY_REGION_SIZE_BYTES (KERNEL_MEMORY_REGION_SIZE_MBS << 20)
 
+// MemoryInfo is a struct used to return information about memory metadata
 struct MemoryInfo{
         uint64_t memSizeBytes;
         uintptr_t pagesWalker;
         uint64_t pagesCount;
 };
 
+// MemTableEntry is a struct used to deserialize the memory table info passed from boot loader
 struct MemTableEntry{
         uint64_t baseAddr;
         uint64_t size;
