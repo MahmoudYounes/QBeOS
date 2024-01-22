@@ -151,12 +151,14 @@ Memory::Memory(){
     }
 
     int i = 0;
-    MemoryRegion *ptr = memoryListHead;
-    while(ptr->next->next != NULL){
-        if(ptr->next->baseAddress - ptr->baseAddress != 4096){
+    MemoryRegion *ptr1 = memoryListHead;
+    MemoryRegion *ptr2 = ptr1->next;
+    while(ptr2 != NULL){
+        if(ptr2->baseAddress - ptr1->baseAddress > 4096){
             panic("memory is not sorted");
         }
-        ptr = ptr->next;
+        ptr1 = ptr2;
+        ptr2 = ptr2->next;
         i++;
     }
 
@@ -269,7 +271,7 @@ MemoryRegion Memory::GetPageAt(uintptr_t paddr){
     int lidx = 0;
     int ridx = physicalPagesCount;
     int midIdx = (ridx - lidx) / 2;
-    while(lidx < ridx && Abs(memoryListHead[midIdx].baseAddress - paddrPageAligned) > PHYSICAL_PAGE_SIZE){
+    while(lidx < ridx && memoryListHead[midIdx].baseAddress != paddrPageAligned){
         if (memoryListHead[midIdx].baseAddress <= paddrPageAligned){
             // paddr on the right
             lidx = midIdx;

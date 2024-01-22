@@ -57,6 +57,4 @@ bool CPUInfo::IsCPUFeatureSupported(CPUFeatureEDX feature){
     return cpuFeaturesEDX & feature;
 }
 
-
-
 CPUInfo cpu;
