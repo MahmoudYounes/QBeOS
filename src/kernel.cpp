@@ -13,6 +13,7 @@
 #include "common.h"
 #include "math.h"
 #include "formater.h"
+#include "cpuinfo.h"
 
 void kmain() __attribute__ ((noreturn));
 void bootEnd() __attribute__ ((noreturn));
@@ -24,6 +25,7 @@ extern Screen screen;
 extern Memory sysMemory;
 extern VirtualMemory vmm;
 extern GDT gdt;
+extern CPUInfo cpu;
 
 // For now it's easier for me to just look at the screen. I have a way in mind
 // to automate this, so guess what... here is another TODO!
@@ -289,6 +291,7 @@ void bootEnd(){
 void kmain() {
     cli();
     setupConsole();
+    cpu = CPUInfo();
 
     // sys initializations
     screen.WriteString("Initializing all systems...\n\0");
