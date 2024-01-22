@@ -26,6 +26,7 @@ class IDT {
 
         // Sets up the IDT
         void setupIDT();
+
     public:
         IDT();
 

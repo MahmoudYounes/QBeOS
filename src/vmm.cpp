@@ -1,5 +1,4 @@
 #include "vmm.h"
-#include "memory.h"
 
 static char *buf;
 
