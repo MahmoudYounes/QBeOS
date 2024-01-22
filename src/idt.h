@@ -5,6 +5,7 @@
 #include "common.h"
 
 class IDTEntry : public MemoryEncodeable {
+
     private:
         uint16_t offsetLow;
         uint16_t segment;
