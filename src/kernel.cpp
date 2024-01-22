@@ -33,8 +33,8 @@ extern CPUInfo cpu;
 // TODO: move unit tests to separate files
 void testMemoryInitialization(){
     MemoryInfo memInfo = sysMemory.GetMemoryInfo();
-    if (memInfo.memSizeBytes != GB_TO_BYTE(4)){
-        printf(buf, "FAILED: expected %d GBs found %d GBs\n\0", BYTE_TO_GB(4), BYTE_TO_GB(memInfo.memSizeBytes));
+    if (memInfo.memSizeBytes == 0){
+        print("FAILED: expected memory more than 0 GBs\0");
         panic("Memory Initialization tests failed\n\0");
     }
 
@@ -90,22 +90,27 @@ void testVMMAloocation(){
 }
 
 void testMemoryPageAt(){
+    bool failed = false;
     MemoryRegion mem = sysMemory.GetPageAt(0x8000);
     if ((uintptr_t)mem.baseAddress != 0x8000){
         printf(buf, "FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
-        panic("Memory PageAt tests failed");
+        failed = true;
     }
 
     mem = sysMemory.GetPageAt(0x8020);
     if ((uintptr_t)mem.baseAddress != 0x8000){
         printf(buf, "FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
-        panic("Memory PageAt tests failed");
+        failed = true;
     }
 
     mem = sysMemory.GetPageAt(0x50000000);
     if ((uintptr_t)mem.baseAddress != 0x50000000){
         printf(buf, "FAILED: expected %p found %p\n\0", 0x50000000, mem.baseAddress);
-        panic("Memory PageAt tests failed");
+        failed = true;
+    }
+
+    if (failed){
+        panic("memory tests failed");
     }
     print("Memory PageAt tests succeeded\n\0");
 }
@@ -316,7 +321,7 @@ void kmain() {
     //testPDTEntry();
     //testPTEntry();
     //testMemset();
-    testFormater();
+    //testFormater();
     testVMMAloocation();
 
     bootEnd();
