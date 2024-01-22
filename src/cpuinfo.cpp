@@ -10,6 +10,8 @@ CPUInfo::CPUInfo(){
     print("Detected cpu \0");
     print(cpuModel);
     print("\n");
+
+    getCPUFeatures();
 }
 
 void CPUInfo::getCPUModel(){
@@ -38,5 +40,23 @@ void CPUInfo::getCPUModel(){
 
     *mp ='\0';
 }
+
+void CPUInfo::getCPUFeatures(){
+    int unused, ecx, edx;
+    __cpuid(1, unused, unused, ecx, edx);
+
+    cpuFeaturesECX = ecx;
+    cpuFeaturesEDX = edx;
+}
+
+bool CPUInfo::IsCPUFeatureSupported(CPUFeatureECX feature){
+    return cpuFeaturesECX & feature;
+}
+
+bool CPUInfo::IsCPUFeatureSupported(CPUFeatureEDX feature){
+    return cpuFeaturesEDX & feature;
+}
+
+
 
 CPUInfo cpu;
