@@ -3,19 +3,25 @@
 
 #include "mem_encodeable.h"
 #include "common.h"
+#include "screen.h"
+#include "formater.h"
 
 class IDTEntry : public MemoryEncodeable {
-
     private:
         uint16_t offsetLow;
         uint16_t segment;
         uint16_t flags;
         uint16_t offsetHigh;
     public:
+        IDTEntry();
+        IDTEntry(uint64_t entry);
         uint64_t EncodeEntryAt(uintptr_t addr);
         void SetOffset(uint32_t offset);
         void SetSegment(uint16_t segment);
         void SetFlags(uint16_t flags);
+        uint32_t GetOffset();
+        uint16_t GetSegment();
+        uint16_t GetFlags();
 };
 
 class IDT {

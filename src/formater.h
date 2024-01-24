@@ -2,12 +2,14 @@
 #define FORMATER_H
 
 #include "common.h"
+#include "screen.h"
 
 #define FORMATER_BUFFER_SIZE_BYTES 2048
 #define EOL '\0'
 #define FORMAT_SIGN '%'
 #define DECIMAL_SIGN 'd'
 #define HEX_SIGN 'x'
+#define LONG_HEX_SIGN 'X'
 #define BIN_SIGN 'b'
 #define LONG_SIGN 'l'
 #define PTR_SIGN 'p'
@@ -22,9 +24,9 @@
 // implementation.
 class Formater {
     private:
-        uint32_t putNumber(char *buf, uint8_t startIdx, uint64_t num);
-        uint32_t putNumberAsHex(char *buf, uint8_t startIdx, uint64_t num);
-        uint32_t putNumberAsBin(char *buf, uint8_t startIdx, uint64_t num);
+        uint32_t putNumber(char *buf, uint32_t startIdx, uint64_t num);
+        uint32_t putNumberAsHex(char *buf, uint32_t startIdx, uint64_t num);
+        uint32_t putNumberAsBin(char *buf, uint32_t startIdx, uint64_t num);
     public:
         void Format(char *res, const char *str, ...);
 

@@ -1,5 +1,7 @@
 #include "formater.h"
 
+extern Screen screen;
+
 void Formater::Format(char *res, const char *str, ...){
     if (str == NULL || str[0] == EOL) {
         return;
@@ -8,31 +10,41 @@ void Formater::Format(char *res, const char *str, ...){
     va_list argPtr;
     va_start(argPtr, str);
     uint64_t num;
-    uint8_t stri = 1, buffi = 0;
+    uint32_t stri = 1, buffi = 0;
     char prevChar = str[stri - 1], currChar = str[stri];
     while(currChar != EOL){
         if (prevChar == FORMAT_SIGN && currChar != FORMAT_SIGN){
             switch (currChar) {
-                case LONG_SIGN:
+                case LONG_SIGN:{
                     num = va_arg(argPtr, int64_t);
                     buffi += putNumber(res, buffi, num);
                     break;
-                case DECIMAL_SIGN:
+                }
+                case DECIMAL_SIGN:{
                     num = va_arg(argPtr, int);
                     buffi += putNumber(res, buffi, num);
                     break;
-                case HEX_SIGN:
+                }
+                case HEX_SIGN:{
+                    num = va_arg(argPtr, uint32_t);
+                    buffi += putNumberAsHex(res, buffi, num);
+                    break;
+                }
+                case LONG_HEX_SIGN:{
                     num = va_arg(argPtr, uint64_t);
                     buffi += putNumberAsHex(res, buffi, num);
                     break;
-                case BIN_SIGN:
+                }
+                case BIN_SIGN:{
                     num = va_arg(argPtr, int);
                     buffi += putNumberAsBin(res, buffi, num);
                     break;
-                case PTR_SIGN:
+                }
+                case PTR_SIGN:{
                     num = va_arg(argPtr, uintptr_t);
                     buffi += putNumberAsHex(res, buffi, num);
                     break;
+                }
             }
             prevChar = currChar;
             currChar = str[++stri];
@@ -53,7 +65,7 @@ void Formater::Format(char *res, const char *str, ...){
     return;
 }
 
-uint32_t Formater::putNumber(char *buf, uint8_t startIdx, uint64_t num){
+uint32_t Formater::putNumber(char *buf, uint32_t startIdx, uint64_t num){
     char bf[20]; // max number 2^64 - 1 is 20 chars
     int li = 19;
     uint32_t changes = 0;
@@ -77,9 +89,9 @@ uint32_t Formater::putNumber(char *buf, uint8_t startIdx, uint64_t num){
     return changes;
 }
 
-uint32_t Formater::putNumberAsHex(char *buf, uint8_t startIdx, uint64_t num){
+uint32_t Formater::putNumberAsHex(char *buf, uint32_t startIdx, uint64_t num){
     char bf[18]; // 64 bits number can be represented in max 18 hex chars
-    int li = 63;
+    int li = 17;
     uint32_t changes = 0;
 
     if (num == 0){
@@ -127,7 +139,7 @@ uint32_t Formater::putNumberAsHex(char *buf, uint8_t startIdx, uint64_t num){
     return changes;
 }
 
-uint32_t Formater::putNumberAsBin(char *buf, uint8_t startIdx, uint64_t num){
+uint32_t Formater::putNumberAsBin(char *buf, uint32_t startIdx, uint64_t num){
     char bf[64];
     int li = 63;
     uint32_t changes = 0;

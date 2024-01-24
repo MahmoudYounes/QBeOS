@@ -120,7 +120,7 @@ Memory::Memory(){
                 .state = reserved
             };
             uint64_t memHoleEndAddr = mtentry.baseAddr + mtentry.size;
-            printf(buf, "found memory hole. start: %x end: at %x\n\0", mtentry.baseAddr, memHoleEndAddr);
+            printf(buf, "found memory hole. start: %X end: at %X\n\0", mtentry.baseAddr, memHoleEndAddr);
             splitRegion(&mtentry, bootMemRegionsCount);
 
             endAddr = memHoleEndAddr;
@@ -133,7 +133,7 @@ Memory::Memory(){
 
         endAddr = mtentry.baseAddr + mtentry.size;
 
-        printf(buf, "found memory region. start: %x end: at %x\n\0", mtentry.baseAddr, endAddr);
+        printf(buf, "found memory region. start: %X end: at %X\n\0", mtentry.baseAddr, endAddr);
 
         // This is not a reliable exit condition.
         if (mtentry.size == 0){
