@@ -6,6 +6,7 @@
 #include "screen.h"
 #include "formater.h"
 
+
 class IDTEntry : public MemoryEncodeable {
     private:
         uint16_t offsetLow;
