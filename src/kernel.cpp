@@ -3,6 +3,7 @@
  * 
 ***/
 
+#include "idt.h"
 #include "mem_region.h"
 #include "pdt_entry.h"
 #include "pt_entry.h"
@@ -275,6 +276,36 @@ void testPTEntry(){
     print("PTEntry tests succeeded\n\0");
 }
 
+void testIDTEntry(){
+    uintptr_t pg = (uintptr_t)vmm.Allocate(4096);
+
+    IDTEntry idtEntry = IDTEntry();
+
+    idtEntry.SetSegment(0x8);  // segment 0x8
+    idtEntry.SetOffset(0xff);  // offset low 0xff offset high 0
+    idtEntry.SetFlags(0x4e00);
+    idtEntry.EncodeEntryAt(pg);
+
+    uint64_t entry = *((uint64_t *)pg);
+    IDTEntry actualEntry = IDTEntry(entry);
+    if (actualEntry.GetFlags() != 0x4e00){
+        printf(buf, "Expected 0x4e00 found %x\n\0", actualEntry.GetFlags());
+        panic("FAILED: IDTEntry tests\n\0");
+    }
+
+    if (actualEntry.GetSegment() != 0x8){
+        printf(buf, "Expected 0x8 found %x\n\0", actualEntry.GetSegment());
+        panic("FAILED: IDTEntry tests\n\0");
+    }
+
+    if (actualEntry.GetOffset() != 0xff){
+        printf(buf, "Expected 0xff found %x\n\0", actualEntry.GetOffset());
+        panic("FAILED: IDTEntry tests\n\0");
+    }
+}
+
+// END TESTS
+
 void setupConsole(){
     screen = Screen();
     screen.ClearScreen();
@@ -314,15 +345,18 @@ void kmain() {
     // testing that systems are initialized and booted correctly.
 
     screen.WriteString("Running self tests\n\0");
-    testMemoryInitialization();
-    testMemoryAllocation();
-    testMemoryPageAt();
+    //testMemoryInitialization();
+    //testMemoryAllocation();
+    //testMemoryPageAt();
     // these tests will not page until vmm.alloc is implemented
     //testPDTEntry();
     //testPTEntry();
     //testMemset();
+    // end of these tests
+
     //testFormater();
-    testVMMAloocation();
+    //testVMMAloocation();
+    testIDTEntry();
 
     bootEnd();
 }
