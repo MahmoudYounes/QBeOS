@@ -7,6 +7,7 @@
 
 
 #define GDT_ENTRY_SIZE_BYTES 8
+#define GDT_KERNEL_CODE_DESCRIPTOR_SEL 0x8
 
 // Access Bits Encoded
 

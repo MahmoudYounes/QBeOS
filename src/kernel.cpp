@@ -15,6 +15,7 @@
 #include "math.h"
 #include "formater.h"
 #include "cpuinfo.h"
+#include "idt.h"
 
 void kmain() __attribute__ ((noreturn));
 void bootEnd() __attribute__ ((noreturn));
@@ -27,6 +28,7 @@ extern Memory sysMemory;
 extern VirtualMemory vmm;
 extern GDT gdt;
 extern CPUInfo cpu;
+extern IDT idt;
 
 // For now it's easier for me to just look at the screen. I have a way in mind
 // to automate this, so guess what... here is another TODO!
@@ -334,6 +336,7 @@ void kmain() {
     sysMemory = Memory();
     gdt = GDT();
     vmm = VirtualMemory(false /* should run vmm self tests before paging */);
+    idt = IDT();
 
     // at this point interrupts are disabled... need to setup IDT to renable them.
 

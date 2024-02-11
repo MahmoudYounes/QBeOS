@@ -5,7 +5,9 @@
 #include "common.h"
 #include "screen.h"
 #include "formater.h"
+#include "interrupt_32.h"
 
+#define GATE_32INTR_F 0x8e00      // 1P 00PL 0R  e(32bit intr gate) 00R
 
 class IDTEntry : public MemoryEncodeable {
     private:
@@ -29,13 +31,11 @@ class IDT {
     private:
         uintptr_t idtTableBase = 0x910000;
 
-        // Loads the IDT
-        void loadIDT();
-
-        // Sets up the IDT
-        void setupIDT();
-
     public:
+        struct __attribute__((packed)) IDTInfo {
+                uint16_t size;
+                uint32_t offset;
+        } idt;
         IDT();
 
 };
