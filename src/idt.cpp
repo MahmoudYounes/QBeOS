@@ -1,6 +1,15 @@
 #include "idt.h"
+#include "gdt.h"
+#include "interrupt_32.h"
 
 extern Screen screen;
+
+// interruptVector contains pointers to the vector methods that will be used
+static void (*interruptVector[])(struct interruptFrame *) = {
+UnImplementedISR
+};
+
+static int countDefinedInterrupts = 1;
 
 IDTEntry::IDTEntry(){}
 
@@ -66,14 +75,23 @@ uint64_t IDTEntry::EncodeEntryAt(uintptr_t addr){
 }
 
 IDT::IDT(){
-    setupIDT();
-    loadIDT();
+    // interrupts should be set up only once
+    uint8_t idtIdx = 0;
+    for (int i = 0; i < countDefinedInterrupts;i++){
+        IDTEntry idtEntry = IDTEntry();
+        idtEntry.SetSegment(GDT_KERNEL_CODE_DESCRIPTOR_SEL);
+        idtEntry.SetOffset((uintptr_t)interruptVector[0]);
+        idtEntry.SetFlags(GATE_32INTR_F);
+        idtEntry.EncodeEntryAt(idtTableBase + idtIdx++ * 8);
+    }
+
+    idt.offset = idtTableBase;
+    idt.size = 8 * countDefinedInterrupts;
+
+    __asm__ __volatile__ (
+        "lidt %0"
+        :
+        : "m" (idt));
 }
 
-void IDT::setupIDT(){
-
-}
-
-void IDT::loadIDT(){
-
-}
+IDT idt;
