@@ -10,12 +10,12 @@ void APIC::enableAPIC() {
   uint32_t eax, edx;
   char buf[512];
 
-  if (cpu.IsCPUFeatureSupported(CPUID_FEAT_APIC)) {
+  if (cpu.IsCPUFeatureSupported(CPU_FEAT_APIC)) {
     kprint("CPU Supports APIC\n\0");
     supportedAPIC = true;
   }
 
-  if (cpu.IsCPUFeatureSupported(CPUID_FEAT_X2APIC)) {
+  if (cpu.IsCPUFeatureSupported(CPU_FEAT_X2APIC)) {
     kprint("CPU Supports x2APIC\n\0");
     supportedX2APIC = true;
   }
