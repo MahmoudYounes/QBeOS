@@ -5,98 +5,98 @@
 #include "cpuid.h"
 #include "logger.h"
 
-// TODO: imagine you provide a shell command like lscpu. this class needs to have and support reading all CPU information.
-// todo that, check the table 3-8 in intel manual vol 2 page 814
+// TODO: imagine you provide a shell command like lscpu. this class needs to
+// have and support reading all CPU information. todo that, check the table 3-8
+// in intel manual vol 2 page 814
 
-enum CPUModel{
-AMD,
-AMDOLD,
-INTEL,
+enum CPUModel {
+  AMD,
+  AMDOLD,
+  INTEL,
 };
 
-enum CPUFeatureECX{
-    CPUID_FEAT_ECX_SSE3         = 1 << 0,
-    CPUID_FEAT_ECX_PCLMUL       = 1 << 1,
-    CPUID_FEAT_ECX_DTES64       = 1 << 2,
-    CPUID_FEAT_ECX_MONITOR      = 1 << 3,
-    CPUID_FEAT_ECX_DS_CPL       = 1 << 4,
-    CPUID_FEAT_ECX_VMX          = 1 << 5,
-    CPUID_FEAT_ECX_SMX          = 1 << 6,
-    CPUID_FEAT_ECX_EST          = 1 << 7,
-    CPUID_FEAT_ECX_TM2          = 1 << 8,
-    CPUID_FEAT_ECX_SSSE3        = 1 << 9,
-    CPUID_FEAT_ECX_CID          = 1 << 10,
-    CPUID_FEAT_ECX_SDBG         = 1 << 11,
-    CPUID_FEAT_ECX_FMA          = 1 << 12,
-    CPUID_FEAT_ECX_CX16         = 1 << 13,
-    CPUID_FEAT_ECX_XTPR         = 1 << 14,
-    CPUID_FEAT_ECX_PDCM         = 1 << 15,
-    CPUID_FEAT_ECX_PCID         = 1 << 17,
-    CPUID_FEAT_ECX_DCA          = 1 << 18,
-    CPUID_FEAT_ECX_SSE4_1       = 1 << 19,
-    CPUID_FEAT_ECX_SSE4_2       = 1 << 20,
-    CPUID_FEAT_ECX_X2APIC       = 1 << 21,
-    CPUID_FEAT_ECX_MOVBE        = 1 << 22,
-    CPUID_FEAT_ECX_POPCNT       = 1 << 23,
-    CPUID_FEAT_ECX_TSC          = 1 << 24,
-    CPUID_FEAT_ECX_AES          = 1 << 25,
-    CPUID_FEAT_ECX_XSAVE        = 1 << 26,
-    CPUID_FEAT_ECX_OSXSAVE      = 1 << 27,
-    CPUID_FEAT_ECX_AVX          = 1 << 28,
-    CPUID_FEAT_ECX_F16C         = 1 << 29,
-    CPUID_FEAT_ECX_RDRAND       = 1 << 30,
-    CPUID_FEAT_ECX_HYPERVISOR   = 1 << 31
+enum CPUFeatureECX {
+  CPU_FEAT_SSE3 = 1 << 0,
+  CPU_FEAT_PCLMUL = 1 << 1,
+  CPU_FEAT_DTES64 = 1 << 2,
+  CPU_FEAT_MONITOR = 1 << 3,
+  CPU_FEAT_DS_CPL = 1 << 4,
+  CPU_FEAT_VMX = 1 << 5,
+  CPU_FEAT_SMX = 1 << 6,
+  CPU_FEAT_EST = 1 << 7,
+  CPU_FEAT_TM2 = 1 << 8,
+  CPU_FEAT_SSSE3 = 1 << 9,
+  CPU_FEAT_CID = 1 << 10,
+  CPU_FEAT_SDBG = 1 << 11,
+  CPU_FEAT_FMA = 1 << 12,
+  CPU_FEAT_CX16 = 1 << 13,
+  CPU_FEAT_XTPR = 1 << 14,
+  CPU_FEAT_PDCM = 1 << 15,
+  CPU_FEAT_PCID = 1 << 17,
+  CPU_FEAT_DCA = 1 << 18,
+  CPU_FEAT_SSE4_1 = 1 << 19,
+  CPU_FEAT_SSE4_2 = 1 << 20,
+  CPU_FEAT_X2APIC = 1 << 21,
+  CPU_FEAT_MOVBE = 1 << 22,
+  CPU_FEAT_POPCNT = 1 << 23,
+  CPU_FEAT_TSC_DEADLINE = 1 << 24,
+  CPU_FEAT_AES = 1 << 25,
+  CPU_FEAT_XSAVE = 1 << 26,
+  CPU_FEAT_OSXSAVE = 1 << 27,
+  CPU_FEAT_AVX = 1 << 28,
+  CPU_FEAT_F16C = 1 << 29,
+  CPU_FEAT_RDRAND = 1 << 30,
+  CPU_FEAT_HYPERVISOR = 1 << 31
 };
 
-enum CPUFeatureEDX{
-    CPUID_FEAT_EDX_FPU          = 1 << 0,
-    CPUID_FEAT_EDX_VME          = 1 << 1,
-    CPUID_FEAT_EDX_DE           = 1 << 2,
-    CPUID_FEAT_EDX_PSE          = 1 << 3,
-    CPUID_FEAT_EDX_TSC          = 1 << 4,
-    CPUID_FEAT_EDX_MSR          = 1 << 5,
-    CPUID_FEAT_EDX_PAE          = 1 << 6,
-    CPUID_FEAT_EDX_MCE          = 1 << 7,
-    CPUID_FEAT_EDX_CX8          = 1 << 8,
-    CPUID_FEAT_EDX_APIC         = 1 << 9,
-    CPUID_FEAT_EDX_SEP          = 1 << 11,
-    CPUID_FEAT_EDX_MTRR         = 1 << 12,
-    CPUID_FEAT_EDX_PGE          = 1 << 13,
-    CPUID_FEAT_EDX_MCA          = 1 << 14,
-    CPUID_FEAT_EDX_CMOV         = 1 << 15,
-    CPUID_FEAT_EDX_PAT          = 1 << 16,
-    CPUID_FEAT_EDX_PSE36        = 1 << 17,
-    CPUID_FEAT_EDX_PSN          = 1 << 18,
-    CPUID_FEAT_EDX_CLFLUSH      = 1 << 19,
-    CPUID_FEAT_EDX_DS           = 1 << 21,
-    CPUID_FEAT_EDX_ACPI         = 1 << 22,
-    CPUID_FEAT_EDX_MMX          = 1 << 23,
-    CPUID_FEAT_EDX_FXSR         = 1 << 24,
-    CPUID_FEAT_EDX_SSE          = 1 << 25,
-    CPUID_FEAT_EDX_SSE2         = 1 << 26,
-    CPUID_FEAT_EDX_SS           = 1 << 27,
-    CPUID_FEAT_EDX_HTT          = 1 << 28,
-    CPUID_FEAT_EDX_TM           = 1 << 29,
-    CPUID_FEAT_EDX_IA64         = 1 << 30,
-    CPUID_FEAT_EDX_PBE          = 1 << 31
+enum CPUFeatureEDX {
+  CPU_FEAT_FPU = 1 << 0,
+  CPU_FEAT_VME = 1 << 1,
+  CPU_FEAT_DE = 1 << 2,
+  CPU_FEAT_PSE = 1 << 3,
+  CPU_FEAT_TSC = 1 << 4,
+  CPU_FEAT_MSR = 1 << 5,
+  CPU_FEAT_PAE = 1 << 6,
+  CPU_FEAT_MCE = 1 << 7,
+  CPU_FEAT_CX8 = 1 << 8,
+  CPU_FEAT_APIC = 1 << 9,
+  CPU_FEAT_SEP = 1 << 11,
+  CPU_FEAT_MTRR = 1 << 12,
+  CPU_FEAT_PGE = 1 << 13,
+  CPU_FEAT_MCA = 1 << 14,
+  CPU_FEAT_CMOV = 1 << 15,
+  CPU_FEAT_PAT = 1 << 16,
+  CPU_FEAT_PSE36 = 1 << 17,
+  CPU_FEAT_PSN = 1 << 18,
+  CPU_FEAT_CLFLUSH = 1 << 19,
+  CPU_FEAT_DS = 1 << 21,
+  CPU_FEAT_ACPI = 1 << 22,
+  CPU_FEAT_MMX = 1 << 23,
+  CPU_FEAT_FXSR = 1 << 24,
+  CPU_FEAT_SSE = 1 << 25,
+  CPU_FEAT_SSE2 = 1 << 26,
+  CPU_FEAT_SS = 1 << 27,
+  CPU_FEAT_HTT = 1 << 28,
+  CPU_FEAT_TM = 1 << 29,
+  CPU_FEAT_IA64 = 1 << 30,
+  CPU_FEAT_PBE = 1 << 31
 };
 
+class CPUInfo {
+private:
+  // cpu model is stored in 12 bytes + 1 null byte
+  char cpuModel[13];
+  uint32_t cpuFeaturesECX;
+  uint32_t cpuFeaturesEDX;
 
-class CPUInfo{
-    private:
-        // cpu model is stored in 12 bytes + 1 null byte
-        char cpuModel[13];
-        uint32_t cpuFeaturesECX;
-        uint32_t cpuFeaturesEDX;
+  void getCPUModel();
+  void getCPUFeatures();
+  uint32_t getCPUMaxLogicalAddress();
 
-        void getCPUModel();
-        void getCPUFeatures();
-        uint32_t getCPUMaxLogicalAddress();
-    public:
-        CPUInfo();
-        bool IsCPUFeatureSupported(CPUFeatureECX feature);
-        bool IsCPUFeatureSupported(CPUFeatureEDX feature);
+public:
+  CPUInfo();
+  bool IsCPUFeatureSupported(CPUFeatureECX feature);
+  bool IsCPUFeatureSupported(CPUFeatureEDX feature);
 };
-
 
 #endif /* CPUINFO_H */

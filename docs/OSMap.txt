@@ -295,9 +295,6 @@ Divide configuration register is used to divide the frequency of the PC clock an
 the interrupt. You configure the timer vector and mode by writing to the timer LVT register. to start the timer you need to write
 to the initial timer count register.
 
-## MADT
-
-
 ## IVT
 This is the interrupt table that exists in real mode. The BIOS sets this table up. This is a 4 byte per table entry
 table where each entry has 2 bytes.
@@ -305,7 +302,10 @@ referencing segment and 2 bytes referencing offset, both mark the address of the
 happens. These are the routines that run when we do for example int 15h in real mode.
 
 ## IDT
-TODO: fill in the IDT documentation
+TODO: fill in the IDT documentation with every interrupt implementation design.
+
+# ACPI
+## MADT
 
 # multiprocessing
 this section deals with running multiprocessors together.

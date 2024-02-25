@@ -9,8 +9,6 @@ CPUInfo::CPUInfo(){
     kprint("Detected cpu \0");
     kprint(cpuModel); // TODO: support string formatter and remove these three lines
 
-    uint32_t cpuMaxLogicalAddress = getCPUMaxLogicalAddress();
-    kprintf(buf, "Initial APIC ID %d\n\0", cpuMaxLogicalAddress);
     getCPUFeatures();
 }
 
