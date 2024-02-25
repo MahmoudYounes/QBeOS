@@ -21,7 +21,7 @@ void Formater::Format(char *res, const char *str, ...){
                     break;
                 }
                 case DECIMAL_SIGN:{
-                    num = va_arg(argPtr, int);
+                    num = va_arg(argPtr, uint32_t);
                     buffi += putNumber(res, buffi, num);
                     break;
                 }
@@ -36,7 +36,7 @@ void Formater::Format(char *res, const char *str, ...){
                     break;
                 }
                 case BIN_SIGN:{
-                    num = va_arg(argPtr, int);
+                    num = va_arg(argPtr, uint32_t);
                     buffi += putNumberAsBin(res, buffi, num);
                     break;
                 }

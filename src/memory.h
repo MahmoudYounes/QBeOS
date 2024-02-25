@@ -2,11 +2,9 @@
 #define MEMORY_H
 
 #include "common.h"
-#include "screen.h"
 #include "mem_region.h"
 #include "strings.h"
 #include "logger.h"
-#include "formater.h"
 #include "math.h"
 
 // 4 KB physical pages

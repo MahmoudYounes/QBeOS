@@ -4,7 +4,6 @@
 #include "mem_region.h"
 
 static char buf[512];
-extern Screen screen;
 
 void Memory::assertMemoryListSize() {
     uint64_t memoryListSizeBytes =  physicalPagesCount * sizeof(MemoryRegion);
@@ -63,7 +62,7 @@ void Memory::reserverKernelMemory(){
         ptr = ptr->next;
     }
 
-    printf(buf, "reserved %dMBs for kernel\n\0", BYTE_TO_MB(actualReserved));
+    kprintf(buf, "reserved %dMBs for kernel\n\0", BYTE_TO_MB(actualReserved));
 }
 
 void Memory::setupFreePagePtr(){
@@ -96,7 +95,7 @@ MemoryRegion *Memory::findEmptyRegionFor(uint64_t pages){
 }
 
 Memory::Memory(){
-    screen.WriteString("Initializing memory...\n");
+    kprint("Initializing memory...\n");
     uint64_t bootMemRegionsCount = 0;
     uint64_t endAddr = 0;
 
@@ -120,7 +119,7 @@ Memory::Memory(){
                 .state = reserved
             };
             uint64_t memHoleEndAddr = mtentry.baseAddr + mtentry.size;
-            printf(buf, "found memory hole. start: %X end: at %X\n\0", mtentry.baseAddr, memHoleEndAddr);
+            kprintf(buf, "found memory hole. start: %X end: at %X\n\0", mtentry.baseAddr, memHoleEndAddr);
             splitRegion(&mtentry, bootMemRegionsCount);
 
             endAddr = memHoleEndAddr;
@@ -133,7 +132,7 @@ Memory::Memory(){
 
         endAddr = mtentry.baseAddr + mtentry.size;
 
-        printf(buf, "found memory region. start: %X end: at %X\n\0", mtentry.baseAddr, endAddr);
+        kprintf(buf, "found memory region. start: %X end: at %X\n\0", mtentry.baseAddr, endAddr);
 
         // This is not a reliable exit condition.
         if (mtentry.size == 0){
@@ -146,7 +145,7 @@ Memory::Memory(){
     for (uint64_t i = 0; i < physicalPagesCount; i++){
         if((i != physicalPagesCount - 1 && memoryListHead[i].next == NULL) ||
            (i == physicalPagesCount - 1 && memoryListHead[i].next != NULL)){
-            printf(buf, "failed to set list pointers correctly at %d\n\0", i);
+            kprintf(buf, "failed to set list pointers correctly at %d\n\0", i);
             panic("memory self tests failed");
         }
     }
@@ -193,10 +192,10 @@ void Memory::PrintMemory(){
         }
     }
 
-    printf(buf, "system ram: %d MBs.\n\0", BYTE_TO_MB(memInfo.memSizeBytes));
-    printf(buf, "usable memory: %d MBs.\n\0", BYTE_TO_MB(availableMemory));
-    printf(buf, "kernel memory: %d MBs.\n\0", BYTE_TO_MB(kernelMemory));
-    printf(buf, "reserved memory: %d MBs.\n\0", BYTE_TO_MB(reservedMemory));
+    kprintf(buf, "system ram: %d MBs.\n\0", BYTE_TO_MB(memInfo.memSizeBytes));
+    kprintf(buf, "usable memory: %d MBs.\n\0", BYTE_TO_MB(availableMemory));
+    kprintf(buf, "kernel memory: %d MBs.\n\0", BYTE_TO_MB(kernelMemory));
+    kprintf(buf, "reserved memory: %d MBs.\n\0", BYTE_TO_MB(reservedMemory));
 }
 
 void *Memory::AllocPhysicalPage(){

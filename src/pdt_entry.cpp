@@ -89,5 +89,5 @@ uint64_t PDTEntry::EncodeEntryAt(uintptr_t addr){
 
 
 void PDTEntry::PrintEntryInfo(char *buf){
-    printf(buf, "entry info %b\n\0", entry);
+    kprintf(buf, "entry info %b\n\0", entry);
 }

@@ -2,7 +2,6 @@
 #define VMM_H
 
 #include "common.h"
-#include "formater.h"
 #include "mem_region.h"
 #include "memory.h"
 #include "pdt_entry.h"
@@ -19,7 +18,6 @@
 #define VMM_UNMAP 2       // same effect as RESV different naming
 
 extern Memory sysMemory;
-extern Screen screen;
 
 class VirtualMemory{
     // PDT address, check OSMap.txt

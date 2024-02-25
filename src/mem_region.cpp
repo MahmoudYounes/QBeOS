@@ -7,34 +7,34 @@ long MemoryRegion::GetSize(){
 }
 
 void MemoryRegion::PrintRegionInfo(){
-    printf(buf, "memory region %d\n\0", bootRegionID);
-    printf(buf, "  start address: %p\n\0", baseAddress);
-    printf(buf, "  region size: %d Kbs\n\0", BYTE_TO_KB(size));
-    print("  region type: \0");
+    kprintf(buf, "memory region %d\n\0", bootRegionID);
+    kprintf(buf, "  start address: %p\n\0", baseAddress);
+    kprintf(buf, "  region size: %d Kbs\n\0", BYTE_TO_KB(size));
+    kprint("  region type: \0");
     switch (state) {
         case 0:
-            print("invalid\n\0");
+            kprint("invalid\n\0");
             break;
         case 1:
-            print("usable\n\0");
+            kprint("usable\n\0");
             break;
         case 2:
-            print("reserved\n\0");
+            kprint("reserved\n\0");
             break;
         case 3:
-            print("reclaimable\n\0");
+            kprint("reclaimable\n\0");
             break;
         case 4:
-            print("nvs\n\0");
+            kprint("nvs\n\0");
             break;
         case 5:
-            print("badmem\n\0");
+            kprint("badmem\n\0");
             break;
         case 6:
-            print("kernel\n\0");
+            kprint("kernel\n\0");
             break;
         default:
-            print("unknown memory type\n\0");
+            kprint("unknown memory type\n\0");
             break;
     }
 }

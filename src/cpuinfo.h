@@ -3,8 +3,10 @@
 
 #include "common.h"
 #include "cpuid.h"
-#include "screen.h"
-#include "formater.h"
+#include "logger.h"
+
+// TODO: imagine you provide a shell command like lscpu. this class needs to have and support reading all CPU information.
+// todo that, check the table 3-8 in intel manual vol 2 page 814
 
 enum CPUModel{
 AMD,
@@ -89,6 +91,7 @@ class CPUInfo{
 
         void getCPUModel();
         void getCPUFeatures();
+        uint32_t getCPUMaxLogicalAddress();
     public:
         CPUInfo();
         bool IsCPUFeatureSupported(CPUFeatureECX feature);

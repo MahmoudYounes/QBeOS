@@ -32,17 +32,4 @@ class Formater {
 
 };
 
-#define sprintf(resBuf, str, ...) Formater().Format(resBuf, str, __VA_ARGS__)
-#define printf(resBuf, str, ...)                \
-    do {                                        \
-    sprintf(resBuf, str, __VA_ARGS__);          \
-    screen.WriteString(resBuf);                 \
-    } while (0)
-
-#define print(str)                              \
-    do {                                        \
-    screen.WriteString(str);                    \
-    } while (0)
-
-
 #endif /* FORMATER_H */

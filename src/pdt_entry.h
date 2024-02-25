@@ -4,13 +4,10 @@
 #include "common.h"
 #include "mem_encodeable.h"
 #include "pt_entry.h"
-#include "screen.h"
-#include "formater.h"
+
 
 #define KERN_PDT PDTEntry(KB).SetPresent()->SetIsReadWrite()
 #define USER_PDT PDTEntry(KB).SetPresent()->SetIsReadWrite()->SetIsUserAccessible()
-
-extern Screen screen;
 
 enum PageSize{
     KB,

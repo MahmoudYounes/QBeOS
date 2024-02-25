@@ -8,14 +8,14 @@
 #include "pdt_entry.h"
 #include "pt_entry.h"
 #include "vmm.h"
-#include "screen.h"
 #include "memory.h"
 #include "gdt.h"
 #include "common.h"
 #include "math.h"
-#include "formater.h"
 #include "cpuinfo.h"
 #include "idt.h"
+#include "pic.h"
+#include "apic.h"
 
 void kmain() __attribute__ ((noreturn));
 void bootEnd() __attribute__ ((noreturn));
@@ -29,6 +29,8 @@ extern VirtualMemory vmm;
 extern GDT gdt;
 extern CPUInfo cpu;
 extern IDT idt;
+extern PIC pic;
+extern APIC apic;
 
 // For now it's easier for me to just look at the screen. I have a way in mind
 // to automate this, so guess what... here is another TODO!
@@ -37,11 +39,11 @@ extern IDT idt;
 void testMemoryInitialization(){
     MemoryInfo memInfo = sysMemory.GetMemoryInfo();
     if (memInfo.memSizeBytes == 0){
-        print("FAILED: expected memory more than 0 GBs\0");
+        kprint("FAILED: expected memory more than 0 GBs\0");
         panic("Memory Initialization tests failed\n\0");
     }
 
-    print("Memory Initialization tests succeeded\n\0");
+    kprint("Memory Initialization tests succeeded\n\0");
 }
 
 void testMemoryAllocation(){
@@ -49,9 +51,9 @@ void testMemoryAllocation(){
     // sense these tests are run after paging is enabled. so they don't have
     // a vmm allocation counter part.
     uint64_t *memPtr = (uint64_t *)sysMemory.AllocPhysicalPage();
-    print("allocated memory\n");
+    kprint("allocated memory\n");
 
-    print("freeing allocated page\n");
+    kprint("freeing allocated page\n");
     sysMemory.Free(memPtr);
 
     screen.WriteString("allocating 16KBs i.e 4 Pages of memory\n\0");
@@ -72,7 +74,7 @@ void testVMMAloocation(){
 
     uint8_t cmpRes = strcmp(memPtr, testBuf);
     if (cmpRes != 0){
-        print("FAILED: failed to write testBuf into allocated memory\n\0");
+        kprint("FAILED: failed to write testBuf into allocated memory\n\0");
         panic("VMM Allocation tests failed\n\0");
     }
     vmm.Free(memPtr);
@@ -83,45 +85,45 @@ void testVMMAloocation(){
 
     for (uint64_t i = 0; i < MB_TO_BYTE(10);i++){
         if(memPtr[i] != 'a'){
-            print("FAILED: failed to write to allocated memory\n\0");
+            kprint("FAILED: failed to write to allocated memory\n\0");
             panic("VMM Allocation tests failed\n\0");
         }
     }
     vmm.Free(memPtr);
 
-    print("VMM Allocation tests succeeded\n\0");
+    kprint("VMM Allocation tests succeeded\n\0");
 }
 
 void testMemoryPageAt(){
     bool failed = false;
     MemoryRegion mem = sysMemory.GetPageAt(0x8000);
     if ((uintptr_t)mem.baseAddress != 0x8000){
-        printf(buf, "FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
+        kprintf(buf, "FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
         failed = true;
     }
 
     mem = sysMemory.GetPageAt(0x8020);
     if ((uintptr_t)mem.baseAddress != 0x8000){
-        printf(buf, "FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
+        kprintf(buf, "FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
         failed = true;
     }
 
     mem = sysMemory.GetPageAt(0x50000000);
     if ((uintptr_t)mem.baseAddress != 0x50000000){
-        printf(buf, "FAILED: expected %p found %p\n\0", 0x50000000, mem.baseAddress);
+        kprintf(buf, "FAILED: expected %p found %p\n\0", 0x50000000, mem.baseAddress);
         failed = true;
     }
 
     if (failed){
         panic("memory tests failed");
     }
-    print("Memory PageAt tests succeeded\n\0");
+    kprint("Memory PageAt tests succeeded\n\0");
 }
 
 void testFormater(){
     Formater formater = Formater();
 
-    print("Testing formatter\n\0");
+    kprint("Testing formatter\n\0");
 
     formater.Format(buf, "\n\ntwo new lines\n\0");
     screen.WriteString(buf);
@@ -173,7 +175,7 @@ void testMemset() {
             panic("failed memset test\n\0");
         }
     }
-    print("Memset tests succeeded\n\0");
+    kprint("Memset tests succeeded\n\0");
 }
 
 void testPDTEntry() {
@@ -189,8 +191,8 @@ void testPDTEntry() {
     uint32_t actual = *((uint32_t *)pp);
     uint32_t expectedEntry = 0b00000000100000010111000010000111;
     if (expectedEntry != actual){
-        print("FAILED:\0");
-        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        kprint("FAILED:\0");
+        kprintf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
         panic("Test PDTEntry failed");
     }
 
@@ -203,8 +205,8 @@ void testPDTEntry() {
     actual = *((uint32_t *)pp);
     expectedEntry = 0b00000000101101010101000000000011;
     if (expectedEntry != actual){
-        print("FAILED:\0");
-        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        kprint("FAILED:\0");
+        kprintf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
         panic("Test PDTEntry failed");
     }
 
@@ -212,8 +214,8 @@ void testPDTEntry() {
     actual = *((uint32_t *)pp);
     expectedEntry = 0b10010100000001000000000011;
     if (expectedEntry != actual){
-        print("FAILED:\0");
-        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        kprint("FAILED:\0");
+        kprintf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
         panic("Test PDTEntry failed");
     }
 
@@ -221,13 +223,13 @@ void testPDTEntry() {
     actual = *((uint32_t *)pp);
     expectedEntry = 0b10010100000001000000000111;
     if (expectedEntry != actual){
-        print("FAILED:\0");
-        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        kprint("FAILED:\0");
+        kprintf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
         panic("Test PDTEntry failed");
     }
 
     vmm.Free((void *)pp);
-    print("PDTEntry tests succeeded\n\0");
+    kprint("PDTEntry tests succeeded\n\0");
 }
 
 void testPTEntry(){
@@ -242,8 +244,8 @@ void testPTEntry(){
     uint32_t actual = *((uint32_t *)pp);
     uint32_t expectedEntry = 0b10110000000100000101;
     if (expectedEntry != actual){
-        print("FAILED:\0");
-        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        kprint("FAILED:\0");
+        kprintf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
         panic("Test PDTEntry failed");
     }
 
@@ -251,8 +253,8 @@ void testPTEntry(){
     actual = *((uint32_t *)pp);
     expectedEntry = 0b11111111111111111111000000000000;
     if (expectedEntry != actual){
-        print("FAILED:\0");
-        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        kprint("FAILED:\0");
+        kprintf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
         panic("Test PDTEntry failed");
     }
 
@@ -260,8 +262,8 @@ void testPTEntry(){
     actual = *((uint32_t *)pp);
     expectedEntry = 0b10010100000001000000000011;
     if (expectedEntry != actual){
-        print("FAILED:\0");
-        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        kprint("FAILED:\0");
+        kprintf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
         panic("Test PDTEntry failed");
     }
 
@@ -269,13 +271,13 @@ void testPTEntry(){
     actual = *((uint32_t *)pp);
     expectedEntry = 0b10010100000001000000000111;
     if (expectedEntry != actual){
-        print("FAILED:\0");
-        printf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
+        kprint("FAILED:\0");
+        kprintf(buf, " read after write value is %b expected %b \0", *((uint32_t*)pp), expectedEntry);
         panic("Test PDTEntry failed");
     }
 
     sysMemory.Free((void *)pp);
-    print("PTEntry tests succeeded\n\0");
+    kprint("PTEntry tests succeeded\n\0");
 }
 
 void testIDTEntry(){
@@ -291,17 +293,17 @@ void testIDTEntry(){
     uint64_t entry = *((uint64_t *)pg);
     IDTEntry actualEntry = IDTEntry(entry);
     if (actualEntry.GetFlags() != 0x4e00){
-        printf(buf, "Expected 0x4e00 found %x\n\0", actualEntry.GetFlags());
+        kprintf(buf, "Expected 0x4e00 found %x\n\0", actualEntry.GetFlags());
         panic("FAILED: IDTEntry tests\n\0");
     }
 
     if (actualEntry.GetSegment() != 0x8){
-        printf(buf, "Expected 0x8 found %x\n\0", actualEntry.GetSegment());
+        kprintf(buf, "Expected 0x8 found %x\n\0", actualEntry.GetSegment());
         panic("FAILED: IDTEntry tests\n\0");
     }
 
     if (actualEntry.GetOffset() != 0xff){
-        printf(buf, "Expected 0xff found %x\n\0", actualEntry.GetOffset());
+        kprintf(buf, "Expected 0xff found %x\n\0", actualEntry.GetOffset());
         panic("FAILED: IDTEntry tests\n\0");
     }
 }
@@ -315,14 +317,14 @@ void setupConsole(){
 
 void printHelloMessage(){
     screen.ClearScreen();
-    screen.WriteString("Welcome to QBeOS...\n\0");
+    kprint("Welcome to QBeOS...\n\0");
 }
 
 void bootEnd(){
     // When we go to userspace we will not have this as system should always
     // be running until shutdown is specified.
-    screen.WriteString("booting done...\n\0");
-    screen.WriteString("halting PC...\n\0");
+    kprint("booting done...\n\0");
+    kprint("halting PC...\n\0");
     HLT();
 }
 
@@ -332,11 +334,13 @@ void kmain() {
     cpu = CPUInfo();
 
     // sys initializations
-    screen.WriteString("Initializing all systems...\n\0");
+    kprint("Initializing all systems...\n\0");
     sysMemory = Memory();
     gdt = GDT();
     vmm = VirtualMemory(false /* should run vmm self tests before paging */);
     idt = IDT();
+    pic = PIC();
+    apic = APIC();
 
     // at this point interrupts are disabled... need to setup IDT to renable them.
 
@@ -347,7 +351,7 @@ void kmain() {
     // Since I don't have a userspace env yet, this will be just
     // testing that systems are initialized and booted correctly.
 
-    screen.WriteString("Running self tests\n\0");
+    kprint("Running self tests\n\0");
     //testMemoryInitialization();
     //testMemoryAllocation();
     //testMemoryPageAt();

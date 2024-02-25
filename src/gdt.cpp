@@ -1,11 +1,8 @@
 #include "gdt.h"
 #include "common.h"
 
-
-extern Screen screen;
-
 GDT::GDT(){
-    screen.WriteString("initializing GDT...\n");
+    kprint("initializing GDT...\n");
 
     lastEntryAddress = (uint8_t *)gdtBaseAddress;
     GDTEntry nullDescriptor = ConstructGDTEntry(0x00000000, 0x00000000, 0x0000, 0x0000);
