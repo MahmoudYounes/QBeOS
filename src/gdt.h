@@ -3,7 +3,6 @@
 
 #include "common.h"
 #include "logger.h"
-#include "screen.h"
 
 
 #define GDT_ENTRY_SIZE_BYTES 8

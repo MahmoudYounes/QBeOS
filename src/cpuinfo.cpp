@@ -1,15 +1,13 @@
 #include "cpuinfo.h"
 
-extern Screen screen;
-
 CPUInfo::CPUInfo(){
-    print("Detecting cpu...\n\0");
+    char buf[512];
+    kprint("Detecting cpu...\n\0");
 
     getCPUModel();
 
-    print("Detected cpu \0");
-    print(cpuModel);
-    print("\n");
+    kprint("Detected cpu \0");
+    kprint(cpuModel); // TODO: support string formatter and remove these three lines
 
     getCPUFeatures();
 }
@@ -55,6 +53,13 @@ bool CPUInfo::IsCPUFeatureSupported(CPUFeatureECX feature){
 
 bool CPUInfo::IsCPUFeatureSupported(CPUFeatureEDX feature){
     return cpuFeaturesEDX & feature;
+}
+
+uint32_t CPUInfo::getCPUMaxLogicalAddress(){
+    int unused, ebx, ecx, edx;
+    __cpuid(1, unused, ebx, ecx, edx);
+
+    return ebx & 0xff000000;
 }
 
 CPUInfo cpu;

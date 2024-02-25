@@ -3,8 +3,6 @@
 
 #include "mem_encodeable.h"
 #include "common.h"
-#include "screen.h"
-#include "formater.h"
 #include "interrupt_32.h"
 
 #define GATE_32INTR_F 0x8e00      // 1P 00PL 0R  e(32bit intr gate) 00R
@@ -13,7 +11,7 @@ class IDTEntry : public MemoryEncodeable {
     private:
         uint16_t offsetLow;
         uint16_t segment;
-        uint16_t flags;
+        uint16_t flags; // MSB -> LSB: Present,2 * DPL, Res 0, 4 * GateType, 8 * Res
         uint16_t offsetHigh;
     public:
         IDTEntry();

@@ -27,22 +27,22 @@ void VirtualMemory::testAddrTranslation(uintptr_t expectedAddr){
     uintptr_t addr = paddr | lastTwelve;
 
     if(addr != expectedAddr){
-        printf(buf, "testing mapping of address %p\n\0", expectedAddr);
-        printf(buf, "page tables are incorrectly set up. expected %p found %p\n\0", expectedAddr, addr);
-        printf(buf, "offseting pdt %p with %x yielded \0", PDTAddress, firstTen);
-        printf(buf, "%p\n\0", pdtPtr);
-        printf(buf, "addresss of PT from PDT Entry is %p\n\0", ptPtr);
-        printf(buf, "offseting pt %p with %d yielded \0", ptPtr, nextTen);
-        printf(buf, "%p\n\0", ptePtr);
-        printf(buf, "address of Page from PT Entry is %p\n\0", paddr);
-        printf(buf, "constructing address from Page Base %p, and offset %d in page yielded \0", paddr, lastTwelve);
-        printf(buf, "%p\n\0", addr);
+        kprintf(buf, "testing mapping of address %p\n\0", expectedAddr);
+        kprintf(buf, "page tables are incorrectly set up. expected %p found %p\n\0", expectedAddr, addr);
+        kprintf(buf, "offseting pdt %p with %x yielded \0", PDTAddress, firstTen);
+        kprintf(buf, "%p\n\0", pdtPtr);
+        kprintf(buf, "addresss of PT from PDT Entry is %p\n\0", ptPtr);
+        kprintf(buf, "offseting pt %p with %d yielded \0", ptPtr, nextTen);
+        kprintf(buf, "%p\n\0", ptePtr);
+        kprintf(buf, "address of Page from PT Entry is %p\n\0", paddr);
+        kprintf(buf, "constructing address from Page Base %p, and offset %d in page yielded \0", paddr, lastTwelve);
+        kprintf(buf, "%p\n\0", addr);
         panic("vmm test failed");
     }
 }
 
 void VirtualMemory::initializeMemory(){
-    print("Initializing virtual memory module...\n\0");
+    kprint("Initializing virtual memory module...\n\0");
     setupPageDirectoryTable();
     mapSystemMemory();
     enablePaging();
@@ -89,7 +89,6 @@ void VirtualMemory::enablePaging(){
     // test translate if enabled
     testVirtualMemory();
 
-    screen.WriteString("Enabling paging, no return...\n\0");
     // TODO: if we want higher half kernel then after paging is enabled, must do a far jump to the next kernl address
     __asm__ __volatile__ (
         "mov ecx, %0\n\t"
@@ -100,6 +99,7 @@ void VirtualMemory::enablePaging(){
         "mov cr0, ecx\n\t"
         :
         : "r"(PDTAddress));
+    kprint("Enabled paging...\n\0");
 }
 
 void VirtualMemory::createPDTEntry(uintptr_t atPDTPtr, uintptr_t ofPTPtr){

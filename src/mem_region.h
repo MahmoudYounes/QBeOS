@@ -1,13 +1,10 @@
 #ifndef MEM_REGION_H
 #define MEM_REGION_H
 
-#include "screen.h"
 #include "common.h"
-#include "formater.h"
+#include "logger.h"
 
 #define IS_SYS_REGION(memPtr) memPtr->state != usable
-
-extern Screen screen;
 
 enum memState{
     invalid,
