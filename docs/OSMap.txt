@@ -305,7 +305,110 @@ happens. These are the routines that run when we do for example int 15h in real 
 TODO: fill in the IDT documentation with every interrupt implementation design.
 
 # ACPI
+advanced configuration an power management interface. not a hardware spec. not a software spec. it's an interface definition for dealing
+with a devices. it is not specific to a certain type of computer.
+it's not the only way to interface with devices. the other way would be for the OEM (original equipment manufacturer) to provide their
+own driver for each OS, or a nice developer implementing the driver based on hardware spec which will be a pain in the arse. this is
+called the legacy mode.
+
+## overview
+ACPI is a standard that allows OS to:
+* enumerate connected devices to the system
+* manage the devices functionality
+* control the power states of the connected device
+it is the OS's interface to deal with PCI devices, a middle man between devices and OS.
+The ACPI does this via a group of tables. these tables are called definition and control objects.
+
+## terminologies
+
+* definition blocks: a logical area in memory containing control methods as defined by OEM.
+* namespace: a logical grouping of a device functionality.
+* ACPI Namespace: a tree like structure of namespaces.
+
+a full list of terminologies exists in ACPI specs section 2.1
+
+## how it works
+ACPI Source Language compiler (ASL) compiles objects and control method to machine byte code (this happens on OEM side) and then ACPI Machine Language interpreter (AML) interprets it (happens in OS).
+AML evaluates code in definition blocks
+all of the above exists in a namespace. An object with _HID object can be managed by ACPI (drivers loaded by ACPI)
+an object with _AID (physical identification object) maps to a device with a firmware that knows how to manage itself without ACPI. ACPI can still manage those if needed.
+ACPI has runtime model triggered on events like new device connected, temprature increasing, etc.
+
+## ACPI initialization
+during boot, device firmware does setup, init, and self test. after that it updates its information in the ACPI table as necessary. i.e, it writes its information in memory.
+the OSPM (operating system power management) submodule or the ACPI submodule then parses these tables starting at root system description table (RSDT) that exists in
+BEDA (bios extended data area, see memory_layout.txt) or in the area below the 1MB boundary. this table contains pointer to XSDT and FADT and other tables.
+
+## RSDP
+Root system description pointer contains two pointers, one to RSDT and one to XSDT
+structure of this pointer is as the following: (Legend: name  size  offset  description)
+
+Signature   8B   0    "RSD PTR " <- note the space at the end.
+Checksum    1B   8    first 20 Bytes checksum and should be zero
+OEMID       6B   9    OEM ID supplied
+Revision    1B   15   The Revision of the ACPI. if zero this is ACPI V1
+RSDT        4B   16   Pointer to RSDT in memory
+Length      4B   20   Length of RSDT Table. Not available in ACPI V1
+XSDT Addr   8B   24   Pointer to XSDT Addr. Not available in ACPI V1
+Checksum    1B   32   Checksum of the entire table. Not available in ACPI V1
+Reserved    3B   33   Reserved bits. Not available in ACPI V1
+
+## System Description Table
+All the rest of the system description tables have their metadata in system description header. this table has the following structure
+Signature        4B 0   Identifier for the table see table 5.5 in UEFI ACPI spec
+Length           4B 4   Table length in bytes
+Revision         1B 8   Revision
+Checksum         1B 9   Entire table. must add to zero
+OEMID            6B 10
+OEM Table id     8B 16  OEM Supplied string ID used to identify particular data tables
+OEM Revision     4B 24
+Creator id       4B 28  Vendor id
+Creator revision 4B 32 revision for ASL Compiler
+
+## RSDT
+Page 104 for the complete table structure ACPI UEFI Spec Doc.
+This table is used in ACPI V1. if ACPI V2 is used the XSDT supersedes RSDT.
+
+## XSDT
+Page 105 for the complete table structure. used when ACPI V2 is used.
+note the 64 bit addresses in this table rather than the 32 bits.
+
+in both of the above tables, there is an array of addresses that point to other system description tables below.
+
+## FADT
+fixed ACPI description table constains addressed for important memory mapped hardware registers. page 106 for complete table structure.
+
+
+## DSDT
+deferentiated system definition table is the begining of the namespace and contains the definition blocks.
+
 ## MADT
+Multi apic definition table.
+
+## OS
+* section 1.7.2 specifies the requirements to be implemented by the OS to be ACPI complient. section 1.7.3 contains the minimum requirements.
+
+## main components of ACPI
+Three components:
+* ACPI System Description tables: the system tables that contains the definition blocks and pesudo code that can be interpreted by the OS. OSPM component in the OS contains an interpreter for this code
+this code contains procedures that can be executed defined by the OEM (original equipment manufacturer) to manage some functionality of the device.
+* ACPI registers: hardware interface.
+* ACPI platform firmware: code that initializes, sets up, restarts, sleeps, wake, etc. it is called during init of the PC.
+
+## QBeKern ACPI
+much like an OS for any IA32 Arch QBeKern will be ACPI Complient. during bootstrap of the system QBeKern will:
+* Search for the Root System Description Pointer (RDSP) in the EBDA. if not found, will search in the
+motherboard BIOS area. if not boot will fail.
+* if booting in EFI, QBeKern will get a pointer to the RSDP from the EFI system tables.
+* if ACPI V1 QBeKern uses RSDT, else use XSDT
+* then QBeKern will parse the following table structures:
+-- FADT
+-- FACS
+-- MADT
+
+Note: this is the begining. The topic of power management and interfacing with other components is a very complicated and time consuming work.
+While this is exciting in itself, there are more important and exciting as much topics to tackle first. this is a nice feature to implement towards the end.
+Hence, I will only parse the basic tables to figure out more info about the processors and then stop.
 
 # multiprocessing
 this section deals with running multiprocessors together.

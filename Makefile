@@ -1,3 +1,4 @@
+ROOT_DIR = $(shell pwd)
 BLD_DIR = ./build
 BIN_DIR = ./bin
 ISO_NAME = BeOS.iso

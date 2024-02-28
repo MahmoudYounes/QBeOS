@@ -9,6 +9,7 @@ LD = i686-elf-g++
 .PHONY: build srcs $(CPP_SOURCES) $(INTR_SOURCES) setupEnvironment clean
 
 build: setupEnvironment srcs
+	echo $(ROOT_DIR)
 	$(LD) -nostdlib -Wl,-melf_i386 -Wl,--oformat=binary -T../linker.ld -o build/KERNEL.IMG $(OBJ_SOURCES) -lgcc
 	mv *.o build
 	cp build/KERNEL.IMG ../build/
