@@ -1,5 +1,4 @@
 ASM = nasm
-BLD_DIR = ../build
 
 build: bootloader.asm
     # -w+orphan-labels causes any orphan labels to give a warning. an orphan label is <label> without :

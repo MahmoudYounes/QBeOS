@@ -1,29 +1,38 @@
-ALL_CPP_SOURCES = $(wildcard *.cpp)
-INTR_SOURCES = interrupt_32.cpp
-CPP_SOURCES = $(filter-out $(INTR_SOURCES),$(ALL_CPP_SOURCES))
-OBJ_SOURCES = $(ALL_CPP_SOURCES:.cpp=.o)
-GCC = i686-elf-g++
-LD = i686-elf-g++
+export TMP_BLD_DIR := ${SRC_ROOT}/build
+export GCC := i686-elf-g++
+export LD := i686-elf-g++
+export GCCFLAGS := -masm=intel -ffreestanding -lgcc -Wall -Wextra -fno-exceptions -fno-rtti -nostdlib -ffunction-sections -fno-builtin
+export GCCFLAGS_INTR := -mgeneral-regs-only -mno-red-zone
+export INCLUDES := -I $(shell pwd)/include
 
-# defining phony rules
-.PHONY: build srcs $(CPP_SOURCES) $(INTR_SOURCES) setupEnvironment clean
+SUB_DIRS := acpi
+ALL_CPP_SOURCES := $(wildcard *.cpp)
+INTR_SOURCES := interrupt_32.cpp
+CPP_SOURCES := $(filter-out $(INTR_SOURCES),$(ALL_CPP_SOURCES))
+OBJ_SOURCES := $(ALL_CPP_SOURCES:.cpp=.o)
+
+
+.PHONY: build srcs $(CPP_SOURCES) $(INTR_SOURCES) $(SUB_DIRS) setupEnvironment clean
 
 build: setupEnvironment srcs
-	$(LD) -nostdlib -Wl,-melf_i386 -Wl,--oformat=binary -T../linker.ld -o build/KERNEL.IMG $(OBJ_SOURCES) -lgcc
-	mv *.o build
-	cp build/KERNEL.IMG ../build/
+	mv *.o ${TMP_BLD_DIR}
+	$(LD) -nostdlib -Wl,-melf_i386 -Wl,--oformat=binary -T $(ROOT_DIR)/linker.ld -o ${TMP_BLD_DIR}/KERNEL.IMG $(TMP_BLD_DIR)/*.o -lgcc
+	cp ${TMP_BLD_DIR}/KERNEL.IMG ${BLD_DIR}
 
-srcs: $(INTR_SOURCES) $(CPP_SOURCES)
+srcs: $(INTR_SOURCES) $(CPP_SOURCES) $(SUB_DIRS)
 
 $(CPP_SOURCES):
-	$(GCC) -masm=intel -ffreestanding -lgcc -Wall -Wextra -fno-exceptions -fno-rtti -nostdlib -ffunction-sections -fno-builtin -c $@
+	$(GCC) $(INCLUDES) $(GCCFLAGS) -c $@
 
 $(INTR_SOURCES):
-	$(GCC) -masm=intel -ffreestanding -lgcc -Wall -Wextra -fno-exceptions -fno-rtti -nostdlib -ffunction-sections -fno-builtin -mgeneral-regs-only -mno-red-zone -c $@
+	$(GCC) $(INCLUDES) $(GCCFLAGS) $(GCCFLAGS_INTR) -c $@
+
+$(SUB_DIRS):
+	$(MAKE) -C $(SUB_DIRS)
 
 setupEnvironment:
-	if [ ! -d build ]; then mkdir build; fi
+	if [ ! -d ${TMP_BLD_DIR} ]; then mkdir ${TMP_BLD_DIR}; fi
 
 clean:
-	if [ -d build ]; then rm -r build; fi
-	rm -r $(OBJ_SOURCES)
+	if [ -d ${TMP_BLD_DIR} ]; then rm -r ${TMP_BLD_DIR}; fi
+	$(MAKE) -C $(SUB_DIRS) clean
