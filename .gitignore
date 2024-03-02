@@ -20,6 +20,10 @@ sandbox/**
 
 #ignoring clangd cache files
 .cache/**
+
+# ignore compile commands json
+compile_commands.json
+
 # ignoring log files
 bochsout.txt
 ParallelOut.txt
