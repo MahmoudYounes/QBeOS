@@ -14,5 +14,4 @@ $(LOCAL_BLD):
 
 .PHONY: clean
 clean:
-	$(info cleaning)
-	rm $(OBJ_SRCS)
+	$(info nothing to do)

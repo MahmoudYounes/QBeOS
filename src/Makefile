@@ -35,5 +35,4 @@ setupEnvironment:
 
 clean:
 	if [ -d ${TMP_BLD_DIR} ]; then rm -r ${TMP_BLD_DIR}; fi
-	rm $(OBJ_SOURCES)
 	$(MAKE) -C $(SUB_DIRS) clean
