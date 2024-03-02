@@ -18,6 +18,8 @@ sandbox/**
 # ignoring vscode files
 .vscode/**
 
+#ignoring clangd cache files
+.cache/**
 # ignoring log files
 bochsout.txt
 ParallelOut.txt
