@@ -1,4 +1,4 @@
-#include "include/apic.h"
+#include "arch/x86/include/apic.h"
 
 APIC::APIC() {
   kprint("Initializing APIC\n\0");

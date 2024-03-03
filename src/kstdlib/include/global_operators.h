@@ -1,8 +1,8 @@
 #ifndef KSTDLIB_H
 #define KSTDLIB_H
 
+#include "arch/include/vmm.h"
 #include "include/common.h"
-#include "include/vmm.h"
 
 extern VirtualMemory vmm;
 

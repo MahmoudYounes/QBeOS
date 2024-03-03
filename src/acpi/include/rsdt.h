@@ -2,9 +2,9 @@
 #define RSDT_H
 
 #include "include/common.h"
-#include "include/kstdlib.h"
 #include "include/logger.h"
 #include "include/strings.h"
+#include "kstdlib/include/global_operators.h"
 
 struct ACPIRSDT {
   char signature[4];

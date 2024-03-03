@@ -3,11 +3,11 @@
 
 #include "acpi/include/rsdt.h"
 #include "acpi/include/xsdt.h"
-#include "common.h"
-#include "kstdlib.h"
-#include "logger.h"
-#include "strings.h"
-#include "vmm.h"
+#include "arch/include/vmm.h"
+#include "include/common.h"
+#include "include/logger.h"
+#include "include/strings.h"
+#include "kstdlib/include/global_operators.h"
 
 #define ACPI_EBDA_REG_START 0x40e /* Physical Address */
 #define ACPI_EBDA_REG_END 0x80e

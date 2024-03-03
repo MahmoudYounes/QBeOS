@@ -3,19 +3,19 @@
  *
  ***/
 
-#include "include/acpi.h"
-#include "include/apic.h"
+#include "acpi/include/acpi.h"
+#include "arch/include/vmm.h"
+#include "arch/x86/include/apic.h"
+#include "arch/x86/include/cpuinfo.h"
+#include "arch/x86/include/gdt.h"
+#include "arch/x86/include/idt.h"
+#include "arch/x86/include/mem_region.h"
+#include "arch/x86/include/memory.h"
+#include "arch/x86/include/pdt_entry.h"
+#include "arch/x86/include/pic.h"
+#include "arch/x86/include/pt_entry.h"
 #include "include/common.h"
-#include "include/cpuinfo.h"
-#include "include/gdt.h"
-#include "include/idt.h"
 #include "include/math.h"
-#include "include/mem_region.h"
-#include "include/memory.h"
-#include "include/pdt_entry.h"
-#include "include/pic.h"
-#include "include/pt_entry.h"
-#include "include/vmm.h"
 
 void kmain() __attribute__((noreturn));
 void bootEnd() __attribute__((noreturn));

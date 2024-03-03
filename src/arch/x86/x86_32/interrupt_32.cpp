@@ -1,4 +1,4 @@
-#include "include/interrupt_32.h"
+#include "arch/x86/include/interrupt_32.h"
 
 EXCEPTION BadInterrupt(struct interruptFrame *hwRegs) {
   panic("Interrupt is not implemented...\nhalting...\0");

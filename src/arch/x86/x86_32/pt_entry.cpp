@@ -1,4 +1,4 @@
-#include "include/pt_entry.h"
+#include "arch/x86/include/pt_entry.h"
 
 PTEntry::PTEntry() {
   // if ps is MB then we are setting bit 7

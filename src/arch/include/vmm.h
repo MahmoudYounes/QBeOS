@@ -1,11 +1,11 @@
 #ifndef VMM_H
 #define VMM_H
 
-#include "common.h"
-#include "mem_region.h"
-#include "memory.h"
-#include "pdt_entry.h"
-#include "pt_entry.h"
+#include "arch/x86/include/mem_region.h"
+#include "arch/x86/include/memory.h"
+#include "arch/x86/include/pdt_entry.h"
+#include "arch/x86/include/pt_entry.h"
+#include "include/common.h"
 
 #define ENTRIES_COUNT 1024
 #define ENTRY_SIZE_BYTES sizeof(uint32_t)

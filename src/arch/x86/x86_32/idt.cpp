@@ -1,4 +1,4 @@
-#include "include/idt.h"
+#include "arch/x86/include/idt.h"
 
 // interruptVector contains pointers to the vector methods that will be used
 // TODO: a smarter way is to define the whole 256 entries and specify overrides!
