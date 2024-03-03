@@ -1,11 +1,11 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#include "common.h"
-#include "logger.h"
-#include "math.h"
-#include "mem_region.h"
-#include "strings.h"
+#include "arch/x86/include/mem_region.h"
+#include "include/common.h"
+#include "include/logger.h"
+#include "include/math.h"
+#include "include/strings.h"
 
 // 4 KB physical pages
 #define PAGE_SIZE_BYTES 4096

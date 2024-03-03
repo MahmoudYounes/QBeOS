@@ -1,9 +1,4 @@
-#include "include/memory.h"
-#include "include/common.h"
-#include "include/math.h"
-#include "include/mem_region.h"
-
-static char buf[512];
+#include "arch/x86/include/memory.h"
 
 void Memory::assertMemoryListSize() {
   uint64_t memoryListSizeBytes = physicalPagesCount * sizeof(MemoryRegion);
@@ -67,6 +62,7 @@ void Memory::reserverKernelMemory() {
     ptr = ptr->next;
   }
 
+  char buf[256]; // this needs to be statically alloced like this. can't use vmm
   kprintf(buf, "reserved %dMBs for kernel\n\0", BYTE_TO_MB(actualReserved));
 }
 
@@ -101,6 +97,7 @@ MemoryRegion *Memory::findEmptyRegionFor(uint64_t pages) {
 
 Memory::Memory() {
   kprint("Initializing memory...\n");
+  char buf[256];
   uint64_t bootMemRegionsCount = 0;
   uint64_t endAddr = 0;
 
@@ -185,6 +182,7 @@ Memory::Memory() {
 }
 
 void Memory::PrintMemory() {
+  char buf[256];
   uint64_t availableMemory = 0;
   uint64_t kernelMemory = 0;
   uint64_t reservedMemory = 0;

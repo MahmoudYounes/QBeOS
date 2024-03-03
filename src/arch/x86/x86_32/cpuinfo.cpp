@@ -1,7 +1,6 @@
-#include "include/cpuinfo.h"
+#include "arch/x86/include/cpuinfo.h"
 
 CPUInfo::CPUInfo() {
-  char buf[512];
   kprint("Detecting cpu...\n\0");
 
   getCPUModel();

@@ -1,4 +1,4 @@
-#include "include/screen.h"
+#include "arch/include/screen.h"
 
 Screen::Screen() {
   // disable the cursor

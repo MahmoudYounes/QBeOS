@@ -1,9 +1,9 @@
 #ifndef CPUINFO_H
 #define CPUINFO_H
 
-#include "common.h"
 #include "cpuid.h"
-#include "logger.h"
+#include "include/common.h"
+#include "include/logger.h"
 
 // TODO: imagine you provide a shell command like lscpu. this class needs to
 // have and support reading all CPU information. todo that, check the table 3-8

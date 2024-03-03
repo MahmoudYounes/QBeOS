@@ -1,4 +1,4 @@
-#include "include/pic.h"
+#include "arch/x86/include/pic.h"
 
 PIC::PIC() {
   // intel chips normally come with 2 pics to act as master and slave. this is

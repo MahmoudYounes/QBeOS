@@ -1,4 +1,4 @@
-#include "include/gdt.h"
+#include "arch/x86/include/gdt.h"
 #include "include/common.h"
 
 GDT::GDT() {

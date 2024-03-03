@@ -5,22 +5,21 @@
 
 // This file defines the interrupt vector methods
 
-#include "common.h"
-#include "logger.h"
-
+#include "include/common.h"
+#include "include/logger.h"
 
 #define INTERRUPT void __attribute__((interrupt))
 #define EXCEPTION void __attribute__((interrupt))
 
-// interruptFrame is the frame used to hold register values. this is setup by the compiler.
-struct interruptFrame{
-    uint16_t ss;
-    uint32_t esp;
-    uint16_t eflags;
-    uint16_t cs;
-    uint32_t eip;
+// interruptFrame is the frame used to hold register values. this is setup by
+// the compiler.
+struct interruptFrame {
+  uint16_t ss;
+  uint32_t esp;
+  uint16_t eflags;
+  uint16_t cs;
+  uint32_t eip;
 };
-
 
 // definitions of all functions here. implementation is found in cpp file
 EXCEPTION BadInterrupt(struct interruptFrame *hwRegs);
