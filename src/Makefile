@@ -3,7 +3,7 @@ export GCC := i686-elf-g++
 export LD := i686-elf-g++
 export GCCFLAGS := -masm=intel -ffreestanding -lgcc -Wall -Wextra -fno-exceptions -fno-rtti -nostdlib -ffunction-sections -fno-builtin
 export GCCFLAGS_INTR := -mgeneral-regs-only -mno-red-zone
-export INCLUDES := -I $(shell pwd)/include
+export INCLUDES := -I $(shell pwd)
 
 SUB_DIRS := acpi
 ALL_CPP_SOURCES := $(wildcard *.cpp)

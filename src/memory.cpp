@@ -1,7 +1,7 @@
-#include "memory.h"
-#include "common.h"
-#include "math.h"
-#include "mem_region.h"
+#include "include/memory.h"
+#include "include/common.h"
+#include "include/math.h"
+#include "include/mem_region.h"
 
 static char buf[512];
 
@@ -118,7 +118,6 @@ Memory::Memory() {
     MemTableEntry mtentry;
     memcpy(&mtentry, memoryTableAddress + bootMemRegionsCount * 5,
            sizeof(mtentry));
-    kprintf(buf, "memory region state %d\n\0", mtentry.state);
     if (mtentry.size != 0 && endAddr != mtentry.baseAddr) {
       mtentry = {.baseAddr = endAddr,
                  .size = mtentry.baseAddr - endAddr,

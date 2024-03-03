@@ -1,36 +1,97 @@
-#include "acpi.h"
+#include "include/acpi.h"
 
 ACPI::ACPI() {
-  char *buf = (char *)vmm.Allocate(256);
+  bool found = false;
+  char *buf = new char[256];
+  uint16_t ebdaPtr;
 
   kprint("locating ACPI rsdt pointer\n\0");
-  bool found = locateRSDP(ACPI_REG3_STARTADDR, ACPI_REG3_ENDADDR);
-  found = found ? found : locateRSDP(ACPI_REG2_STARTADDR, ACPI_REG2_ENDADDR);
-  found = found ? found : locateRSDP(ACPI_REG3_STARTADDR, ACPI_REG3_ENDADDR);
 
-  if (!found) {
-    panic("could not find a valid ACPI table\n\0");
+  memcpy(&ebdaPtr, (uint8_t *)ACPI_EBDA_REG_START, 2);
+
+  kprintf(buf, "found EBDA at %x\n\0", (uint32_t)ebdaPtr);
+
+  char sig[9];
+  int steps = 0;
+  for (uintptr_t p = ebdaPtr; steps < 1024; steps++) {
+    memcpy(sig, (uint8_t *)p, 8);
+    if (strcmp(sig, "RSD PTR ") == 0) {
+      kprint("found rsdp from EBDA\n\0");
+      found = true;
+      parseRSDP(p);
+    }
+    p += 16;
   }
 
-  kprint("located ACPI rsdp\n\0");
-  acpiver = acpirsdp.rev;
-  kprint("parsing ACPI tables\n\0");
-
-  vmm.Free(buf);
-}
-
-bool ACPI::locateRSDP(uintptr_t startAddr, uintptr_t endAddr) {
-  char signature[8];
-
-  for (uint64_t *p = (uint64_t *)startAddr; p < (uint64_t *)endAddr; p += 1) {
-    // check signature
-    memcpy(signature, p, 8);
-    if (strcmp(signature, "RSD PTR ") == 0) {
-      memcpy(&acpirsdp, p, sizeof(ACPIRSDP));
-      return true;
+  for (uint8_t *p = (uint8_t *)0xe0000; p < (uint8_t *)0xfffff; p += 16) {
+    memcpy(sig, p, 8);
+    sig[8] = '\0';
+    if (strcmp(sig, "RSD PTR \0") == 0) {
+      found = true;
+      kprint("found rsdp from BIOS AREA\n\0");
+      parseRSDP((uintptr_t)p);
     }
   }
-  return false;
+
+  delete[] buf;
+
+  if (!found) {
+    panic("didn't find ACPI tables\n\0");
+  }
+}
+
+void ACPI::parseRSDP(uintptr_t p) {
+  char *buf = new char[256];
+  memcpy(&rsdp, (uint8_t *)p, sizeof(ACPIRSDP));
+  if (rsdp.rev == 0) {
+    kprintf(buf, "found v1 acpi rsdp at %x\n\0", (uint32_t)p);
+    parseRSDPV1();
+  } else {
+    kprintf(buf, "found v2 acpi rsdp at %x\n\0", (uint32_t)p);
+    parseRSDPV2();
+  }
+
+  delete[] buf;
+}
+
+void ACPI::parseRSDPV1() {
+  printTableInfo();
+  rsdt = new RSDT(rsdp.rsdtAddr);
+  HLT();
+}
+
+void ACPI::parseRSDPV2() {
+  printTableInfo();
+  xsdt = new XSDT(rsdp.xsdtAddr);
+  HLT();
+}
+
+void ACPI::printTableInfo() {
+  kprint("print rsdp info start:\n\0");
+  char *buf = new char[256];
+  memcpy(buf, rsdp.signature, 8);
+  buf[8] = '\n';
+  buf[9] = '\0';
+  kprint(buf);
+
+  kprintf(buf, "%d\n\0", (uint32_t)rsdp.checksum);
+
+  memcpy(buf, rsdp.oemid, 6);
+  buf[5] = '\n';
+  buf[6] = '\0';
+  kprint(buf);
+
+  kprintf(buf, "%d\n\0", rsdp.rev);
+
+  kprintf(buf, "%x\n\0", rsdp.rsdtAddr);
+
+  kprintf(buf, "%d\n\0", rsdp.lengthBytes);
+
+  kprintf(buf, "%X\n\0", rsdp.xsdtAddr);
+
+  kprintf(buf, "%d\n\0", (uint32_t)rsdp.extChecksum);
+
+  kprint("print rsdp info end\n\0");
 }
 
 ACPI acpi;

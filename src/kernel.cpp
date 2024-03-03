@@ -3,19 +3,19 @@
  *
  ***/
 
-#include "acpi.h"
-#include "apic.h"
-#include "common.h"
-#include "cpuinfo.h"
-#include "gdt.h"
-#include "idt.h"
-#include "math.h"
-#include "mem_region.h"
-#include "memory.h"
-#include "pdt_entry.h"
-#include "pic.h"
-#include "pt_entry.h"
-#include "vmm.h"
+#include "include/acpi.h"
+#include "include/apic.h"
+#include "include/common.h"
+#include "include/cpuinfo.h"
+#include "include/gdt.h"
+#include "include/idt.h"
+#include "include/math.h"
+#include "include/mem_region.h"
+#include "include/memory.h"
+#include "include/pdt_entry.h"
+#include "include/pic.h"
+#include "include/pt_entry.h"
+#include "include/vmm.h"
 
 void kmain() __attribute__((noreturn));
 void bootEnd() __attribute__((noreturn));
@@ -69,7 +69,7 @@ void testMemoryAllocation() {
 }
 
 void testVMMAloocation() {
-  char *memPtr = (char *)vmm.Allocate(100);
+  char *memPtr = new char[100];
   char testBuf[] = "testing vmm allocation\n\0";
   memcpy(memPtr, testBuf, strlen(testBuf) * sizeof(char));
 
@@ -78,9 +78,9 @@ void testVMMAloocation() {
     kprint("FAILED: failed to write testBuf into allocated memory\n\0");
     panic("VMM Allocation tests failed\n\0");
   }
-  vmm.Free(memPtr);
+  delete[] memPtr;
 
-  memPtr = (char *)vmm.Allocate(MB_TO_BYTE(10));
+  memPtr = new char[MB_TO_BYTE(10)];
 
   memset(memPtr, 'a', MB_TO_BYTE(10));
 
@@ -90,7 +90,7 @@ void testVMMAloocation() {
       panic("VMM Allocation tests failed\n\0");
     }
   }
-  vmm.Free(memPtr);
+  delete[] memPtr;
 
   kprint("VMM Allocation tests succeeded\n\0");
 }
@@ -293,7 +293,7 @@ void testPTEntry() {
 }
 
 void testIDTEntry() {
-  uintptr_t pg = (uintptr_t)vmm.Allocate(4096);
+  uintptr_t pg = (uintptr_t)vmm.Allocate(PAGE_SIZE_BYTES);
 
   IDTEntry idtEntry = IDTEntry();
 

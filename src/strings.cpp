@@ -1,4 +1,4 @@
-#include "strings.h"
+#include "include/strings.h"
 
 // TODO: resolve this issue. This implementation is copy pasted from glibc
 // BYTE_COPY_FWD macro implementation. the original glibc memcpy is more

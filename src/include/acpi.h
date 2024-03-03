@@ -1,21 +1,18 @@
 #ifndef ACPI_H
 #define ACPI_H
 
+#include "acpi/include/rsdt.h"
+#include "acpi/include/xsdt.h"
 #include "common.h"
+#include "kstdlib.h"
 #include "logger.h"
 #include "strings.h"
 #include "vmm.h"
 
-#define ACPI_REG1_STARTADDR 0x80000
-#define ACPI_REG1_ENDADDR 0xa0000
-
-#define ACPI_REG2_STARTADDR 0xe0000
-#define ACPI_REG2_ENDADDR 0x100000
-
-#define ACPI_REG3_STARTADDR 0xbfff0000
-#define ACPI_REG3_ENDADDR 0xc0000000
-
-extern VirtualMemory vmm;
+#define ACPI_EBDA_REG_START 0x40e /* Physical Address */
+#define ACPI_EBDA_REG_END 0x80e
+#define ACPI_HI_RSDP_REG_START 0xe0000 /* Physical Address */
+#define ACPI_HI_RSDP_REG_END 0x100000
 
 struct ACPIRSDP {
   char signature[8];
@@ -32,9 +29,14 @@ struct ACPIRSDP {
 class ACPI {
 private:
   uint8_t acpiver;
-  struct ACPIRSDP acpirsdp;
+  struct ACPIRSDP rsdp;
+  RSDT *rsdt;
+  XSDT *xsdt;
 
-  bool locateRSDP(uintptr_t startAddr, uintptr_t endAddr);
+  void parseRSDP(uintptr_t p);
+  void parseRSDPV1();
+  void parseRSDPV2();
+  void printTableInfo();
 
 public:
   ACPI();
