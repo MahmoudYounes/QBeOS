@@ -286,7 +286,7 @@ eight bits specify the vector number (hence LVT). this vector number is the numb
 define the interrupt delivery mechanisms. look into intel manual Vol3 Table 11-8
 
 ### Error handling
-the Error status register (ESR) must be written to to rearm the error functionalities of the APIC and to update the ESR before
+the Error status register (ESR) must be written to, to rearm the error functionalities of the APIC and to update the ESR before
 reading from it.
 
 ### APIC Timer
@@ -403,12 +403,16 @@ motherboard BIOS area. if not boot will fail.
 * if ACPI V1 QBeKern uses RSDT, else use XSDT
 * then QBeKern will parse the following table structures:
 -- FADT
--- FACS
 -- MADT
 
 Note: this is the begining. The topic of power management and interfacing with other components is a very complicated and time consuming work.
-While this is exciting in itself, there are more important and exciting as much topics to tackle first. this is a nice feature to implement towards the end.
-Hence, I will only parse the basic tables to figure out more info about the processors and then stop.
+While this is exciting in itself, there are more important and exciting as much topics to tackle first in kernel. this is a nice feature to implement towards the end.
+Hence, I will only parse the basic tables to figure out more info about the processors and then stop. this includes FADT and MADT.
+
+the architecture of the code will be as the following:
+* in src/includes acpi.h will define the acpi subsystem external interface.
+* in src/acpi/includes include files will only be related to internal acpi management.
+* in src/acpi all implementation goes here.
 
 # multiprocessing
 this section deals with running multiprocessors together.
