@@ -1,8 +1,8 @@
 #ifndef APIC_H
 #define APIC_H
 
-#include "arch/x86/include/asm.h"
 #include "arch/x86/include/cpuinfo.h"
+#include "arch/x86/include/processor.h"
 #include "include/common.h"
 #include "include/logger.h"
 

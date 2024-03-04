@@ -57,13 +57,11 @@ void ACPI::parseRSDP(uintptr_t p) {
 void ACPI::parseRSDPV1() {
   printTableInfo();
   rsdt = new RSDT(rsdp.rsdtAddr);
-  HLT();
 }
 
 void ACPI::parseRSDPV2() {
   printTableInfo();
   xsdt = new XSDT(rsdp.xsdtAddr);
-  HLT();
 }
 
 void ACPI::printTableInfo() {

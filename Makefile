@@ -57,7 +57,7 @@ clean:
 	if [ -d $(BLD_DIR) ]; then rm -r $(BLD_DIR); fi
 	if [ -d $(BIN_DIR) ]; then rm -r $(BIN_DIR); fi
 	if [ -d $(ISO_ROOT_DIR) ]; then rm -r $(ISO_ROOT_DIR); fi
-	$(MAKE) -C src clean
+	-$(MAKE) -C src clean
 
 .PHONY: rebuild
 rebuild:
