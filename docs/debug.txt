@@ -1,0 +1,25 @@
+# Overview
+this file explains how to debug the qbekern. qbekern is run as a flat binary file. meaning, it's stripped of all notion of ELF format.
+the reason behind this, is that at some point I would like to generate my own format like ELF and PE to load programs.
+once I have this format and programs can be loaded with it, qbekern will follow it. however, for now, I am sticking with raw binary
+until I find this format or yield to ELF.
+
+# debugging
+when qbekern is compiled it's compiled by default with debug symbols (TODO: change this to be a make option given at build time)
+the way it's converted to binary format is by using the build tool chain.
+first qbekern is linked and an ELF program is outputed. this elf program is suitable to be used with gdb as a source for file symbols.
+objcopy is then used to output a flat binary format. the flat binary is nothing but the elf program with all sections merged into .data section
+
+to debug the kernel, run make debug target then use another shell with gdb ./kernel.elf. target the remote qemu machine in gdb by executing target remote :1234
+then place a breakpoint. ideally the first breakpoint you can place is in kmain.
+then use gdb as you are used to.
+
+# Yielding to ELF
+if at any point I decided to yield to ELF, the following will be changed:
+- the bootloader needs to be changed to be able to parse the ELF format, look for the sections it must load and load them in memory.
+- this means the bootloader will have to be split into two phase bootloaders
+  - first phase loads the second phase, go into protected mode, setup fake VMM, IDT, etc. stuff and then jump into second phase.
+  - second phase must contain code to locate the kernel on CD, parse the ELF file, load sections into memory and then jump into kmain.
+  - kmain will have to abide to the sysv abi and call ctors and continue loading.
+  - kmain will setup actual VMM,IDT, etc. stuff and the continue operation as usual.
+for now, it's a mix of a rash decision and desire for innovation and expermintation to not yield to the ELF format with equal weights.
