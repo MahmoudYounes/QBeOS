@@ -1,7 +1,9 @@
 export TMP_BLD_DIR := ${SRC_ROOT}/build
 export GCC := i686-elf-g++
 export LD := i686-elf-g++
-export GCCFLAGS := -masm=intel -ffreestanding -lgcc -Wall -Wextra -fno-exceptions -fno-rtti -nostdlib -ffunction-sections -fno-builtin
+export OBJCPY := i686-elf-objcopy
+export OBJCPYFLAGS := -O binary
+export GCCFLAGS := -g -masm=intel -ffreestanding -lgcc -Wall -Wextra -fno-exceptions -fno-rtti -nostdlib -ffunction-sections -fno-builtin
 export GCCFLAGS_INTR := -mgeneral-regs-only -mno-red-zone
 export INCLUDES := -I $(shell pwd)
 export ARCH := x86_32
@@ -13,8 +15,12 @@ CPP_SRCS := $(wildcard *.cpp)
 
 build: setupEnvironment srcs
 	mv *.o ${TMP_BLD_DIR}
-	$(LD) -nostdlib -Wl,-melf_i386 -Wl,--oformat=binary -T $(ROOT_DIR)/linker.ld -o ${TMP_BLD_DIR}/KERNEL.IMG $(TMP_BLD_DIR)/*.o -lgcc
+	$(LD) -nostdlib -T $(ROOT_DIR)/linker.ld -o ${TMP_BLD_DIR}/kernel.elf $(TMP_BLD_DIR)/*.o -lgcc
+
+	$(OBJCPY) $(OBJCPYFLAGS) ${TMP_BLD_DIR}/kernel.elf ${TMP_BLD_DIR}/KERNEL.IMG
+
 	cp ${TMP_BLD_DIR}/KERNEL.IMG ${BLD_DIR}
+	cp ${TMP_BLD_DIR}/kernel.elf ${BLD_DIR}
 
 srcs: $(CPP_SRCS) $(SUB_DIRS)
 

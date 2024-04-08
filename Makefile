@@ -41,16 +41,16 @@ run-bochs: $(BIN_DIR)/$(ISO_NAME)
 	bochs -f bochsrc.txt
 
 debug: $(BIN_DIR)/$(ISO_NAME)
-	qemu-system-i386                                 \
-	-accel tcg,thread=single                       \
-	-cpu core2duo                                  \
-	-m 4096                                         \
-	-no-reboot                                     \
-	-drive format=raw,media=cdrom,file=./bin/QBeOS.iso    \
-	-serial stdio                                  \
-	-smp 1                                         \
-	-vga std                                       \
-    -d int -no-shutdown -no-reboot -gdb tcp:localhost:1234 -S
+	qemu-system-i386                                 	\
+	-cpu host                                  			\
+	-enable-kvm											\
+	-m 4096                                         	\
+	-no-reboot                                     		\
+	-drive format=raw,media=cdrom,file=./bin/QBeOS.iso  \
+	-serial stdio                                  		\
+	-smp 1                                         		\
+	-vga std                                       		\
+    -d int -no-shutdown -no-reboot -S -s
 
 .PHONY: clean
 clean:
