@@ -4,7 +4,6 @@ CPP_SRCS := $(filter-out $(INTR_SRCS),$(wildcard *.cpp))
 .PHONY: build $(CPP_SRCS) $(INTR_SRCS)
 
 build: $(CPP_SRCS) $(INTR_SRCS)
-	$(info compiling $(CPP_SRCS) and $(INTR_SRCS))
 	mv *.o $(TMP_BLD_DIR)
 
 $(CPP_SRCS):
@@ -12,3 +11,7 @@ $(CPP_SRCS):
 
 $(INTR_SRCS):
 	$(GCC) $(INCLUDES) $(GCCFLAGS) $(GCCFLAGS_INTR) -c $@
+
+.PHONY:clean
+clean:
+	-rm *.o

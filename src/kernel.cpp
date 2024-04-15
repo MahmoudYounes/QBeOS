@@ -3,6 +3,10 @@
  *
  ***/
 
+// TODO: the includes in the project have pretty big names. need to reduce this
+// naming. this requires modifying the build commands in the make file to work
+// better with correct includes.
+
 #include "acpi/include/acpi.h"
 #include "arch/include/vmm.h"
 #include "arch/x86/include/apic.h"
@@ -13,9 +17,15 @@
 #include "arch/x86/include/memory.h"
 #include "arch/x86/include/pdt_entry.h"
 #include "arch/x86/include/pic.h"
+#include "arch/x86/include/processor.h"
 #include "arch/x86/include/pt_entry.h"
+#include "arch/x86/include/tss.h"
 #include "include/common.h"
 #include "include/math.h"
+
+#ifndef ARCH_X86_32
+#define ARCH_X86_32
+#endif
 
 void kmain() __attribute__((noreturn));
 void bootEnd() __attribute__((noreturn));
@@ -32,6 +42,7 @@ extern IDT idt;
 extern PIC pic;
 extern APIC apic;
 extern ACPI acpi;
+extern TSSManager tssManager;
 
 // For now it's easier for me to just look at the screen. I have a way in mind
 // to automate this, so guess what... here is another TODO!
@@ -350,10 +361,14 @@ void kmain() {
   sysMemory = Memory();
   gdt = GDT();
   vmm = VirtualMemory(false /* should run vmm self tests before paging */);
+  tssManager = TSSManager();
   idt = IDT();
   pic = PIC();
   apic = APIC();
   acpi = ACPI();
+
+  generalreg_size_t ip = readIP();
+  kprintf(buf, "value of IP is %d\n\0", ip);
 
   // at this point interrupts are disabled... need to setup IDT to renable them.
 

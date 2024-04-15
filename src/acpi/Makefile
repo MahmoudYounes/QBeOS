@@ -14,4 +14,4 @@ $(LOCAL_BLD):
 
 .PHONY: clean
 clean:
-	$(info nothing to do)
+	rm *.o

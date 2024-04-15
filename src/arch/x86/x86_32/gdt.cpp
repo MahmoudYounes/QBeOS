@@ -26,6 +26,10 @@ GDT::GDT() {
 }
 
 void GDT::encodeEntry(GDTEntry *entry) {
+  if ((uintptr_t)lastEntryAddress - gdtBaseAddress > MB_TO_BYTE(1)) {
+    panic("GDT Overflow. Cannot encode more GDT entries");
+  }
+
   // Limit
   lastEntryAddress[0] = GET_BYTE(entry->limit, 0);
   lastEntryAddress[1] = GET_BYTE(entry->limit, 1);
@@ -47,7 +51,7 @@ void GDT::encodeEntry(GDTEntry *entry) {
   countEntries++;
 }
 
-GDTEntry GDT::ConstructGDTEntry(uint32_t base, uint32_t limit, uint8_t access,
+GDTEntry GDT::ConstructGDTEntry(uintptr_t base, uintptr_t limit, uint8_t access,
                                 uint8_t flags) {
   return GDTEntry{
       .limit = limit, .base = base, .access = access, .flags = flags};
@@ -61,16 +65,15 @@ GDTEntry GDT::ConstructLDTEntry(uint32_t base, uint32_t limit) {
                   .flags = SEGMENT_FLAGS_DEFAULT};
 }
 
-GDTEntry GDT::ConstructTSSKernEntry(uint32_t base, uint32_t limit) {
+GDTEntry GDT::ConstructTSSKernEntry(uintptr_t base, uintptr_t limit) {
   uint8_t access = SEGMENT_PRESENT | SEGMENT_PRIVLG_0 |
                    SEGMENT_SYSTEM_TYPE_3264TSS_AVAILABLE;
-  return GDTEntry{.limit = limit,
-                  .base = base,
-                  .access = access,
-                  .flags = SEGMENT_FLAGS_DEFAULT};
+  uint8_t flags = SEGMENT_FLAGS_SIZE_32PROTECTED;
+  return GDTEntry{
+      .limit = limit, .base = base, .access = access, .flags = flags};
 }
 
-GDTEntry GDT::ConstructTSSUserEntry(uint32_t base, uint32_t limit) {
+GDTEntry GDT::ConstructTSSUserEntry(uintptr_t base, uintptr_t limit) {
   uint8_t access = SEGMENT_PRESENT | SEGMENT_PRIVLG_3 |
                    SEGMENT_SYSTEM_TYPE_3264TSS_AVAILABLE;
   return GDTEntry{.limit = limit,
@@ -99,5 +102,7 @@ void GDT::RefreshGDT() {
                : "a"(gdtSize), "r"(gdtBaseAddress)
                : "memory");
 }
+
+void GDT::AddGDTEntry(GDTEntry *entry) { encodeEntry(entry); }
 
 GDT gdt;

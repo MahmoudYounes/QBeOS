@@ -7,3 +7,7 @@ build: $(CPP_SRCS)
 
 $(CPP_SRCS):
 	$(GCC) $(INCLUDES) $(GCCFLAGS) -c $@
+
+.PHONY: clean
+clean:
+	-rm *.o

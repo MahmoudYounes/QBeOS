@@ -13,6 +13,7 @@ RSDT::RSDT(uintptr_t rsdtAddr) {
   kprintf(buf, "found a valid RSDT with %d entries. allocating memory...\n\0",
           rsdt.length);
   entries = new uint32_t[rsdt.length];
+  kprint("allocated memory \n\0");
 
   uint32_t idx = 0;
   uintptr_t entriesBegin = rsdtAddr + sizeof(ACPIRSDT);

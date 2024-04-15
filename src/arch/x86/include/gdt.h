@@ -6,6 +6,10 @@
 
 #define GDT_ENTRY_SIZE_BYTES 8
 #define GDT_KERNEL_CODE_DESCRIPTOR_SEL 0x8
+#define GDT_KERNEL_DATA_DESCRIPTOR_SEL 0x10
+#define GDT_USER_CODE_DESCRIPTOR_SEL 0x18
+#define GDT_USER_DATA_DESCRIPTOR_SEL 0x20
+#define GDT_TSS_DESCRIPTOR_SEL 0x28
 
 // Access Bits Encoded
 
@@ -28,7 +32,7 @@
 
 #define SEGMENT_SYSTEM_TYPE_16TSS_AVAILABLE 1
 #define SEGMENT_SYSTEM_TYPE_16TSS_BUSY 3
-#define SEGMENT_SYSTEM_TYPE_3264TSS_AVAILABLE 9
+#define SEGMENT_SYSTEM_TYPE_3264TSS_AVAILABLE 0x9
 #define SEGMENT_SYSTEM_TYPE_3264TSS_BUSY 0xb
 
 #define SEGMENT_SYSTEM_TYPE_LDT 2
@@ -62,7 +66,7 @@ struct GDTEntry {
 // GDT Manager
 class GDT {
 private:
-  static const uint32_t gdtBaseAddress = 0x00400000;
+  static const uintptr_t gdtBaseAddress = 0x00400000;
   uint8_t *lastEntryAddress;
   uint8_t countEntries = 0;
 
@@ -73,11 +77,11 @@ private:
 public:
   GDT();
 
-  GDTEntry ConstructGDTEntry(uint32_t base, uint32_t limit, uint8_t access,
+  GDTEntry ConstructGDTEntry(uintptr_t base, uintptr_t limit, uint8_t access,
                              uint8_t flags);
-  GDTEntry ConstructLDTEntry(uint32_t base, uint32_t limit);
-  GDTEntry ConstructTSSKernEntry(uint32_t base, uint32_t limit);
-  GDTEntry ConstructTSSUserEntry(uint32_t base, uint32_t limit);
+  GDTEntry ConstructLDTEntry(uintptr_t base, uintptr_t limit);
+  GDTEntry ConstructTSSKernEntry(uintptr_t base, uintptr_t limit);
+  GDTEntry ConstructTSSUserEntry(uintptr_t base, uintptr_t limit);
 
   // TODO: how are you going to think about error propagation?
   void AddGDTEntry(GDTEntry *entry);
