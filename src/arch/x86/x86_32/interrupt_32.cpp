@@ -1,109 +1,77 @@
 #include "arch/x86/include/interrupt_32.h"
 
-EXCEPTION BadInterrupt(struct interruptFrame *hwRegs) {
+DEFINE_INTERRUPT(BadInterrupt) {
   panic("Interrupt is not implemented...\nhalting...\0");
 }
 
-EXCEPTION DivZero(struct interruptFrame *hwRegs) {
-  kprint("Div By Zero Error happened\n\0");
-  panic("Unsupported interrupt");
-
-  // TODO: Terminate current running task on cpu
-  // getCurrentCPUTask()
-  // terminateTask()
+DEFINE_INTERRUPT(DivZero) {
+  panic("Div By Zero in kernel. unrecoverable...\n\0");
 }
 
-EXCEPTION DebugException(struct interruptFrame *hwRegs) {
-  kprint("QBeKern does not support debug exception yet.. continuing...\n\0");
-  panic("Unsupported interrupt");
+DEFINE_INTERRUPT(DebugException) {
+  panic("Debug exception is not supported. check docs debug.md\n\0");
 }
 
-EXCEPTION NMI(struct interruptFrame *hwRegs) {
-  kprint("QBeKern does not support NMI yet");
-  panic("Unsupported interrupt");
+DEFINE_INTERRUPT(NMI) {
+  panic("Non maskable interrupts are not implemented yet\n\0");
 }
 
-EXCEPTION Breakpoint(struct interruptFrame *hwRegs) {
-  kprint("QBeKern does not support breakpoints yet");
-  panic("Unsupported interrupt");
+DEFINE_INTERRUPT(Breakpoint) {
+  panic("Breakpoint interrupts are not supported. check docs debug.md\n\0");
 }
 
-EXCEPTION Overflow(struct interruptFrame *hwRegs) {
-  kprint("Overflow Error happened\n\0");
-  panic("Unsupported interrupt");
+DEFINE_INTERRUPT(Overflow) { panic("Unsupported interrupt: overflow\n\0"); }
+
+DEFINE_INTERRUPT(BoundRangeExceeded) {
+  panic("Unsupported interrupt: out of bounds\n\0");
 }
 
-EXCEPTION BoundRangeExceeded(struct interruptFrame *hwRegs) {
-  kprint("Exceeded bounds\n\0");
-  panic("Unsupported interrupt");
+DEFINE_INTERRUPT(InvalidOpcode) {
+  panic("Unsupported interrupt: invalid opcode\n\0");
 }
 
-EXCEPTION InvalidOpcode(struct interruptFrame *hwRegs) {
-  kprint("Invalid opcode");
-  panic("Unsupported interrupt");
+DEFINE_INTERRUPT(DeviceNotAbailable) {
+  panic("Unsupported interrupt: device not available\n\0");
 }
 
-EXCEPTION DeviceNotAbailable(struct interruptFrame *hwRegs) {
-  kprint("FPU is not available");
-  panic("Unsupported interrupt");
+DEFINE_EXCEPTION(DoubleFault) {
+  panic("Unsupported interrupt: Double fault\n\0");
 }
 
-EXCEPTION DoubleFault(struct interruptFrame *hwRegs) {
-  kprint("Double fault\n\0");
-  panic("Unsupported interrupt");
+DEFINE_EXCEPTION(InvalidTSS) {
+  panic("Unsupported interrupt: invalid tss\n\0");
 }
 
-EXCEPTION InvalidTSS(struct interruptFrame *hwRegs) {
-  kprint("Invalid TSS");
-  panic("Unsupported interrupt");
+DEFINE_EXCEPTION(SegmentNotPresent) {
+  panic("Unsupported interrupt: segment not present\n\0");
 }
 
-EXCEPTION SegmentNotPresent(struct interruptFrame *hwRegs) {
-  kprint("Segment not present");
-  panic("Unsupported interrupt");
+DEFINE_EXCEPTION(StackSegmentFault) {
+  panic("Unsupported interrupt: stack segment fault\n\0");
 }
 
-EXCEPTION StackSegmentFault(struct interruptFrame *hwRegs) {
-  kprint("Stack segment fault");
-  panic("Unsupported interrupt");
+DEFINE_EXCEPTION(GeneralProtectionFault) {
+  panic("Unsupported interrupt: general protection fault\n\0");
 }
 
-EXCEPTION GeneralProtectionFault(struct interruptFrame *hwRegs) {
-  kprint("General protection fault");
-  panic("Unsupported interrupt");
+DEFINE_EXCEPTION(PageFault) { panic("Unsupported interrupt: page fault\n\0"); }
+
+DEFINE_INTERRUPT(MathFault) { panic("Unsupported interrupt: math fault\n\0"); }
+
+DEFINE_EXCEPTION(AligmentCheckFault) {
+  panic("Unsupported interrupt: Alignment check\n\0");
 }
 
-EXCEPTION PageFault(struct interruptFrame *hwRegs) {
-  kprint("Page fault");
-  panic("Unsupported interrupt");
+DEFINE_INTERRUPT(MachineCheckFault) {
+  panic("Unsupported interrupt: machine check fault\n\0");
 }
 
-EXCEPTION MathFault(struct interruptFrame *hwRegs) {
-  kprint("Math fault");
-  panic("Unsupported interrupt");
+DEFINE_INTERRUPT(SIMDFault) { panic("Unsupported interrupt: SIMD fault\n\0"); }
+
+DEFINE_INTERRUPT(VirtualizationFault) {
+  panic("Unsupported interrupt: Virtualization fault\n\0");
 }
 
-EXCEPTION AligmentCheckFault(struct interruptFrame *hwRegs) {
-  kprint("Alignment check fault");
-  panic("Unsupported interrupt");
-}
-
-EXCEPTION MachineCheckFault(struct interruptFrame *hwRegs) {
-  kprint("Machine check fault");
-  panic("Unsupported interrupt");
-}
-
-EXCEPTION SIMDFault(struct interruptFrame *hwRegs) {
-  kprint("SIMD fault");
-  panic("Unsupported interrupt");
-}
-
-EXCEPTION VirtualizationFault(struct interruptFrame *hwRegs) {
-  kprint("Virtualization fault");
-  panic("Unsupported interrupt");
-}
-
-EXCEPTION ControlProtectionException(struct interruptFrame *hwRegs) {
-  kprint("Control protection exception");
-  panic("Unsupported interrupt");
+DEFINE_EXCEPTION(ControlProtectionException) {
+  panic("Unsupported interrupt: control protection\n\0");
 }
