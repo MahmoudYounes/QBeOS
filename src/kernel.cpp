@@ -379,6 +379,7 @@ void kmain() {
   // Since I don't have a userspace env yet, this will be just
   // testing that systems are initialized and booted correctly.
 
+  sti();
   kprint("Running self tests\n\0");
   // testMemoryInitialization();
   // testMemoryAllocation();
