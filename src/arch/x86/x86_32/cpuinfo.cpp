@@ -5,7 +5,7 @@ CPUInfo::CPUInfo() {
 
   getCPUModel();
 
-  kprint("Detected cpu \0");
+  kprint("Detected cpu:\n\0");
   kprint(
       cpuModel); // TODO: support string formatter and remove these three lines
 

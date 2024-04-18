@@ -37,7 +37,7 @@
 #define SET_LOWER_WORD(var, val) var | val
 #define SET_HIGHER_WORD(var, val) var | ((uint64_t)val << WORD_SIZE)
 
-#define HLT() for(;;) asm("hlt")
+#define HLT() for(;;) asm("hlt");
 
 // TODO: <todo> this code should go into arch folder
 inline void outb(uint16_t port, uint8_t val){
