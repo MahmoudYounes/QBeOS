@@ -71,7 +71,6 @@ private:
 
   // APIC Info
   APICRegs regs;
-  bool supportedAPIC;
   bool supportedX2APIC;
   bool isBSP;
 
