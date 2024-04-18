@@ -1,6 +1,8 @@
 #include "arch/x86/include/idt.h"
 
 // interruptVector contains pointers to the vector methods that will be used
+// int22 is a bad interrupt handler.
+// int80 is a system call interrupt handler.
 // TODO: a smarter way is to define the whole 256 entries and specify overrides!
 static uintptr_t *interruptVector[] = {(uintptr_t *)DivZero,
                                        (uintptr_t *)DebugException,
