@@ -88,6 +88,8 @@ private:
   char cpuModel[13];
   uint32_t cpuFeaturesECX;
   uint32_t cpuFeaturesEDX;
+  uint32_t initAPICID;
+  uint32_t maxSupportedValue;
 
   void getCPUModel();
   void getCPUFeatures();
@@ -97,6 +99,9 @@ public:
   CPUInfo();
   bool IsCPUFeatureSupported(CPUFeatureECX feature);
   bool IsCPUFeatureSupported(CPUFeatureEDX feature);
+  uint32_t GetInitialAPICID();
+  bool IsConstantTimer();
+  uint32_t GetClockFrequency();
 };
 
 #endif /* CPUINFO_H */

@@ -5,6 +5,13 @@ region should be strongly uncachable. 12.3
 APIC overview pg3389 -- figure 11.4 -- 11.3
 APIC register specs pg3390 -- table 11-1 -- 11.3
 
+to get the APIC BASE Address register read the MSR 0x1b. to enable APIC write the MSR 0x1b
+bit 8 shows if this is the bootstrap processor BSP
+set bit 10 to enable x2APIC
+set bit 11 to enable global APIC
+bits 12:31 on 32bit arch or 12:63 on 64bit arch constitute APIC base
+bits 12:35 on 32bit arch with support for 36 bit addressing space
+
 11.4.7 APIC states
 
 APIC important information to parse:

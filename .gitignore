@@ -32,3 +32,5 @@ debugger-log.out
 
 # ignore ini files
 **.ini
+
+.gdb_history
