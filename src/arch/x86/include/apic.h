@@ -1,88 +1,93 @@
 #ifndef APIC_H
 #define APIC_H
 
+#include "arch/include/vmm.h"
 #include "arch/x86/include/cpuinfo.h"
 #include "arch/x86/include/processor.h"
 #include "include/common.h"
 #include "include/logger.h"
 
 extern CPUInfo cpu;
+extern VirtualMemory vmm;
 
-struct APICRegs {
-  uint32_t id;         // RW
-  uint32_t version;    // R
-  uint32_t tpr;        // task priority register RW
-  uint32_t apr;        // arbitration priority register R
-  uint32_t ppr;        // processor priority register R
-  uint32_t eoi;        // end of interrupt W
-  uint32_t rrd;        // remote read register R
-  uint32_t ldr;        // logical destination register RW
-  uint32_t dfr;        // destination format register RW
-  uint32_t spir;       // spurious interrupt vector register RW
-  uint32_t isr0;       // interrupt service register R
-  uint32_t isr1;       // interrupt service register R
-  uint32_t isr2;       // interrupt service register R
-  uint32_t isr3;       // interrupt service register R
-  uint32_t isr4;       // interrupt service register R
-  uint32_t isr5;       // interrupt service register R
-  uint32_t isr6;       // interrupt service register R
-  uint32_t isr7;       // interrupt service register R
-  uint32_t tmr0;       // trigger mode register R
-  uint32_t tmr1;       // trigger mode register R
-  uint32_t tmr2;       // trigger mode register R
-  uint32_t tmr3;       // trigger mode register R
-  uint32_t tmr4;       // trigger mode register R
-  uint32_t tmr5;       // trigger mode register R
-  uint32_t tmr6;       // trigger mode register R
-  uint32_t tmr7;       // trigger mode register R
-  uint32_t irr0;       // interrupt request register R
-  uint32_t irr1;       // interrupt request register R
-  uint32_t irr2;       // interrupt request register R
-  uint32_t irr3;       // interrupt request register R
-  uint32_t irr4;       // interrupt request register R
-  uint32_t irr5;       // interrupt request register R
-  uint32_t irr6;       // interrupt request register R
-  uint32_t irr7;       // interrupt request register R
-  uint32_t esr;        // error status register RW
-  uint32_t lvtcmci;    // local vector table corrected machine check interrupt
-                       // register RW
-  uint32_t icr_lo;     // interrupt command register low RW
-  uint32_t icr_hi;     // interrupt command register high RW
-  uint32_t lvttimer;   // local vector table timer register RW
-  uint32_t lvtthremal; // local vector table thermal register RW
-  uint32_t lvtpmc;     // local vector table performance counter RW
-  uint32_t lvtlint0;   // local vector table LINT[0] pin RW
-  uint32_t lvtlint1;   // local vector table LINT[1] pin RW
-  uint32_t lvterr;     // local vector table error register RW
-  uint32_t icr;        // initial count register RW
-  uint32_t ccr;        // current count register R
-  uint32_t dcr;        // divide configuration register RW
-};
+// 0x3f0 is the last offset for apic register which is 4 bytes as well
+#define SIZEOF_APIC_TABLE 0x3f4
+#define ID_REG 0x20
+#define VER_REG 0x30
+#define TASK_PRIORITY_REG 0x80
+#define ARBITR_PRIORITY_REG 0x90
+#define CPU_PRIORITY_REG 0xa0
+#define EOI_REG 0xb0
+#define REMOTE_READ_REG 0xc0
+#define LOGICAL_DESTINATION_REG 0xd0
+#define DESTINATION_FORMAT_REG 0xe0
+#define SIV_REG 0xf0 // spurious interrupt vector register
+#define ISR0_REG 0x100
+#define ISR1_REG 0x110
+#define ISR2_REG 0x120
+#define ISR3_REG 0x130
+#define ISR4_REG 0x140
+#define ISR5_REG 0x150
+#define ISR6_REG 0x160
+#define ISR7_REG 0x170
+#define TMR0_REG 0x180
+#define TMR1_REG 0x190
+#define TMR2_REG 0x1a0
+#define TMR3_REG 0x1b0
+#define TMR4_REG 0x1c0
+#define TMR5_REG 0x1d0
+#define TMR6_REG 0x1e0
+#define TMR7_REG 0x1f0
+#define IRR0_REG 0x200
+#define IRR1_REG 0x210
+#define IRR2_REG 0x220
+#define IRR3_REG 0x230
+#define IRR4_REG 0x240
+#define IRR5_REG 0x250
+#define IRR6_REG 0x260
+#define IRR7_REG 0x270
+#define ERR_REG 0x280
+#define LVT_CMCI_REG 0x2f0
+#define LVT_ICR0_REG 0x300
+#define LVT_ICR1_REG 0x310
+#define LVT_TMR_REG 0x320
+#define LVT_THRML_REG 0x330
+#define LVT_PMC_REG 0x340
+#define LVT_LINT0_REG 0x350
+#define LVT_LINT1_REG 0x360
+#define LVT_LINTERR_REG 0x370
+#define INIT_COUNT_REG 0x380
+#define CURR_COUNT_REG 0x390
+#define DIV_CFG_REG 0x3e0
 
-// Used to handle all APIC functionalities.
-// Every processor should have one object of this class.
 class APIC {
 private:
-  // Address Space for communicating with APIC.
-  // Contains the APIC Table
   bool isMapped = false;
   uintptr_t initialRegistersAddress;
-  uintptr_t remappedRegistersAddress;
-
-  // APIC Info
-  APICRegs regs;
+  bool supportedAPIC;
   bool supportedX2APIC;
   bool isBSP;
-
-  // init utils
+  bool isReserved(uint32_t reg);
+  bool isROnly(uint32_t reg);
+  void validateAPIC();
+  void initializeAPIC();
   void enableAPIC();
+  void configureCMCI();
+  void configureTimer();
+  void configureThermal();
+  void configurePMC();
+  void configureLINT0();
+  void configureLINT1();
+  void configureErr();
+  void configureSpurious();
 
-  // APIC RW
-  APICRegs *readRegs();
-  void writeRegs();
+  int32_t readRegister(uint32_t reg);
+  void writeRegister(uint32_t reg, uint32_t content);
 
 public:
   APIC();
+  void StartTimer(uint32_t val);
+  uint32_t ReadTimer();
 };
 
 #endif /* APIC_H */
