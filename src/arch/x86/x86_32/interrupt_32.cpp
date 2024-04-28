@@ -75,3 +75,15 @@ DEFINE_INTERRUPT(VirtualizationFault) {
 DEFINE_EXCEPTION(ControlProtectionException) {
   panic("Unsupported interrupt: control protection\n\0");
 }
+
+DEFINE_INTERRUPT(TimerHandler) { kprint("timer called\n\0"); }
+
+DEFINE_INTERRUPT(LINT0Handler) { kprint("LINT0 called\n\0"); }
+
+DEFINE_INTERRUPT(LINT1Handler) { kprint("LINT1 Called\n\0"); }
+
+DEFINE_INTERRUPT(PMCHandler) { kprint("PMC Called\n\0"); }
+
+DEFINE_INTERRUPT(CMCIHandler) { kprint("CMCI called\n\0"); }
+
+DEFINE_INTERRUPT(SpuriousHandler) { kprint("Spurious interrupt occured\n\0"); }

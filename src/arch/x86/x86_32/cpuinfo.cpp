@@ -13,8 +13,10 @@ CPUInfo::CPUInfo() {
 }
 
 void CPUInfo::getCPUModel() {
-  int unused, ebx, ecx, edx;
-  __cpuid(0, unused, ebx, ecx, edx);
+  int eax, ebx, ecx, edx;
+  __cpuid(0, eax, ebx, ecx, edx);
+
+  maxSupportedValue = eax;
 
   // parse retgister
   char *mp = cpuModel;
@@ -40,8 +42,8 @@ void CPUInfo::getCPUModel() {
 }
 
 void CPUInfo::getCPUFeatures() {
-  int unused, ecx, edx;
-  __cpuid(1, unused, unused, ecx, edx);
+  int unused, ebx, ecx, edx;
+  __cpuid(1, unused, ebx, ecx, edx);
 
   cpuFeaturesECX = ecx;
   cpuFeaturesEDX = edx;
@@ -60,6 +62,34 @@ uint32_t CPUInfo::getCPUMaxLogicalAddress() {
   __cpuid(1, unused, ebx, ecx, edx);
 
   return ebx & 0xff000000;
+}
+
+uint32_t CPUInfo::GetInitialAPICID() {
+  int eax = 1, ebx, unused;
+  __cpuid(0, eax, ebx, unused, unused);
+
+  return ebx >> 24;
+}
+
+bool CPUInfo::IsConstantTimer() {
+  int eax, unused;
+  __cpuid(0x6, eax, unused, unused, unused);
+
+  return eax & 0x2;
+}
+
+uint32_t CPUInfo::GetClockFrequency() {
+  int eax, ebx, ecx, edx;
+
+  if (maxSupportedValue > 0x15) {
+    __cpuid(0x15, eax, ebx, ecx, edx);
+    return 0;
+  } else {
+    panic("can not read TSC\n\0");
+  }
+
+  // TODO: is this the right value?
+  return 1;
 }
 
 CPUInfo cpu;

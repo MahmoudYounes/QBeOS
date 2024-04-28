@@ -1,10 +1,10 @@
 Tasks to implement APCI:
 - Decide where to map the APIC (Done): for now I don't need to remap it because I am still doing SP
   not MP. so it's fine to leave it as is.
-- Map the APIC physical memory to VMM.
-- Parse data: APICID [0..24] Reg 0
-- Parse data: APICVersion APIC Version Register number:
-- Parse data: max LVT entries from APIC Version Register (LVT Entries - 1)
+- Map the APIC physical memory to VMM (Done).
+- Parse data: APICID [0..24] Reg 0x20
+- Parse data: APICVersion APIC Version Register number 0x30
+- Parse data: max LVT entries from APIC Version Register (LVT Entries - 1) (Done)
 - Configure the LVT Registers:
   - Configure LVT CMCI:
     -

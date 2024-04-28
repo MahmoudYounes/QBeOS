@@ -366,6 +366,16 @@ void kmain() {
   pic = PIC();
   apic = APIC();
   acpi = ACPI();
+  sti();
+  apic.StartTimer(100);
+  char *buf = new char[128];
+  for (;;) {
+    uint32_t timerValue = apic.ReadTimer();
+    kprintf(buf, "timer value is %d\n\0", timerValue);
+    if (timerValue <= 0) {
+      break;
+    }
+  }
 
   generalreg_size_t ip = readIP();
   kprintf(buf, "value of IP is %d\n\0", ip);

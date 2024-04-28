@@ -34,9 +34,15 @@ static uintptr_t *interruptVector[] = {(uintptr_t *)DivZero,
                                        (uintptr_t *)BadInterrupt,
                                        (uintptr_t *)BadInterrupt,
                                        (uintptr_t *)BadInterrupt,
-                                       (uintptr_t *)BadInterrupt};
+                                       (uintptr_t *)BadInterrupt,
+                                       (uintptr_t *)BadInterrupt,
+                                       (uintptr_t *)CMCIHandler,
+                                       (uintptr_t *)TimerHandler,
+                                       (uintptr_t *)PMCHandler,
+                                       (uintptr_t *)LINT0Handler,
+                                       (uintptr_t *)LINT1Handler};
 
-static int countDefinedInterrupts = 31;
+static int countDefinedInterrupts = 37;
 
 IDTEntry::IDTEntry() {}
 
@@ -95,16 +101,31 @@ uint64_t IDTEntry::EncodeEntryAt(uintptr_t addr) {
 IDT::IDT() {
   // interrupts should be set up only once
   uint8_t idtIdx = 0;
-  for (int i = 0; i < countDefinedInterrupts; i++) {
+  for (; idtIdx < countDefinedInterrupts; idtIdx++) {
     IDTEntry idtEntry = IDTEntry();
     idtEntry.SetSegment(GDT_KERNEL_CODE_DESCRIPTOR_SEL);
-    idtEntry.SetOffset((uintptr_t)interruptVector[i]);
+    idtEntry.SetOffset((uintptr_t)interruptVector[idtIdx]);
     idtEntry.SetFlags(GATE_32INTR_F);
-    idtEntry.EncodeEntryAt(idtTableBase + idtIdx++ * 8);
+    idtEntry.EncodeEntryAt(idtTableBase + idtIdx * 8);
   }
 
+  for (; idtIdx < 254; idtIdx++) {
+    IDTEntry idtEntry = IDTEntry();
+    idtEntry.SetSegment(GDT_KERNEL_CODE_DESCRIPTOR_SEL);
+    idtEntry.SetOffset(
+        (uintptr_t)interruptVector[9]); // int 9 is always bad interrupt
+    idtEntry.SetFlags(GATE_32INTR_F);
+    idtEntry.EncodeEntryAt(idtTableBase + idtIdx * 8);
+  }
+
+  IDTEntry idtEntry = IDTEntry();
+  idtEntry.SetSegment(GDT_KERNEL_CODE_DESCRIPTOR_SEL);
+  idtEntry.SetOffset((uintptr_t)SpuriousHandler);
+  idtEntry.SetFlags(GATE_32INTR_F);
+  idtEntry.EncodeEntryAt(idtTableBase + idtIdx * 8);
+
   idt.offset = idtTableBase;
-  idt.size = 8 * countDefinedInterrupts;
+  idt.size = 8 * 255;
 
   __asm__ __volatile__("lidt %0" : : "m"(idt));
 }
