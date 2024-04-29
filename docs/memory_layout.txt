@@ -20,15 +20,15 @@ note: the boot loader has 480 kbs after it and 30kbs before it. I assume this is
 stack will be the ~= 30kbs before the boot loader.
 
 >1MiB
----------------------------------------------------------------------------------------------
-start     | end           | size                  | region/exception & description                  |
----------------------------------------------------------------------------------------------
-0x00100000| 0x00EFFFFF	  | 0x00E00000 (14 MiB)   | RAM -- free for use (if it exists)	Extended memory 1, 2
-0x00F00000| 0x00FFFFFF    | 0x00100000 (1 MiB)	  | Possible memory mapped hardware	ISA Memory Hole 15-16MB 3
-0x01000000| ????????      | ????????              | (whatever exists)	RAM -- free for use	More Extended memory 1
-0xC0000000| (sometimes, depends on motherboard and devices)	0xFFFFFFFF | 0x40000000 (1 GiB)    | various (typically reserved for memory mapped devices)	Memory mapped PCI devices, PnP NVRAM?, IO APIC/s, local APIC/s, BIOS, ...
+----------------------------------------------------------------------------------------------------------------
+start      | end           | size                            | region/exception & description                  |
+----------------------------------------------------------------------------------------------------------------
+0x00100000 | 0x00EFFFFF	   | 0x00E00000 (14 MiB)             | RAM -- free for use (if it exists)	Extended memory 1, 2
+0x00F00000 | 0x00FFFFFF    | 0x00100000 (1 MiB)	             | Possible memory mapped hardware	ISA Memory Hole 15-16MB 3
+0x01000000 | ????????      | ????????                        | (whatever exists)	RAM -- free for use	More Extended memory 1
+0xC0000000 | (depends on motherboard and devices)	0xFFFFFFFF | 0x40000000 (1 GiB)    | various (typically reserved for memory mapped devices)	Memory mapped PCI devices, PnP NVRAM?, IO APIC/s, local APIC/s, BIOS, ...
 
-0x0000000100000000 (possible memory above 4 GiB)	 ????????????????	 ???????????????? (whatever exists)	RAM -- free for use (PAE/64bit)	More Extended memory 1
- ????????????????	 ????????????????	 ????????????????	Possible memory mapped hardware	Potentially usable for memory mapped PCI devices in modern hardware (but typically not, due to backward compatibility)
+0x0000000100000000 (possible memory above 4 GiB)	(whatever exists)	RAM -- free for use (PAE/64bit)	More Extended memory 1
+Possible memory mapped hardware	Potentially usable for memory mapped PCI devices in modern hardware (but typically not, due to backward compatibility)
 
 
