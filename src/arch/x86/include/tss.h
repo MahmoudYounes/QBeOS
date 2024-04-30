@@ -1,11 +1,11 @@
 #ifndef TSS_H
 #define TSS_H
 
-#include "include/common.h"
-#include "include/logger.h"
-#include "arch/x86/include/processor.h"
 #include "arch/include/vmm.h"
 #include "arch/x86/include/gdt.h"
+#include "arch/x86/include/processor.h"
+#include "include/common.h"
+#include "include/logger.h"
 
 extern VirtualMemory vmm;
 extern GDT gdt;
@@ -52,8 +52,13 @@ struct tss {
 // this controls the TSS structure.
 // should be initialized after vmm
 class TSSManager {
+private:
+  uint32_t currTaskSelector;
+  tss currTask;
+
 public:
-    TSSManager();
+  TSSManager();
+  uint32_t GetCurrentTask();
 };
 
 #endif /* TSS_H */

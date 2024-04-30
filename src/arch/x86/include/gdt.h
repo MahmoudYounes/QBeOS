@@ -84,7 +84,7 @@ public:
   GDTEntry ConstructTSSUserEntry(uintptr_t base, uintptr_t limit);
 
   // TODO: how are you going to think about error propagation?
-  void AddGDTEntry(GDTEntry *entry);
+  uint32_t AddGDTEntry(GDTEntry *entry);
 
   void RefreshGDT();
 };

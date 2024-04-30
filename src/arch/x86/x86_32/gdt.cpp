@@ -11,16 +11,16 @@ GDT::GDT() {
       0x00000000, 0xfffff, SEGMENT_KERNEL_CODE, SEGMENT_FLAGS_DEFAULT);
   GDTEntry kernelDataDescriptor = ConstructGDTEntry(
       0x00000000, 0xfffff, SEGMENT_KERNEL_DATA, SEGMENT_FLAGS_DEFAULT);
-  GDTEntry restCodeDescriptor = ConstructGDTEntry(
+  GDTEntry userCodeDescriptor = ConstructGDTEntry(
       0x00c00000, 0xfffff, SEGMENT_USER_CODE, SEGMENT_FLAGS_DEFAULT);
-  GDTEntry restDataDescriptor = ConstructGDTEntry(
+  GDTEntry userDataDescriptor = ConstructGDTEntry(
       0x00c00000, 0xfffff, SEGMENT_USER_DATA, SEGMENT_FLAGS_DEFAULT);
 
-  encodeEntry(&nullDescriptor);
-  encodeEntry(&kernelCodeDescriptor);
-  encodeEntry(&kernelDataDescriptor);
-  encodeEntry(&restCodeDescriptor);
-  encodeEntry(&restDataDescriptor);
+  AddGDTEntry(&nullDescriptor);
+  AddGDTEntry(&kernelCodeDescriptor);
+  AddGDTEntry(&kernelDataDescriptor);
+  AddGDTEntry(&userCodeDescriptor);
+  AddGDTEntry(&userDataDescriptor);
 
   RefreshGDT();
 }
@@ -48,7 +48,6 @@ void GDT::encodeEntry(GDTEntry *entry) {
   lastEntryAddress[6] = (entry->flags << 4) | lastEntryAddress[6];
 
   lastEntryAddress += 8;
-  countEntries++;
 }
 
 GDTEntry GDT::ConstructGDTEntry(uintptr_t base, uintptr_t limit, uint8_t access,
@@ -103,6 +102,10 @@ void GDT::RefreshGDT() {
                : "memory");
 }
 
-void GDT::AddGDTEntry(GDTEntry *entry) { encodeEntry(entry); }
+uint32_t GDT::AddGDTEntry(GDTEntry *entry) {
+  encodeEntry(entry);
+  uint32_t entrySelector = countEntries++ << 3;
+  return entrySelector;
+}
 
 GDT gdt;
