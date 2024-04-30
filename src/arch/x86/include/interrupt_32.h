@@ -7,6 +7,9 @@
 
 #include "include/common.h"
 #include "include/logger.h"
+#include "arch/x86/include/apic.h"
+
+extern APIC apic;
 
 #define DEFINE_INTERRUPT(interruptName) void __attribute__((interrupt)) interruptName(struct interruptFrame *hwRegs)
 #define DEFINE_EXCEPTION(exceptionName) void __attribute__((interrupt)) exceptionName(struct interruptFrame *hwRegs, uint32_t errCode)
@@ -47,5 +50,7 @@ DEFINE_INTERRUPT(LINT0Handler);
 DEFINE_INTERRUPT(LINT1Handler);
 DEFINE_INTERRUPT(PMCHandler);
 DEFINE_INTERRUPT(CMCIHandler);
+DEFINE_INTERRUPT(APICErrHandler);
 DEFINE_INTERRUPT(SpuriousHandler);
+
 #endif /* INTERRUPT_32_H */
