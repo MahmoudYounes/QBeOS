@@ -11,6 +11,8 @@ TSSManager::TSSManager() {
   __asm__ __volatile__("ltr %0" : : "r"(currTaskSelector));
 }
 
-uint32_t TSSManager::GetCurrentTask() { return 0; }
+tss *TSSManager::GetCurrentTask() { return &currTask; }
+
+uint32_t TSSManager::GetCurrentTaskSelector() { return currTaskSelector; }
 
 TSSManager tssManager;

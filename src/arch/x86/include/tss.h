@@ -58,7 +58,8 @@ private:
 
 public:
   TSSManager();
-  uint32_t GetCurrentTask();
+  tss *GetCurrentTask();
+  uint32_t GetCurrentTaskSelector();
 };
 
 #endif /* TSS_H */
