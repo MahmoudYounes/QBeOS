@@ -60,8 +60,26 @@ extern VirtualMemory vmm;
 #define CURR_COUNT_REG 0x390
 #define DIV_CFG_REG 0x3e0
 
+enum DIV_CFG {
+  DIV2 = 0x0,
+  DIV4 = 0x1,
+  DIV8 = 0x2,
+  DIV16 = 0x3,
+  DIV32 = 0x8,
+  DIV64 = 0x9,
+  DIV128 = 0xa,
+  DIV1 = 0xb
+};
+
+enum TIMER_MODE {
+  ONESHOT = 0x0,
+  PERIODIC = 0x1,
+  TSCD = 0x2,
+};
+
 class APIC {
 private:
+  bool isInitialized;
   bool isMapped = false;
   uintptr_t initialRegistersAddress;
   bool supportedAPIC;
@@ -88,6 +106,9 @@ public:
   APIC();
   void StartTimer(uint32_t val);
   uint32_t ReadTimer();
+  void DebugPrintAPICState();
+  void WriteEOI();
+  void StartTimer(DIV_CFG divCfg, TIMER_MODE mode, uint32_t initVal);
 };
 
 #endif /* APIC_H */

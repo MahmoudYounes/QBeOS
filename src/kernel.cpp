@@ -364,21 +364,9 @@ void kmain() {
   tssManager = TSSManager();
   idt = IDT();
   pic = PIC();
-  apic = APIC();
   acpi = ACPI();
+  apic = APIC();
   sti();
-  apic.StartTimer(100);
-  char *buf = new char[128];
-  for (;;) {
-    uint32_t timerValue = apic.ReadTimer();
-    kprintf(buf, "timer value is %d\n\0", timerValue);
-    if (timerValue <= 0) {
-      break;
-    }
-  }
-
-  generalreg_size_t ip = readIP();
-  kprintf(buf, "value of IP is %d\n\0", ip);
 
   // at this point interrupts are disabled... need to setup IDT to renable them.
 
@@ -389,7 +377,6 @@ void kmain() {
   // Since I don't have a userspace env yet, this will be just
   // testing that systems are initialized and booted correctly.
 
-  sti();
   kprint("Running self tests\n\0");
   // testMemoryInitialization();
   // testMemoryAllocation();

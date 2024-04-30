@@ -40,9 +40,10 @@ static uintptr_t *interruptVector[] = {(uintptr_t *)DivZero,
                                        (uintptr_t *)TimerHandler,
                                        (uintptr_t *)PMCHandler,
                                        (uintptr_t *)LINT0Handler,
-                                       (uintptr_t *)LINT1Handler};
+                                       (uintptr_t *)LINT1Handler,
+                                       (uintptr_t *)APICErrHandler};
 
-static int countDefinedInterrupts = 37;
+static int countDefinedInterrupts = 38;
 
 IDTEntry::IDTEntry() {}
 
