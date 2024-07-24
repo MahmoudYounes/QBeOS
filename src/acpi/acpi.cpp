@@ -1,6 +1,6 @@
 #include "include/acpi.h"
 
-ACPI::ACPI() {
+ACPIM::ACPIM() {
   bool found = false;
   char *buf = new char[256];
   uint16_t ebdaPtr;
@@ -13,7 +13,7 @@ ACPI::ACPI() {
 
   char sig[9];
   int steps = 0;
-  for (uintptr_t p = ebdaPtr; steps < 1024; steps++) {
+  for (uintptr_t p = ebdaPtr; !found && steps < 1024; steps++) {
     memcpy(sig, (uint8_t *)p, 8);
     if (strcmp(sig, "RSD PTR ") == 0) {
       kprint("found rsdp from EBDA\n\0");
@@ -23,7 +23,7 @@ ACPI::ACPI() {
     p += 16;
   }
 
-  for (uint8_t *p = (uint8_t *)0xe0000; p < (uint8_t *)0xfffff; p += 16) {
+  for (uint8_t *p = (uint8_t *)0xe0000; !found && p < (uint8_t *)0xfffff; p += 16) {
     memcpy(sig, p, 8);
     sig[8] = '\0';
     if (strcmp(sig, "RSD PTR \0") == 0) {
@@ -40,7 +40,7 @@ ACPI::ACPI() {
   }
 }
 
-void ACPI::parseRSDP(uintptr_t p) {
+void ACPIM::parseRSDP(uintptr_t p) {
   char *buf = new char[256];
   memcpy(&rsdp, (uint8_t *)p, sizeof(ACPIRSDP));
   if (rsdp.rev == 0) {
@@ -54,17 +54,17 @@ void ACPI::parseRSDP(uintptr_t p) {
   delete[] buf;
 }
 
-void ACPI::parseRSDPV1() {
+void ACPIM::parseRSDPV1() {
   printTableInfo();
-  rsdt = new RSDT(rsdp.rsdtAddr);
+  rsdt = new RSDTM(rsdp.rsdtAddr);
 }
 
-void ACPI::parseRSDPV2() {
+void ACPIM::parseRSDPV2() {
   printTableInfo();
-  xsdt = new XSDT(rsdp.xsdtAddr);
+  panic("XSDT is not implemented yet\0\n");
 }
 
-void ACPI::printTableInfo() {
+void ACPIM::printTableInfo() {
   kprint("print rsdp info start:\n\0");
   char *buf = new char[256];
   memcpy(buf, rsdp.signature, 8);
@@ -83,13 +83,20 @@ void ACPI::printTableInfo() {
 
   kprintf(buf, "%x\n\0", rsdp.rsdtAddr);
 
-  kprintf(buf, "%d\n\0", rsdp.lengthBytes);
-
-  kprintf(buf, "%X\n\0", rsdp.xsdtAddr);
+  kprintf(buf, "%d\n\0", rsdp.lengthBytes); 
 
   kprintf(buf, "%d\n\0", (uint32_t)rsdp.extChecksum);
 
   kprint("print rsdp info end\n\0");
 }
 
-ACPI acpi;
+int calculateChecksum(uintptr_t begin, uint32_t length) {
+  uint32_t csum = 0, itr = 0;
+  for (uint8_t *ptr = (uint8_t *)begin; itr < length; itr++, ptr++) {
+    csum += *ptr;
+  }
+  return csum;
+}
+
+// list of all ACPI table managers
+ACPIM acpi;

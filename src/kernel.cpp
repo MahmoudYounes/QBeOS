@@ -41,7 +41,7 @@ extern CPUInfo cpu;
 extern IDT idt;
 extern PIC pic;
 extern APIC apic;
-extern ACPI acpi;
+extern ACPIM acpi;
 extern TSSManager tssManager;
 
 // For now it's easier for me to just look at the screen. I have a way in mind
@@ -364,7 +364,7 @@ void kmain() {
   tssManager = TSSManager();
   idt = IDT();
   pic = PIC();
-  acpi = ACPI();
+  acpi = ACPIM();
   apic = APIC();
   sti();
 
@@ -376,20 +376,6 @@ void kmain() {
   // Ideally this would be the init process running or a shell
   // Since I don't have a userspace env yet, this will be just
   // testing that systems are initialized and booted correctly.
-
-  kprint("Running self tests\n\0");
-  // testMemoryInitialization();
-  // testMemoryAllocation();
-  // testMemoryPageAt();
-  //  these tests will not page until vmm.alloc is implemented
-  // testPDTEntry();
-  // testPTEntry();
-  // testMemset();
-  //  end of these tests
-
-  // testFormater();
-  // testVMMAloocation();
-  testIDTEntry();
 
   bootEnd();
 }
