@@ -1,6 +1,8 @@
 #include "acpi/include/rsdt.h"
+#include "acpi/include/acpi.h"
 
-RSDT::RSDT(uintptr_t rsdtAddr) {
+RSDTM::RSDTM(uintptr_t rsdtAddr) {
+  rsdtPtr = rsdtAddr;
   memcpy(&rsdt, (uint8_t *)rsdtAddr, sizeof(ACPIRSDT));
   validateTable();
 
@@ -21,9 +23,11 @@ RSDT::RSDT(uintptr_t rsdtAddr) {
     entries[idx] = *((uint32_t *)(entriesBegin + idx * sizeof(uint32_t)));
     idx++;
   }
+
+  parseTables();
 }
 
-void RSDT::validateTable() {
+void RSDTM::validateTable() {
   valid = true;
   char *sig = new char[5];
   memcpy(sig, &rsdt.signature, 4);
@@ -33,5 +37,21 @@ void RSDT::validateTable() {
     valid = false;
   }
 
-  // TODO: validate checksum
+  uint64_t csum =  calculateChecksum(rsdtPtr, rsdt.length) % 0x100;  
+  if (csum) {
+    panic("read invalid RSDT Table\n\0");
+  }
+}
+
+void RSDTM::parseTables() {
+    for (uint32_t idx = 0; idx < rsdt.length; idx++){
+        uintptr_t addr = entries[idx];
+        if (strncmp((const char *)addr, "FACP", 4) == 0){
+            kprint("found FACP\n");
+            facpm = new FACPM(addr); 
+        } else if (strncmp((const char *)addr, "APIC", 4) == 0){
+            kprint("found MADT\n");
+            madtm = new MADTM(addr); 
+        }
+    } 
 }

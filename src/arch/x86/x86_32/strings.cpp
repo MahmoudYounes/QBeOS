@@ -57,3 +57,14 @@ extern "C" int8_t strcmp(const char *str1p, const char *str2p) {
     return 1;
   return 0;
 }
+
+extern "C" int8_t strncmp(const char *str1p, const char *str2p, uint8_t nbytes){
+   for (int64_t i = 0; i < nbytes; i++) {
+    if (str1p[i] < str2p[i]) {
+      return -1;
+    } else if (str1p[i] > str2p[i]) {
+      return 1;
+    }
+  }
+  return 0;
+}

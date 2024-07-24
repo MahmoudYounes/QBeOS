@@ -2,7 +2,6 @@
 #define ACPI_H
 
 #include "acpi/include/rsdt.h"
-#include "acpi/include/xsdt.h"
 #include "arch/include/vmm.h"
 #include "include/common.h"
 #include "include/logger.h"
@@ -26,12 +25,11 @@ struct ACPIRSDP {
   uint8_t reserved[3];
 } __attribute__((packed));
 
-class ACPI {
+class ACPIM {
 private:
   uint8_t acpiver;
   struct ACPIRSDP rsdp;
-  RSDT *rsdt;
-  XSDT *xsdt;
+  RSDTM *rsdt; 
 
   void parseRSDP(uintptr_t p);
   void parseRSDPV1();
@@ -39,7 +37,9 @@ private:
   void printTableInfo();
 
 public:
-  ACPI();
+  ACPIM();
 };
+
+int calculateChecksum(uintptr_t begin, uint32_t length);
 
 #endif /* ACPI_H */

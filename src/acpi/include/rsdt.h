@@ -5,6 +5,8 @@
 #include "include/logger.h"
 #include "include/strings.h"
 #include "kstdlib/include/global_operators.h"
+#include "acpi/include/facp.h"
+#include "acpi/include/madt.h"
 
 struct ACPIRSDT {
   char signature[4];
@@ -18,16 +20,24 @@ struct ACPIRSDT {
   uint32_t creatorRevision;
 } __attribute__((packed));
 
-class RSDT {
+class RSDTM {
 private:
+  uintptr_t rsdtPtr;
   struct ACPIRSDT rsdt;
   bool valid;
   uint32_t *entries;
 
+  /* list of all ACPI tables suppoerted */
+  FACPM *facpm;
+  MADTM *madtm;
+
   void validateTable();
+  void populateACPI();
+  void parseTables();
 
 public:
-  RSDT(uintptr_t rsdtAddr);
+  RSDTM();
+  RSDTM(uintptr_t rsdtAddr);
 };
 
 #endif /* RSDT_H */
