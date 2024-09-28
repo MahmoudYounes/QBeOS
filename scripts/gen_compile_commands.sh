@@ -7,9 +7,9 @@
 
 selfdir="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 rootdir="$selfdir/.."
-pushd rootdir
+pushd $rootdir
 
-echo "install compiledb"
+echo "using pip to install compiledb"
 pip install compiledb
 
 compiledb make -n

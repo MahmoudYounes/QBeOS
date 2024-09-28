@@ -100,10 +100,10 @@ uint64_t IDTEntry::EncodeEntryAt(uintptr_t addr) {
 }
 
 IDT::IDT() {
+  IDTEntry idtEntry;
   // interrupts should be set up only once
   uint8_t idtIdx = 0;
   for (; idtIdx < countDefinedInterrupts; idtIdx++) {
-    IDTEntry idtEntry = IDTEntry();
     idtEntry.SetSegment(GDT_KERNEL_CODE_DESCRIPTOR_SEL);
     idtEntry.SetOffset((uintptr_t)interruptVector[idtIdx]);
     idtEntry.SetFlags(GATE_32INTR_F);
@@ -111,7 +111,6 @@ IDT::IDT() {
   }
 
   for (; idtIdx < 254; idtIdx++) {
-    IDTEntry idtEntry = IDTEntry();
     idtEntry.SetSegment(GDT_KERNEL_CODE_DESCRIPTOR_SEL);
     idtEntry.SetOffset(
         (uintptr_t)interruptVector[9]); // int 9 is always bad interrupt
@@ -119,7 +118,6 @@ IDT::IDT() {
     idtEntry.EncodeEntryAt(idtTableBase + idtIdx * 8);
   }
 
-  IDTEntry idtEntry = IDTEntry();
   idtEntry.SetSegment(GDT_KERNEL_CODE_DESCRIPTOR_SEL);
   idtEntry.SetOffset((uintptr_t)SpuriousHandler);
   idtEntry.SetFlags(GATE_32INTR_F);

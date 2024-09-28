@@ -9,7 +9,6 @@
 #include "include/task.h"
 
 extern GDT gdt;
-extern VirtualMemory vmm;
 
 class Task : Kernel::Task {
 public:

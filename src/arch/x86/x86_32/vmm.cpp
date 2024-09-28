@@ -1,4 +1,5 @@
 #include "arch/include/vmm.h"
+#include "arch/x86/include/pt_entry.h"
 
 static char *buf;
 
@@ -7,39 +8,49 @@ void VirtualMemory::testVirtualMemory() {
     return;
   }
 
-  for (uintptr_t i = 0x0; i < 0xffffffff; i += 4) {
+  for (uintptr_t i = 0x0; i < 0x1000000; i += 4) {
+    MemoryRegion mem = sysMemory.GetPageAt(i) ;
+    if (mem.state != usable){
+      continue;
+    }
+
     testAddrTranslation(i);
   }
 }
 
 void VirtualMemory::testAddrTranslation(uintptr_t expectedAddr) {
-  uint64_t firstTen = expectedAddr >> 22;
-  uint64_t nextTen = (expectedAddr >> 12) & 0x3ff;
-  uint64_t lastTwelve = expectedAddr & 0xfff;
+  // the first 10 MSB are offset into PDT. entry contains address to the PT
+  uint64_t pdtOffset = expectedAddr >> 22;
 
-  uintptr_t pdtPtr = PDTAddress + firstTen * ENTRY_SIZE_BYTES;
-  uint32_t pdtEntry = *(uint32_t *)pdtPtr;
+  // the next 10 MSB are offset into th PT. entry contains address to the page
+  uint64_t ptOffset = (expectedAddr >> 12) & 0x3ff;
+  
+  // the last 12 are offset into the page
+  uint64_t offsetInPage = expectedAddr & 0xfff;
+
+  uintptr_t pdtEntryPtr = PDTAddress + pdtOffset * ENTRY_SIZE_BYTES;
+  uint32_t pdtEntry = *(uint32_t *)pdtEntryPtr;
 
   uintptr_t ptPtr = (pdtEntry >> 12) << 12;
-  uintptr_t ptePtr = ptPtr + nextTen * ENTRY_SIZE_BYTES;
-  uintptr_t pteContent = *(uint32_t *)ptePtr;
+  uintptr_t ptEntryPtr = ptPtr + ptOffset * ENTRY_SIZE_BYTES;
+  uintptr_t pteContent = *(uint32_t *)ptEntryPtr;
   uintptr_t paddr = (pteContent >> 12) << 12;
-  uintptr_t addr = paddr | lastTwelve;
+  uintptr_t addr = paddr | offsetInPage;
 
   if (addr != expectedAddr) {
     kprintf(buf, "testing mapping of address %p\n\0", expectedAddr);
     kprintf(buf, "page tables are incorrectly set up. expected %p found %p\n\0",
             expectedAddr, addr);
-    kprintf(buf, "offseting pdt %p with %x yielded \0", PDTAddress, firstTen);
-    kprintf(buf, "%p\n\0", pdtPtr);
+    kprintf(buf, "offseting pdt %p with %x yielded \0", PDTAddress, pdtOffset);
+    kprintf(buf, "%p\n\0", pdtEntryPtr);
     kprintf(buf, "addresss of PT from PDT Entry is %p\n\0", ptPtr);
-    kprintf(buf, "offseting pt %p with %d yielded \0", ptPtr, nextTen);
-    kprintf(buf, "%p\n\0", ptePtr);
+    kprintf(buf, "offseting pt %p with %d yielded \0", ptPtr, ptOffset);
+    kprintf(buf, "%p\n\0", ptEntryPtr);
     kprintf(buf, "address of Page from PT Entry is %p\n\0", paddr);
     kprintf(buf,
             "constructing address from Page Base %p, and offset %d in page "
             "yielded \0",
-            paddr, lastTwelve);
+            paddr, offsetInPage);
     kprintf(buf, "%p\n\0", addr);
     panic("vmm test failed");
   }
@@ -67,15 +78,28 @@ void VirtualMemory::setupPageDirectoryTable() {
   }
 }
 
+/**
+* Maps the system memory:
+* - create an identity map of the memory
+* - Should map the kernel but does not.
+*   for now I don't have a way to know how big is the kernel
+*   so I use estimate from the output of ls -lah on the image + some buffer
+*   this should change if the kernel is built as ELF file. I can then parse
+*   the ELF data and then get an estimate of how big the kernel really is
+* - map any reserved memory and known to be reserved memory.
+*/
 void VirtualMemory::mapSystemMemory() {
   MemoryInfo physicalMemInfo = sysMemory.GetMemoryInfo();
   // creating identity page directory tables and page tables
   MemoryRegion *ptr = (MemoryRegion *)physicalMemInfo.pagesWalker;
   while (ptr != NULL) {
-    if (ptr->state != usable) {
-      uint32_t flags = VMM_KERN;
-      map((uintptr_t)ptr->baseAddress, (uintptr_t)ptr->baseAddress, flags);
-    }
+    uint32_t flags;
+    if (ptr->state == usable) {
+      flags = VMM_KERN;
+    } else {
+      flags = VMM_UNMAP; 
+    }  
+    map((uintptr_t)ptr->baseAddress, (uintptr_t)ptr->baseAddress, flags);
     ptr = ptr->next;
   }
 
@@ -88,6 +112,7 @@ void VirtualMemory::enablePaging() {
   // test translate if enabled
   testVirtualMemory();
 
+  pagingEnabled = true;
   // TODO: if we want higher half kernel then after paging is enabled, must do a
   // far jump to the next kernl address
   __asm__ __volatile__("mov ecx, %0\n\t"
@@ -102,6 +127,7 @@ void VirtualMemory::enablePaging() {
 }
 
 void VirtualMemory::createPDTEntry(uintptr_t atPDTPtr, uintptr_t ofPTPtr) {
+  // this creates a variable on the stack when it calls the function. it will be cleaned up.
   KERN_PDT->SetPTAddress(ofPTPtr)->EncodeEntryAt(atPDTPtr);
 }
 
@@ -110,7 +136,7 @@ void VirtualMemory::createPTEntry(uintptr_t atPTPtr, uintptr_t ofPtr,
   if (flags & VMM_KERN) {
     KERN_PT->SetPageAddress(ofPtr)->EncodeEntryAt(atPTPtr);
   } else if (flags & VMM_UNMAP) {
-    INVALID_PT.SetPageAddress(ofPtr)->EncodeEntryAt(atPTPtr);
+    NONPRESENT_PT.SetPageAddress(0x0)->EncodeEntryAt(atPTPtr);
   } else {
     // TODO: once we have IDT, lazy create these virual pages on page faults?
     USER_PT->SetPageAddress(ofPtr)->EncodeEntryAt(atPTPtr);
@@ -118,15 +144,24 @@ void VirtualMemory::createPTEntry(uintptr_t atPTPtr, uintptr_t ofPtr,
 }
 
 void VirtualMemory::map(uintptr_t vaddr, uintptr_t paddr, uint8_t flags) {
+  // offsetInPDT
   uint64_t pdtOffset = vaddr >> 22;
+  
+  // offsetInPT
   uint64_t ptOffset = (vaddr >> 12) & 0x3ff;
-  uintptr_t physicalPageBeginAddr = paddr & ~0xfff;
-  uintptr_t pdtAddr = PDTAddress + pdtOffset * ENTRY_SIZE_BYTES;
-  uintptr_t ptAddr = ((*(uint32_t *)pdtAddr) >> 12) << 12;
+  
+  // address of where the page begins
+  uintptr_t pageFrameAddress = paddr & ~0xfff;
+  
+  uintptr_t pdtEntryAddr = PDTAddress + pdtOffset * ENTRY_SIZE_BYTES;
+  uintptr_t ptAddr = (*(uint32_t *)pdtEntryAddr) & ~0xfff;
   uintptr_t ptEntryAddr = ptAddr + ptOffset * ENTRY_SIZE_BYTES;
 
-  createPTEntry((uintptr_t)ptEntryAddr, physicalPageBeginAddr, flags);
-  flushTLB();
+  createPTEntry((uintptr_t)ptEntryAddr, pageFrameAddress, flags);
+  
+  if (pagingEnabled){
+    flushTLB();
+  }
 }
 
 uint32_t VirtualMemory::GetPageEntry(uintptr_t vaddr) {
@@ -212,4 +247,7 @@ void VirtualMemory::MMap(uintptr_t srcPtr, uintptr_t dstPtr) {
 
 void VirtualMemory::Unmap(uintptr_t dstPtr) { unmap(dstPtr); }
 
-VirtualMemory vmm;
+void *VirtualMemory::getPage(){
+  return sysMemory.AllocPhysicalPage();
+}
+

@@ -29,7 +29,7 @@ public:
 
 class IDT {
 private:
-  uintptr_t idtTableBase = 0x910000;
+  uintptr_t idtTableBase = 0x901000;
 
 public:
   struct __attribute__((packed)) IDTInfo {

@@ -15,6 +15,7 @@ void Memory::splitRegion(const MemTableEntry *mtentry,
   for (; i < (mtentry->size / PAGE_SIZE_BYTES); i++) {
     bufRegion.baseAddress =
         ((uint8_t *)mtentry->baseAddr + i * PAGE_SIZE_BYTES);
+       
     bufRegion.size = PAGE_SIZE_BYTES;
     bufRegion.state = (enum memState)mtentry->state;
     bufRegion.bootRegionID = bootMemRegionIdx;
@@ -37,7 +38,7 @@ void Memory::splitRegion(const MemTableEntry *mtentry,
     bufRegion.baseAddress =
         (uint8_t *)(mtentry->baseAddr + i * PAGE_SIZE_BYTES);
     bufRegion.size = PAGE_SIZE_BYTES;
-    bufRegion.state = (enum memState)KERN;
+    bufRegion.state = (enum memState)reserved;
     bufRegion.bootRegionID = bootMemRegionIdx;
     bufRegion.regionID = physicalPagesCount++;
     bufRegion.allocRequestID = 0;
@@ -48,21 +49,21 @@ void Memory::splitRegion(const MemTableEntry *mtentry,
 }
 
 void Memory::reserverKernelMemory() {
-  // the first 8MBs are always reserved for the kernel code and data
+  // this needs to be statically alloced like this. can't use vmm
+  char buf[256];
   uint64_t sizeToReserver = KERNEL_MEMORY_REGION_SIZE_BYTES;
+  kprintf(buf, "reserving %dMBs for kernel\n\0", BYTE_TO_MB(sizeToReserver));
   MemoryRegion *ptr = memoryListHead;
   uint64_t actualReserved = 0;
-  while (sizeToReserver > 0) {
+  while (actualReserved < sizeToReserver) {
     if (ptr->state != reserved) {
       ptr->state = KERN;
       actualReserved += ptr->GetSize();
     }
 
-    sizeToReserver -= ptr->GetSize();
     ptr = ptr->next;
   }
 
-  char buf[256]; // this needs to be statically alloced like this. can't use vmm
   kprintf(buf, "reserved %dMBs for kernel\n\0", BYTE_TO_MB(actualReserved));
 }
 
@@ -99,7 +100,7 @@ Memory::Memory() {
   kprint("Initializing memory...\n");
   char buf[256];
   uint64_t bootMemRegionsCount = 0;
-  uint64_t endAddr = 0;
+  uint64_t prevRegionEndAddr = 0;
 
   // memory tables structure has 4 bytes that contain the size of the table
   uint32_t countRegions = *memoryTableAddress;
@@ -115,16 +116,18 @@ Memory::Memory() {
     MemTableEntry mtentry;
     memcpy(&mtentry, memoryTableAddress + bootMemRegionsCount * 5,
            sizeof(mtentry));
-    if (mtentry.size != 0 && endAddr != mtentry.baseAddr) {
-      mtentry = {.baseAddr = endAddr,
-                 .size = mtentry.baseAddr - endAddr,
+
+    // if we found a memory hole then mark it
+    if (mtentry.size != 0 && prevRegionEndAddr != mtentry.baseAddr) {
+      mtentry = {.baseAddr = prevRegionEndAddr,
+                 .size = mtentry.baseAddr - prevRegionEndAddr,
                  .state = reserved};
       uint64_t memHoleEndAddr = mtentry.baseAddr + mtentry.size;
       kprintf(buf, "found memory hole. start: %X end: at %X\n\0",
               mtentry.baseAddr, memHoleEndAddr);
       splitRegion(&mtentry, bootMemRegionsCount);
 
-      endAddr = memHoleEndAddr;
+      prevRegionEndAddr = memHoleEndAddr;
       continue;
     }
 
@@ -132,10 +135,10 @@ Memory::Memory() {
       splitRegion(&mtentry, bootMemRegionsCount);
     }
 
-    endAddr = mtentry.baseAddr + mtentry.size;
+    prevRegionEndAddr = mtentry.baseAddr + mtentry.size;
 
     kprintf(buf, "found memory region. start: %X end: %X state: %d\n\0",
-            mtentry.baseAddr, endAddr, mtentry.state);
+            mtentry.baseAddr, prevRegionEndAddr, mtentry.state);
 
     // This is not a reliable exit condition.
     if (mtentry.size == 0) {
@@ -143,16 +146,39 @@ Memory::Memory() {
     }
     bootMemRegionsCount++;
   }
-
   memoryListHead[physicalPagesCount - 1].next = NULL;
+
+  // if all tests in this function succeed we are sure that the PMM mapped
+  // the memory correctly.
+  uintptr_t lastSeenAddr = 0;
   for (uint64_t i = 0; i < physicalPagesCount; i++) {
+    // test: all pointers are set correctly
     if ((i != physicalPagesCount - 1 && memoryListHead[i].next == NULL) ||
         (i == physicalPagesCount - 1 && memoryListHead[i].next != NULL)) {
       kprintf(buf, "failed to set list pointers correctly at %d\n\0", i);
       panic("memory self tests failed");
     }
+
+    // test: looping will not cause an endless loop due to self referencing node
+    if (&memoryListHead[i] == memoryListHead[i].next) {
+      kprint("found a self referencing node\n\0");
+      panic("memory self tests failed");
+    }
+
+    // monotonically increasing memory to detect memory overlaps
+    if ((uintptr_t) memoryListHead[i].baseAddress > lastSeenAddr) {
+      kprintf(buf, "lsa: %p ba: %p\n\0", lastSeenAddr, memoryListHead[i].baseAddress);
+        panic("memory overlap detected\n\0");
+    }
+   
+    if ((uintptr_t)memoryListHead[i].next == 0x3030303){
+      panic("hi");
+    }
+
+    lastSeenAddr = (uintptr_t)memoryListHead[i].baseAddress + memoryListHead[i].size;
   }
 
+  //panic("wtf");
   int i = 0;
   MemoryRegion *ptr1 = memoryListHead;
   MemoryRegion *ptr2 = ptr1->next;

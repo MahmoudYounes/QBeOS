@@ -14,8 +14,6 @@
 #include "include/common.h"
 #include "include/logger.h"
 
-extern VirtualMemory vmm;
-
 namespace Kernel {
 // interface for task structures
 class Task {

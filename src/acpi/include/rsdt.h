@@ -7,8 +7,9 @@
 #include "kstdlib/include/global_operators.h"
 #include "acpi/include/facp.h"
 #include "acpi/include/madt.h"
+#include "acpi/include/mcfg.h"
 
-struct ACPIRSDT {
+struct ACPIHDR {
   char signature[4];
   uint32_t length;
   uint8_t revision;
@@ -23,13 +24,14 @@ struct ACPIRSDT {
 class RSDTM {
 private:
   uintptr_t rsdtPtr;
-  struct ACPIRSDT rsdt;
+  struct ACPIHDR rsdt;
   bool valid;
   uint32_t *entries;
 
   /* list of all ACPI tables suppoerted */
   FACPM *facpm;
   MADTM *madtm;
+  MCFGM *mcfgm;
 
   void validateTable();
   void populateACPI();

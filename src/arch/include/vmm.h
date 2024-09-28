@@ -6,12 +6,14 @@
 #include "arch/x86/include/pdt_entry.h"
 #include "arch/x86/include/pt_entry.h"
 #include "include/common.h"
+#include "include/strings.h"
 
 #define ENTRIES_COUNT 1024
 #define ENTRY_SIZE_BYTES sizeof(uint32_t)
 #define TABLE_SIZE_BYTES ENTRIES_COUNT *ENTRY_SIZE_BYTES
 
 // flags for mapping
+#define VMM_NOTPRESENT 2 // not present
 #define VMM_KERN 1  // present read only
 #define VMM_UNMAP 0 // same effect as RESV different naming
 
@@ -23,8 +25,9 @@ class VirtualMemory {
   // PDT address, check OSMap.txt
   // When moving to 64 bits PDTs will exist.
   static const uintptr_t PDTAddress = 0x500000;
-  static const uintptr_t PTAddress = 0x510000;
+  static const uintptr_t PTAddress = 0x501000;
   bool shouldTestMemoryBeforePaging = false;
+  bool pagingEnabled = false;
 
   // Implementing unit tests for paging
   void testVirtualMemory();
@@ -60,6 +63,9 @@ class VirtualMemory {
   // Unmaps a virtual address
   void unmap(uintptr_t vaddr);
 
+  // Returns a physical page allocation
+  void *getPage();
+
 public:
   VirtualMemory();
   VirtualMemory(bool shouldTestMemory);
@@ -79,5 +85,7 @@ public:
   // Unmap addr
   void Unmap(uintptr_t dstPtr);
 };
+
+inline VirtualMemory vmm;
 
 #endif /* VMM_H */

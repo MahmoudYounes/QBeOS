@@ -1,5 +1,9 @@
 #include "arch/x86/include/pdt_entry.h"
 
+PDTEntry::PDTEntry(){
+  entry = 0;
+}
+
 // if PS is MB then the entry points to the physical address of a 4MB page.
 // if PS is KB then the entry points to a PT where each entry points to a
 // 4 KB page.

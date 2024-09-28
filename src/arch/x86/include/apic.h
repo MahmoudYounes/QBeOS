@@ -8,7 +8,6 @@
 #include "include/logger.h"
 
 extern CPUInfo cpu;
-extern VirtualMemory vmm;
 
 // 0x3f0 is the last offset for apic register which is 4 bytes as well
 #define SIZEOF_APIC_TABLE 0x3f4

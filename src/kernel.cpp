@@ -360,7 +360,7 @@ void kmain() {
   kprint("Initializing all systems...\n\0");
   sysMemory = Memory();
   gdt = GDT();
-  vmm = VirtualMemory(false /* should run vmm self tests before paging */);
+  vmm = VirtualMemory(true /* should run vmm self tests before paging */);
   tssManager = TSSManager();
   idt = IDT();
   pic = PIC();
@@ -370,6 +370,7 @@ void kmain() {
 
   // at this point interrupts are disabled... need to setup IDT to renable them.
 
+  bootEnd();
   // Systems initialized and we are booted yay!
   printHelloMessage();
 
