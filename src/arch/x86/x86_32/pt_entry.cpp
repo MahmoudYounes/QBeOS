@@ -61,6 +61,6 @@ PTEntry *PTEntry::SetPageAddress(uint32_t addr) {
 }
 
 uint64_t PTEntry::EncodeEntryAt(uintptr_t addr) {
-  *(uint32_t *)addr = entry;
-  return sizeof(entry);
+  *(uint32_t *)addr = entry; 
+  return sizeof(addr);
 }

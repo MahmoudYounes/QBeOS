@@ -3,7 +3,7 @@
 
 RSDTM::RSDTM(uintptr_t rsdtAddr) {
   rsdtPtr = rsdtAddr;
-  memcpy(&rsdt, (uint8_t *)rsdtAddr, sizeof(ACPIRSDT));
+  memcpy(&rsdt, (uint8_t *)rsdtAddr, sizeof(ACPIHDR));
   validateTable();
 
   if (!valid) {
@@ -18,7 +18,7 @@ RSDTM::RSDTM(uintptr_t rsdtAddr) {
   kprint("allocated memory \n\0");
 
   uint32_t idx = 0;
-  uintptr_t entriesBegin = rsdtAddr + sizeof(ACPIRSDT);
+  uintptr_t entriesBegin = rsdtAddr + sizeof(ACPIHDR);
   while (idx < rsdt.length) {
     entries[idx] = *((uint32_t *)(entriesBegin + idx * sizeof(uint32_t)));
     idx++;
@@ -37,7 +37,7 @@ void RSDTM::validateTable() {
     valid = false;
   }
 
-  uint64_t csum =  calculateChecksum(rsdtPtr, rsdt.length) % 0x100;  
+  uint64_t csum = calculateChecksum(rsdtPtr, rsdt.length) % 0x100;  
   if (csum) {
     panic("read invalid RSDT Table\n\0");
   }
@@ -52,6 +52,10 @@ void RSDTM::parseTables() {
         } else if (strncmp((const char *)addr, "APIC", 4) == 0){
             kprint("found MADT\n");
             madtm = new MADTM(addr); 
+        } else if (strncmp((const char *)addr, "MCFG", 4) == 0){
+            kprint("found MCFG\n");
+            mcfgm = new MCFGM(addr);
         }
+
     } 
 }

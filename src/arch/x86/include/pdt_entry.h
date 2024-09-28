@@ -4,10 +4,10 @@
 #include "arch/x86/include/pt_entry.h"
 #include "include/common.h"
 #include "include/mem_encodeable.h"
+#include "include/strings.h"
 
 #define KERN_PDT PDTEntry(KB).SetPresent()->SetIsReadWrite()
-#define USER_PDT                                                               \
-  PDTEntry(KB).SetPresent()->SetIsReadWrite()->SetIsUserAccessible()
+#define USER_PDT PDTEntry(KB).SetPresent()->SetIsReadWrite()->SetIsUserAccessible()
 
 enum PageSize {
   KB,
@@ -20,6 +20,7 @@ private:
   bool isMBPage();
 
 public:
+  PDTEntry();
   PDTEntry(PageSize ps);
   PDTEntry *SetPresent();
   PDTEntry *SetGlobal();

@@ -3,9 +3,10 @@
 
 #include "include/common.h"
 #include "include/mem_encodeable.h"
+#include "include/strings.h"
 
 #define KERN_PT PTEntry().SetPresent()->SetIsReadWrite()
-#define INVALID_PT PTEntry()
+#define NONPRESENT_PT PTEntry()
 #define USER_PT PTEntry().SetPresent()->SetIsUserAccessible()->SetIsReadWrite()
 
 class PTEntry : public MemoryEncodeable {

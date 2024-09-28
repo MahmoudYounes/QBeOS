@@ -14,7 +14,7 @@
 #define MEMORY_LIST_EXPECTED_SIZE_BYTES MEMORY_LIST_EXPECTED_SIZE_MBS << 20
 // Size of memory reserved by the kernel
 #define KERNEL_MEMORY_REGION_SIZE_MBS                                          \
-  64 // TODO: figure out a way to dynamically calculate this
+  1 // TODO: figure out a way to dynamically calculate this
 #define KERNEL_MEMORY_REGION_SIZE_BYTES (KERNEL_MEMORY_REGION_SIZE_MBS << 20)
 
 // MemoryInfo is a struct used to return information about memory metadata
