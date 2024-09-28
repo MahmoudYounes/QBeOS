@@ -1,6 +1,9 @@
 #include "acpi/include/rsdt.h"
 #include "acpi/include/acpi.h"
 
+// empty constructor
+RSDTM::RSDTM(){}
+
 RSDTM::RSDTM(uintptr_t rsdtAddr) {
   rsdtPtr = rsdtAddr;
   memcpy(&rsdt, (uint8_t *)rsdtAddr, sizeof(ACPIHDR));
