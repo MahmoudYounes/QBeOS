@@ -2,6 +2,7 @@
 #define PCI_H
 
 #include "include/common.h"
+#include "include/kargs.h"
 
 #define CONFIG_ADDR 0xcf8
 #define CONFIG_DATA 0xcfc
@@ -15,7 +16,7 @@ private:
   uint8_t readConfByte(uint32_t busNum, uint32_t deviceNum, uint32_t funcNum, uint32_t regOffset);
   uint16_t readConfWord(uint32_t busNum, uint32_t deviceNum, uint32_t funcNum, uint32_t regOffset);
 public:
-  PCI();
+  PCI(kargs *args);
 };
 
 #endif

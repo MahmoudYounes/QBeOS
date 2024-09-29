@@ -21,7 +21,9 @@
 #include "arch/x86/include/pt_entry.h"
 #include "arch/x86/include/tss.h"
 #include "include/common.h"
+#include "include/logger.h"
 #include "include/math.h"
+#include "include/kargs.h"
 
 #ifndef ARCH_X86_32
 #define ARCH_X86_32
@@ -351,14 +353,33 @@ void bootEnd() {
   HLT();
 }
 
+kargs *parseBootArgs(){
+  uint32_t argsAddress;
+  __asm__ ("mov %0, ebx"
+    : "=b" (argsAddress)
+    :);
+   
+  kargs *args = (kargs *)argsAddress;
+  return args;
+}
+
 void kmain() {
+  kargs * args;
+  char buf[255];
+  args = parseBootArgs();
+
+  kprint("booting kernel with the following args\n\0");
+  kprintf(buf, "memRegionsCount: %d\n\0", args->memRegionsCount);
+  kprintf(buf, "memTableStartAdrr: %p\n\0", args->memTableStartAddr);
+  kprintf(buf, "pciSupported: %d\n\0", args->pciSupported);
+  kprintf(buf, "pciConfigMechanism: %d\n\0", args->pciConfigMech);
+
   cli();
   setupConsole();
   cpu = CPUInfo();
-
   // sys initializations
   kprint("Initializing all systems...\n\0");
-  sysMemory = Memory();
+  sysMemory = Memory(args);
   gdt = GDT();
   vmm = VirtualMemory(true /* should run vmm self tests before paging */);
   tssManager = TSSManager();
@@ -366,6 +387,7 @@ void kmain() {
   pic = PIC();
   acpi = ACPIM();
   apic = APIC();
+  //pci = PCI(args);
   sti();
 
   // at this point interrupts are disabled... need to setup IDT to renable them.

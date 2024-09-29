@@ -67,6 +67,16 @@ sti
 
 	call func_DiscoverMemory
 
+  call func_DiscoverPCI
+
+  ; mark header as complete
+  xor bx, bx
+  xor cx, cx
+  mov bx,0x05be
+  mov ecx, BootHDRAddress
+  ;mov byte [ecx + 11], bl
+  ;mov byte [ecx + 12], bh
+
 	call func_PrepareGDT
 
 	call func_EnableProtectedModeAndJmpKernel
@@ -86,15 +96,17 @@ bootloaderEnd:
 %include "./isoUtilities.asm"
 %include "./kernelLoad.asm"
 %include "./memory.asm"
+%include "./pci.asm"
 %include "./gdt.asm"
 %include "./protectedMode.asm"
 
 ;; boot loader data
-BootDrive:					db 0
-BootFailureMsg:				db "Booting sequence failed", 0
+BootDrive:					        db 0
+BootFailureMsg:				      db "Booting sequence failed", 0
 MemDiscoveryFailureMsg:	    db "Memory discover failed", 0
-BootLoadingMsg:				db "loading QBeOS...", 0
-BytesPerSector:				dw 0
+BootLoadingMsg:				      db "loading QBeOS...", 0
+PCIErrorMsg:                db "Couldn't discover PCI", 0
+BytesPerSector:				      dw 0
 
     ; kernel info
 KernelName:					db "KERNEL.IMG", 0x3b, 0x31
@@ -110,6 +122,8 @@ BLBufPointer:	dw 0x00d0
     ; Memory Layout Table Buf
 MLTBufAddress:     dw 0x7000
 MemRegionsCount:   dd 0
+BootHDRAddress:    dw 0x7800
+
     ; gdtr
 gdtData:
 	dd 0x0000
@@ -135,8 +149,8 @@ GDT:
 
 
 ;; DAP buffer
-DAP:						db 10h; DAP size(disk address packet)
-							db 0; unused
+DAP:						      db 10h; DAP size(disk address packet)
+							        db 0; unused
 dapNumSectors:				dw 0; num sectors
 dapBufferOffset:			dw 0; offset for buffer
 dapBufferSegment:			dw 0; segment for buffer
@@ -145,9 +159,9 @@ dapSectorNumH:				dd 0; absolute sector number high
 
 ;; screen state
 currentCursorPosition:		db 0; the current position of the cursor state
-whiteOnBlackConst:			equ 0x0f; const added to video memory
-rowsLimit:					equ 80
-colsLimit:					equ 25
+whiteOnBlackConst:			  equ 0x0f; const added to video memory
+rowsLimit:					      equ 80
+colsLimit:					      equ 25
 
 ;;; Check if bootloader is bigger than 512 bytes emit error
 %if 2046 - ($ - $$) < 0

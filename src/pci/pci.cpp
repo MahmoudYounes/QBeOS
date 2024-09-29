@@ -1,6 +1,6 @@
 #include "pci/include/pci.h"
 
-PCI::PCI(){
+PCI::PCI(kargs *args){
   enumeratePCIDevices();
 }
 

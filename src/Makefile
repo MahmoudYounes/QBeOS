@@ -19,7 +19,6 @@ CPP_SRCS := $(wildcard *.cpp)
 build: setupEnvironment srcs
 	mv *.o ${TMP_BLD_DIR}
 	$(LD) -nostdlib -T $(ROOT_DIR)/linker.ld -o ${TMP_BLD_DIR}/kernel.elf $(TMP_BLD_DIR)/*.o -lgcc
-
 	$(OBJCPY) $(OBJCPYFLAGS) ${TMP_BLD_DIR}/kernel.elf ${TMP_BLD_DIR}/KERNEL.IMG
 
 	cp ${TMP_BLD_DIR}/KERNEL.IMG ${BLD_DIR}
