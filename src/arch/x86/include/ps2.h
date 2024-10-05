@@ -77,10 +77,6 @@ private:
   void resetPort1();
   void resetPort2();
   void resetPC();
-
-  // a function that tests keyboard
-  // TODO: write a kbd driver
-  void testKeyboard();
  
   bool testPassed;
   bool port1TestPass;

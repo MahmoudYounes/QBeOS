@@ -69,14 +69,6 @@ sti
 
   call func_DiscoverPCI
 
-  ; mark header as complete
-  xor bx, bx
-  xor cx, cx
-  mov bx,0x05be
-  mov ecx, BootHDRAddress
-  ;mov byte [ecx + 11], bl
-  ;mov byte [ecx + 12], bh
-
 	call func_PrepareGDT
 
 	call func_EnableProtectedModeAndJmpKernel

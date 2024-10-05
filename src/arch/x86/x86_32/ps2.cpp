@@ -1,7 +1,6 @@
-#include "ps2/include/ps2.h"
+#include "arch/x86/include/ps2.h"
 
 PS2::PS2(){
-  uint8_t psbuf;
   // Initialize usb controllers to disable USB Legacy Mode uses PCI/PCIe
   // PCI.DisableUSBLegacy();
   
@@ -11,15 +10,15 @@ PS2::PS2(){
   }
  
   configure();
-  psbuf = readData(NO_WAIT_READY);
+  readData(NO_WAIT_READY);
 
   // Disable all PS/2 devices
   disableDevices();
   
-  psbuf = readData(NO_WAIT_READY);
-  psbuf = readData(NO_WAIT_READY);
-  psbuf = readStatus();
-  psbuf = readData(NO_WAIT_READY);
+  readData(NO_WAIT_READY);
+  readData(NO_WAIT_READY);
+  readStatus();
+  readData(NO_WAIT_READY);
   
   // Flush the output buffer
   flushOutput();
@@ -39,8 +38,6 @@ PS2::PS2(){
   resetDevices();
 
   kprint("PS2 Controller Initialized\n\0");
-
-  testKeyboard();
 }
 
 uint8_t PS2::readStatus(){
@@ -303,62 +300,6 @@ check:
   }
   
   flushOutput();
-}
-
-void PS2::testKeyboard(){
-  int8_t ichar;
-  char buf[255];
-  uint8_t data;
-
-echo:
-  writePort1(ECHO);
-  ichar = readData(WAIT_READY);
-  data = (uint8_t) ichar;
-  if (ichar == ERRNO_RDATA){
-    goto end;
-  }
-  switch (data){
-    case RESEND:
-      goto echo;
-      break;
-    case ECHO:
-      kprint("keyboard is functioning\n\0");
-      break;
-    default:
-      kprintf(buf, "recieved unknown return on echo. %x\n\0", data);
-      break; 
-  }
-  
-enablekbd:
-  writePort1(ENABLE_KBD);
-  ichar = readData(WAIT_READY);
-  data = (uint8_t) ichar;
-  if (ichar == ERRNO_RDATA){
-    goto end;
-  }
-  switch (data){
-    case RESEND:
-      goto enablekbd;
-      break;
-    case ACK:
-      kprint("keyboard is enabled\n\0");
-      break;
-    default:
-      kprintf(buf, "recieved unknown return on keyboard enable. %x\n\0", data);
-      break; 
-  }
-  
-recievedata:    
-  ichar = readData(NO_WAIT_READY);
-  data = (uint8_t) ichar;
-  if (ichar == ERRNO_RDATA){
-    kprint("waiting2\n\0");
-    goto recievedata;
-  }
-  kprintf(buf, "read %x\n\0", data);
-  goto recievedata; 
-end:
-  return; 
 }
 
 void PS2::resetPC(){

@@ -11,7 +11,7 @@ export CFG_DEFS := -D KERN_X86_32
 export INCLUDES := -I $(shell pwd)
 export ARCH := x86_32
 
-SUB_DIRS := acpi pci ps2 arch kstdlib
+SUB_DIRS := acpi pci arch kstdlib
 CPP_SRCS := $(wildcard *.cpp)
 
 .PHONY: build srcs $(CPP_SRCS) $(SUB_DIRS) setupEnvironment clean
