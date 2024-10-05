@@ -33,7 +33,11 @@
 
 #define MAX_TRIALS 5
 
-#define NO_RDATA -1
+#define ERRNO_RDATA -1
+
+#define ECHO 0xee
+#define ENABLE_KBD 0xf4
+#define ACK 0xfa
 
 
 extern ACPIM acpi;

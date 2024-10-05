@@ -87,7 +87,7 @@ int8_t PS2::readData(bool wait){
   int32_t timeout = 1000;
   while (wait && !canReadData() && timeout > 0) {timeout--;}
   if (timeout == 0){
-    return NO_RDATA;
+    return ERRNO_RDATA;
   }
 
   return inb(DATA_PORT);
@@ -251,7 +251,7 @@ void PS2::resetPort1(){
 pulsewrite:
   writePort1(RESET);
   res = readData(WAIT_READY);
-  if (res == NO_RDATA){
+  if (res == ERRNO_RDATA){
     if (trials == 0){
       goto check;
     }
@@ -280,7 +280,7 @@ void PS2::resetPort2(){
 pulsewrite:
   writePort2(RESET);
   res = readData(WAIT_READY);
-  if (res == NO_RDATA){
+  if (res == ERRNO_RDATA){
     if (trials == 0){
       goto check;
     }
@@ -309,20 +309,61 @@ void PS2::testKeyboard(){
   int8_t ichar;
   char buf[255];
   int32_t testing = 1000000;
+  uint8_t data;
 
-  while (true){
-    if (testing-- == 0) {
-      break;
-    }
-
-    if (!canReadData()) {
-      continue;
-    }
-    
-    ichar = readData(NO_WAIT_READY);
-    if (ichar == NO_RDATA) {
-      continue;
-    }
-    kprintf(buf, "read %d\n\0", ichar);
+echo:
+  writePort1(ECHO);
+  ichar = readData(WAIT_READY);
+  data = (uint8_t) ichar;
+  if (ichar == ERRNO_RDATA){
+    goto end;
   }
+  switch (data){
+    case RESEND:
+      goto echo;
+      break;
+    case ECHO:
+      kprint("keyboard is functioning\n\0");
+      break;
+    default:
+      kprintf(buf, "recieved unknown return on echo. %x\n\0", data);
+      break; 
+  }
+  
+enablekbd:
+  writePort1(ENABLE_KBD);
+  ichar = readData(WAIT_READY);
+  data = (uint8_t) ichar;
+  if (ichar == ERRNO_RDATA){
+    goto end;
+  }
+  switch (data){
+    case RESEND:
+      goto enablekbd;
+      break;
+    case ACK:
+      kprint("keyboard is enabled\n\0");
+      break;
+    default:
+      kprintf(buf, "recieved unknown return on keyboard enable. %x\n\0", data);
+      break; 
+  }
+  
+recievedata:
+  testing--;
+  if (testing == 0){
+    goto end;
+  }   
+  if (!canReadData()) {
+    goto recievedata;
+  }    
+  ichar = readData(WAIT_READY);
+  data = (uint8_t) ichar;
+  if (ichar == ERRNO_RDATA){
+    goto end;
+  }
+  kprintf(buf, "read %x\n\0", data);
+  goto recievedata; 
+end:
+  return; 
 }
