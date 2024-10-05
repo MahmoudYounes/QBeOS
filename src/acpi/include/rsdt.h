@@ -40,6 +40,8 @@ private:
 public:
   RSDTM();
   RSDTM(uintptr_t rsdtAddr);
+
+  bool IsPS2Supported();
 };
 
 #endif /* RSDT_H */

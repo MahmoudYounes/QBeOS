@@ -29,7 +29,6 @@ func_EnableProtectedModeAndJmpKernel:
     mov es, eax
     mov esp, 0x3fffff
     
-    xor eax, eax
     xor ebx, ebx
     mov bx, [BootHDRAddress]
     shl ebx, 4 ; passing the address of the boot header in ebx

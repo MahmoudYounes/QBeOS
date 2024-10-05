@@ -25,6 +25,10 @@ struct ACPIRSDP {
   uint8_t reserved[3];
 } __attribute__((packed));
 
+/**
+ * this is the APCI Manager. this should expose all required functionalities
+ * to other components in the kernel.
+ */
 class ACPIM {
 private:
   uint8_t acpiver;
@@ -38,8 +42,9 @@ private:
 
 public:
   ACPIM();
+
+  bool IsPS2Supported();
 };
 
-int calculateChecksum(uintptr_t begin, uint32_t length);
-
+inline ACPIM acpi;
 #endif /* ACPI_H */

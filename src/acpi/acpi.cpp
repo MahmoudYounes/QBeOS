@@ -90,13 +90,7 @@ void ACPIM::printTableInfo() {
   kprint("print rsdp info end\n\0");
 }
 
-int calculateChecksum(uintptr_t begin, uint32_t length) {
-  uint32_t csum = 0, itr = 0;
-  for (uint8_t *ptr = (uint8_t *)begin; itr < length; itr++, ptr++) {
-    csum += *ptr;
-  }
-  return csum;
+bool ACPIM::IsPS2Supported(){
+  return rsdt->IsPS2Supported();
 }
 
-// list of all ACPI table managers
-ACPIM acpi;

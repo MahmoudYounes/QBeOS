@@ -52,7 +52,12 @@ we will see.
 
 # Bootloader
 ## real mode memory addressing
-segmentAddr << 4 + offset 
+- segmentAddr << 4 + offset 
+- when storing address in label in nasm, when using this address in a mov operation
+the above equation does not apply. the correct way to move data in this case is to
+load es with label address and load di with the desired offset and then use
+stos(b,w,d,q) to store the data in there.
+remember [<label/register>] is like *label/*register in c/c++
 
 ## List of important assumptions made
 * the kernel and bootloader exist both in the root directory. There are no other directories on the CD
