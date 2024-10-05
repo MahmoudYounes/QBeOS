@@ -20,12 +20,13 @@
 #include "arch/x86/include/processor.h"
 #include "arch/x86/include/pt_entry.h"
 #include "arch/x86/include/tss.h"
+#include "arch/x86/include/ps2.h"
 #include "include/common.h"
 #include "include/logger.h"
 #include "include/math.h"
 #include "include/kargs.h"
 #include "pci/include/pci.h"
-#include "ps2/include/ps2.h"
+
 
 #ifndef ARCH_X86_32
 #define ARCH_X86_32

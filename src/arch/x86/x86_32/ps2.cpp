@@ -308,7 +308,6 @@ check:
 void PS2::testKeyboard(){
   int8_t ichar;
   char buf[255];
-  int32_t testing = 1000000;
   uint8_t data;
 
 echo:
@@ -349,21 +348,19 @@ enablekbd:
       break; 
   }
   
-recievedata:
-  testing--;
-  if (testing == 0){
-    goto end;
-  }   
-  if (!canReadData()) {
-    goto recievedata;
-  }    
-  ichar = readData(WAIT_READY);
+recievedata:    
+  ichar = readData(NO_WAIT_READY);
   data = (uint8_t) ichar;
   if (ichar == ERRNO_RDATA){
-    goto end;
+    kprint("waiting2\n\0");
+    goto recievedata;
   }
   kprintf(buf, "read %x\n\0", data);
   goto recievedata; 
 end:
   return; 
+}
+
+void PS2::resetPC(){
+  writeCommand(0xfe); 
 }
