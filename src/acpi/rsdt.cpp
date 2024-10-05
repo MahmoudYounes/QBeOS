@@ -40,7 +40,7 @@ void RSDTM::validateTable() {
     valid = false;
   }
 
-  uint64_t csum = calculateChecksum(rsdtPtr, rsdt.length) % 0x100;  
+  uint8_t csum = calculateChecksum(rsdtPtr, rsdt.length);  
   if (csum) {
     panic("read invalid RSDT Table\n\0");
   }
@@ -61,4 +61,8 @@ void RSDTM::parseTables() {
         }
 
     } 
+}
+
+bool RSDTM::IsPS2Supported(){
+    return facpm->IsPS2Supported();
 }

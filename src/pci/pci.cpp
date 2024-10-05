@@ -1,11 +1,50 @@
 #include "pci/include/pci.h"
 
-PCI::PCI(){
+PCI::PCI(){}
+
+PCI::PCI(kargs *args){
+  if (!args->pciSupported){
+    panic("PCI is not supported\n\0");
+  }
+
+  if (args->pciConfigMech != 1){
+    panic("PCI Config mechanism 1 is not supported\n\0");
+  }
+
   enumeratePCIDevices();
 }
 
 void PCI::enumeratePCIDevices(){
-   
+  uint16_t val;
+  char buf[255];
+  Device device;
+  devices = new Device[1]();
+  
+  for (int busNum = 0; busNum < 0xff; busNum++){
+    for (int devNum = 0; devNum < 0x1f; devNum++){
+        val = readConf(busNum, devNum, 0, 0);
+        if (val == 0xffff){
+          //kprintf(buf, "no device on bus %d dev %d\n\0", busNum, devNum);
+          continue;
+        } else {
+          parseDevice(busNum, devNum, &device); 
+          kprintf(buf, "found device %d on bus %d with vendorID %x and deviceID %x\n\0", devNum, busNum, device.vendorID, device.deviceID); 
+        }
+    }
+  }
+
+  kprint("finished pci enum\n\0"); 
+}
+
+void PCI::parseDevice(uint32_t busNum, uint32_t devNum, Device *dev){
+  uint32_t val;
+
+  val = readConf(busNum, devNum, 0, 0);
+
+  dev->busNum = busNum;
+  dev->devNum = devNum;
+  dev->vendorID = val & 0xffff;
+  dev->deviceID = val >> 16;
 }
 
 uint32_t PCI::readConf(uint32_t busNum, uint32_t deviceNum, uint32_t funcNum, uint32_t regOffset){
@@ -50,6 +89,3 @@ uint16_t PCI::readConfWord(uint32_t busNum, uint32_t deviceNum, uint32_t funcNum
   // we have read 4 bytes we only need the lowest 1 byte. 
   return configVal & 0xffff; 
 }
-
-
-

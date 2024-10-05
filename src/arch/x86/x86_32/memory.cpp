@@ -96,15 +96,17 @@ MemoryRegion *Memory::findEmptyRegionFor(uint64_t pages) {
   return ptr;
 }
 
-Memory::Memory() {
+Memory::Memory(){}
+
+Memory::Memory(kargs *args) {
   kprint("Initializing memory...\n");
   char buf[256];
   uint64_t bootMemRegionsCount = 0;
   uint64_t prevRegionEndAddr = 0;
 
   // memory tables structure has 4 bytes that contain the size of the table
-  uint32_t countRegions = *memoryTableAddress;
-  memoryTableAddress++;
+  uint32_t countRegions = args->memRegionsCount;
+  memoryTableAddress = (uint32_t *)args->memTableStartAddr;
 
   while (bootMemRegionsCount < countRegions) {
     // TODO: sometimes int15h eax e820 returns 24 bytes instead of 20 bytes.
@@ -312,5 +314,3 @@ MemoryRegion Memory::GetPageAt(uintptr_t paddr) {
   return memoryListHead[midIdx];
 }
 
-// Global Memory Variable;
-Memory sysMemory;

@@ -1,6 +1,9 @@
 #include "arch/x86/include/pic.h"
 
 PIC::PIC() {
+}
+
+void PIC::DisablePIC(){
   // intel chips normally come with 2 pics to act as master and slave. this is
   // called legace interrupt delivery mechanism. this is deprecated in favor of
   // the more modern APIC interrupt delivery mechanism. hence, we are disabling

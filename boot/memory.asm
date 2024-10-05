@@ -15,8 +15,7 @@ func_DiscoverMemory:
     mov es, ax
     xor di, di
     xor ebx, ebx
-    mov di, 4                   ; leaving the first 4 bytes
-                                ; remember memory entries will be placed at es * 16 + di
+
 NextEntry:
     mov eax, [MemRegionsCount]
     inc eax
@@ -40,12 +39,17 @@ MemDiscoveryErr:
     jmp bootFailure
 
 MemDiscoveryEnd:
-    ;; storing the number of memory regions
-    mov ax, [MLTBufAddress]
+    ;; store information in boot HDR
+    mov ax, [BootHDRAddress]
     mov es, ax
     xor di, di
-    mov si, MemRegionsCount
+    mov eax, [MemRegionsCount]
+    stosd
 
-    movsd
+    xor eax, eax
+    mov ax, [MLTBufAddress]
+    shl eax, 4
+    stosd
+       
     popa
     ret

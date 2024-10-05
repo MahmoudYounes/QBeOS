@@ -20,8 +20,13 @@
 #include "arch/x86/include/processor.h"
 #include "arch/x86/include/pt_entry.h"
 #include "arch/x86/include/tss.h"
+#include "arch/x86/include/ps2.h"
 #include "include/common.h"
+#include "include/logger.h"
 #include "include/math.h"
+#include "include/kargs.h"
+#include "pci/include/pci.h"
+
 
 #ifndef ARCH_X86_32
 #define ARCH_X86_32
@@ -42,6 +47,8 @@ extern IDT idt;
 extern PIC pic;
 extern APIC apic;
 extern ACPIM acpi;
+extern PCI pci;
+extern PS2 ps2;
 extern TSSManager tssManager;
 
 // For now it's easier for me to just look at the screen. I have a way in mind
@@ -351,21 +358,54 @@ void bootEnd() {
   HLT();
 }
 
+kargs *parseBootArgs(){
+  uint32_t argsAddress;
+  __asm__ ("mov %0, ebx"
+    : "=b" (argsAddress)
+    :);
+   
+  kargs *args = (kargs *)argsAddress;
+  if (args->magic != BOOT_MAGIC){
+    kprint("WARN: possibly incorrect boot header\n\0");
+    // for some reason this check is broken even though the memory is set
+    // correctly. kargs->magic is always zero. I am suspecting something
+    // with alignment but don't know for sure.
+    //return NULL;
+  }
+  return args;
+}
+
 void kmain() {
   cli();
   setupConsole();
-  cpu = CPUInfo();
 
+  kargs * args;
+  char buf[255];
+  args = parseBootArgs();
+  if (args == NULL){
+    panic("incorrect boot header\n\0");
+  }
+
+  kprint("booting kernel with the following args\n\0");
+  kprintf(buf, "memRegionsCount: %d\n\0", args->memRegionsCount);
+  kprintf(buf, "memTableStartAdrr: %p\n\0", args->memTableStartAddr);
+  kprintf(buf, "pciSupported: %d\n\0", args->pciSupported);
+  kprintf(buf, "pciConfigMechanism: %d\n\0", args->pciConfigMech);
+
+  cpu = CPUInfo();
   // sys initializations
   kprint("Initializing all systems...\n\0");
-  sysMemory = Memory();
+  sysMemory = Memory(args);
   gdt = GDT();
   vmm = VirtualMemory(true /* should run vmm self tests before paging */);
   tssManager = TSSManager();
   idt = IDT();
+  pci = PCI(args);
   pic = PIC();
   acpi = ACPIM();
-  apic = APIC();
+  apic = APIC(); 
+  ps2 = PS2();
+  pci = PCI(args);
   sti();
 
   // at this point interrupts are disabled... need to setup IDT to renable them.

@@ -6,6 +6,7 @@
 #include "include/logger.h"
 #include "include/math.h"
 #include "include/strings.h"
+#include "include/kargs.h"
 
 // 4 KB physical pages
 #define PAGE_SIZE_BYTES 4096
@@ -41,7 +42,7 @@ private:
   MemoryRegion *memoryListHead = (MemoryRegion *)0x920000;
 
   // Address of memory info created by bootloader
-  uint32_t *memoryTableAddress = (uint32_t *)0x70000;
+  uint32_t *memoryTableAddress;
 
   // Pointer to first free Physical Page
   MemoryRegion *freePagePtr;
@@ -77,6 +78,7 @@ private:
 
 public:
   Memory();
+  Memory(kargs *args);
   void PrintMemory();
   void *AllocPhysicalPage();
   void *Allocate(uint64_t sizeBytes);
@@ -84,5 +86,8 @@ public:
   MemoryInfo GetMemoryInfo();
   MemoryRegion GetPageAt(uintptr_t paddr);
 };
+
+// Global Memory Variable;
+inline Memory sysMemory;
 
 #endif /* MEMORY_H */
