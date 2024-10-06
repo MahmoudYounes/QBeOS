@@ -91,3 +91,5 @@ sudo apt install nasm
 echo "done installing nasm"
 echo "installing bochs"
 sudo apt install bochs bochs-x
+
+echo "Done! you may need to install qemu and virtualbox if you want to test with these virtualization solutions"

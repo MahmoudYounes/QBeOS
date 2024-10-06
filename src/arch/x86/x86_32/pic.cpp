@@ -69,11 +69,9 @@ void PIC::CLI(){
 
 void PIC::SendEOI(uint8_t irq){
   if (irq > 8){
-    kprintf("sending EOI for slave for irq %d\n\0", irq);
     outb(SLAVE_CMDPORT, EOI);
   }
 
-  kprintf("sending EOI for irq %d\n\0", irq);
   outb(MASTER_CMDPORT, EOI);  
 }
 

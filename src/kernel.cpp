@@ -396,7 +396,7 @@ void kmain() {
   kprintf("pciConfigMechanism: %d\n\0", args->pciConfigMech);
 
   //cpu = CPUInfo();
-  //kprint("Initializing all systems...\n\0");
+  kprint("Initializing all systems...\n\0");
   sysMemory = Memory(args);
   gdt = GDT();
   vmm = VirtualMemory(true /* should run vmm self tests before paging */);
@@ -404,7 +404,7 @@ void kmain() {
   idt = IDT();
   pic = PIC();
   pic.CLI();
-  //pci = PCI(args);
+  pci = PCI(args);
   //pit = PIT(&pic);
   ps2 = PS2();
   //acpi = ACPIM();

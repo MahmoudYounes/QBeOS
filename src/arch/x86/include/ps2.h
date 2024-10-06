@@ -3,6 +3,7 @@
 
 #include "acpi/include/acpi.h"
 #include "include/common.h"
+#include "include/error.h"
 
 #define DATA_PORT 0x60
 #define CMD_PORT 0x64
@@ -32,8 +33,6 @@
 #define RESET 0xff
 
 #define MAX_TRIALS 5
-
-#define ERRNO_RDATA -1
 
 #define ECHO 0xee
 #define ENABLE_DEV 0xf4
@@ -67,7 +66,7 @@ private:
   void writeCommand(uint8_t cmd);
   uint8_t readStatus();
   bool canReadData();
-  int8_t readData(bool wait);
+  int8_t readData(bool wait, uint8_t *buf);
   bool canWriteData();
   void writeData(uint8_t data);
   void writePort1(uint8_t data);
@@ -97,7 +96,7 @@ public:
   void EnableInterrupt2();
 
   uint8_t WriteCommand(uint8_t cmd, enum PORT port);
-  int8_t ReadData();
+  int8_t ReadData(uint8_t *buf);
   void FlushOutput();
   uint8_t ReadStatus();
 

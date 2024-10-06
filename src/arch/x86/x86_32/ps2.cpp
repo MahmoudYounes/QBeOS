@@ -117,15 +117,17 @@ bool PS2::canReadData(){
   return false;
 }
 
-int8_t PS2::readData(bool wait){
+int8_t PS2::readData(bool wait, uint8_t *buf){
   // wait until data is ready
   int32_t timeout = 1000;
+
   while (wait && !canReadData() && timeout > 0) {timeout--;}
   if (timeout == 0){
-    return ERRNO_RDATA;
+    return ERR_TIMEOUT;    
   }
 
-  return inb(DATA_PORT);
+  *buf = inb(DATA_PORT);
+  return 0;
 }
 
 void PS2::FlushOutput(){
@@ -151,9 +153,14 @@ void PS2::configure(){
   // for port 2 as well.
   
   uint8_t cfgByte;
+  int8_t err;
   
   writeCommand(READ_CFG_BYTE);
-  cfgByte = readData(WAIT_READY);
+  err = readData(WAIT_READY, &cfgByte);
+  if (err){
+    kprintf("error while reading configuration byte: %d\n\0", err);
+    return;
+  }
   
   if (cfgByte & 4){
     panic("os Shouldn't be running?\n\0");
@@ -177,10 +184,15 @@ void PS2::configure(){
 
 void PS2::selfTest(){
   uint8_t testRes;
+  int8_t err;
 
   writeCommand(SELF_TEST);
   while (true){
-    testRes = readData(WAIT_READY);
+    err = readData(WAIT_READY, &testRes);
+    if (err) {
+      kprintf("selftest failed with err: %d\n\0", err);
+      return;
+    }
     switch (testRes){
       case RESEND:
         writeCommand(SELF_TEST);
@@ -211,9 +223,14 @@ void PS2::selfTest(){
 */
 void PS2::detectChannel2(){
   uint8_t testRes;
+  int8_t err;
  
   writeCommand(READ_CFG_BYTE);
-  testRes = readData(WAIT_READY);
+  err = readData(WAIT_READY, &testRes);
+  if (err){
+    kprintf("failed to detect channel2 with err: %d\n\0", err);
+    return;
+  }
   if (!(testRes & (1 << 4))){
     kprint("Controller doesn't have two ports\n\0");
     hasTwoPorts = false;
@@ -230,10 +247,15 @@ void PS2::testPorts(){
 
 void PS2::interfaceTest(){
   uint8_t testRes;
+  int8_t err;
 
   writeCommand(TEST_PORT1);
   while (true){
-    testRes = readData(WAIT_READY);
+    err = readData(WAIT_READY, &testRes);
+    if (err){
+      kprintf("ps2 interface test failed with err: %d\n\0", err);
+      return;
+    }
     switch (testRes){
       case RESEND:
         writeCommand(TEST_PORT1);
@@ -250,7 +272,11 @@ void PS2::interfaceTest(){
 
   writeCommand(TEST_PORT2);
   while (true){
-    testRes = readData(WAIT_READY);
+    err = readData(WAIT_READY, &testRes);
+    if (err) {
+      kprintf("ps2 interface test failed with err: %d\n\0", err);
+      return;
+    }
     switch (testRes){
       case RESEND:
         writeCommand(TEST_PORT2);
@@ -280,10 +306,14 @@ void PS2::resetDevices(){
 
 void PS2::writePort1(uint8_t data){
   uint8_t buf;
-  //FlushOutput();
+  int8_t err;
 retry:
   writeData(data);
-  buf = readData(WAIT_READY);
+  err = readData(WAIT_READY, &buf);
+  if (err){
+    kprintf("failed to write to port1 with err: %d\n\0", err);
+    return;
+  }
   switch(buf){
     case ACK:
       return;
@@ -297,11 +327,14 @@ retry:
 
 void PS2::writePort2(uint8_t data){
   uint8_t buf;
-  //FlushOutput();
+  int8_t err;
 retry:
   writeCommand(WRITE_PORT2);
   writeData(data);
-  buf = readData(WAIT_READY);
+  err = readData(WAIT_READY, &buf);
+  if (err){
+    kprintf("failed to write to port2 with err: %d\n\0", err);
+  }
   switch(buf){
     case ACK:
       return;
@@ -314,13 +347,13 @@ retry:
 }
 
 void PS2::resetPort1(){
-  int8_t res, trials = MAX_TRIALS;
+  int8_t trials = MAX_TRIALS, err;
   uint8_t data, nextCmp = 0xfa;
 
 pulsewrite:
   writePort1(RESET);
-  res = readData(WAIT_READY);
-  if (res == ERRNO_RDATA){
+  err = readData(WAIT_READY, &data);
+  if (err){
     if (trials == 0){
       goto check;
     }
@@ -329,27 +362,28 @@ pulsewrite:
   }
 
 check:
-  data = (uint8_t) res; 
   if (data == 0xfa){
     nextCmp = 0xaa;
   } else if (data == 0xaa){
     nextCmp = 0xfa;
   }
-  res = readData(WAIT_READY);
-  data = (uint8_t) res;
+  err = readData(WAIT_READY, &data);
+  if (err){
+    kprintf("failed to reset port1 with err: %d\n\0", err);
+  }
   if (data != nextCmp){
     panic("failed to reset port1\n\0");
   }
 }
 
 void PS2::resetPort2(){
-  int8_t res, trials = MAX_TRIALS;
+  int8_t err, trials = MAX_TRIALS;
   uint8_t data, nextCmp = 0xfa;
 
 pulsewrite:
   writePort2(RESET);
-  res = readData(WAIT_READY);
-  if (res == ERRNO_RDATA){
+  err = readData(WAIT_READY, &data);
+  if (err){
     if (trials == 0){
       goto check;
     }
@@ -358,15 +392,16 @@ pulsewrite:
   }
 
 check:
-  data = (uint8_t) res;
   if (data == 0xfa){
     nextCmp = 0xaa;
   } else if (data == 0xaa){
     nextCmp = 0xfa;
   }
   
-  res = readData(WAIT_READY);
-  data = (uint8_t)res;
+  err = readData(WAIT_READY, &data);
+  if (err) {
+    kprintf("failed to reset port2 with err: %d\n\0", err);
+  }
   if (data != nextCmp){
     panic("failed to reset port2\n\0");
   }
@@ -380,9 +415,14 @@ void PS2::resetPC(){
 
 void PS2::EnableInterrupt1(){
   uint8_t cfg;
+  int8_t err;
   
   writeCommand(READ_CFG_BYTE);
-  cfg = readData(WAIT_READY);
+  err = readData(WAIT_READY, &cfg);
+  if (err){
+    kprintf("failed to enable interrupt 1 with err: %d", err);
+    return;
+  }
 
   cfg |= 1;
   writeCommand(WRITE_CFG_BYTE);
@@ -401,8 +441,8 @@ uint8_t PS2::WriteCommand(uint8_t cmd, enum PORT port){
   return 0;
 }
 
-int8_t PS2::ReadData(){
-  return readData(WAIT_READY);
+  int8_t PS2::ReadData(uint8_t *buf){
+  return readData(WAIT_READY, buf);
 }
 
 uint8_t PS2::ReadStatus(){

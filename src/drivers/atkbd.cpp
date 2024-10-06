@@ -9,73 +9,54 @@ ATKBD::ATKBD(PIC *pic, PS2 *psc){
 }
 
 void ATKBD::Initialize(){
-  int8_t id[2], err;
+  uint8_t id[2];
+  uint8_t err;
 
   // if you remember from your childhood. the keyboard always had a purple
   // socket to be connected with the purple port in the PC
-  //psc->WriteCommand(0xf2, PORT1);
-  //id[0] = psc->ReadData();
-  //id[1] = psc->ReadData();
-  
-  // we probably should have read a zero here so we set it back
-  //if (id[0] == ERRNO_RDATA){
-  //  id[0] = 0;
-  //}
-  //if(id[1] == ERRNO_RDATA){
-  //  id[1] = 0;
-  //}
-  //for (int i=0; i < 1000000;i++){}
-  //psc->FlushOutput();
-  //psc->FlushOutput();
+  psc->WriteCommand(0xf2, PORT1);
+  err = psc->ReadData(&id[0]);
+  if (!err){
+    psc->ReadData(&id[1]);
+  } else {
+    kprint("could not ID keyboard\n\0");
+  }
+   
   err = pic->EnableInterrupt(1);
   if (err < 0){
     kprint("keyboard error: could not enable keyboard interrupts\n\0");   
   }
-  //for (int i=0; i < 1000000;i++){err = i;}
+  psc->WriteCommand(ENABLE, PORT1);
+  enableLeds();
+}
 
-  //psc->EnableInterrupt1();  
-  //for (int i=0; i < 1000000;i++){}
-
-  //psc->WriteCommand(ENABLE, PORT1);
+void ATKBD::enableLeds(){
+  psc->WriteCommand(SET_LEDS, PORT1);
+  psc->WriteCommand(0x2, PORT1);
 }
 
 void ATKBD::printKeyboardStatus(){
   uint8_t status;
   status = psc->ReadStatus();
   kprintf("read the status of the keyboard %b\n\0", status);
+}
 
+void ATKBD::handleData(uint8_t data){
+  kprintf("recieved data %d\n\0", data);
 }
 
 void ATKBD::Handler(){
-  int8_t data;
-  uint8_t max_trials = 0xfe, curr_trials=0;
-  uint16_t isr, irr;
-  printKeyboardStatus();
-  data = psc->ReadData();
-  //data = psc->ReadData();
-  //data = psc->ReadData();
-
-
-  kprintf("read data %x\n\0", (uint32_t)data);
-  psc->FlushOutput();
-  
-  isr = pic->GetISR();
-  kprintf("read isr %b\n\0", (uint32_t) isr);
-
-  irr = pic->GetIRR();
-  kprintf("read irr %b\n\0", (uint32_t) irr);
+  uint8_t data, err;
+  err = psc->ReadData(&data);
+  if (!err){
+    handleData(data);    
+  }
+ 
   pic->SendEOI(1);
-
-  isr = pic->GetISR();
-  kprintf("read isr %b\n\0", (uint32_t) isr);
-
-  irr = pic->GetIRR();
-  kprintf("read irr %b\n\0", (uint32_t) irr);
 }
 
 
 void KeyboardHandler(struct interruptFrame *hwregs){
-  kprint("recieved keyboard interrupt\n\0");
   kbdDriver.Handler(); 
 }
 

@@ -11,6 +11,7 @@
 #define ENABLE 0xf4
 #define RESET 0xff
 #define ID 0xf2
+#define SET_LEDS 0xed
 
 DEFINE_INTERRUPT(KeyboardHandler);
 
@@ -19,6 +20,8 @@ private:
   PIC *pic;
   PS2 *psc;
   void printKeyboardStatus();
+  void enableLeds();
+  void handleData(uint8_t data);
 public:
   ATKBD();
   ATKBD(PIC *pic, PS2 *psc);
