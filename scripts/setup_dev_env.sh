@@ -23,6 +23,11 @@ createDirIfNotExist () {
     fi
 }
 
+if [ -d $TMP ];
+then
+  rm -rf $TMP
+fi
+
 # setup global vars
 export PREFIX="$HOME/opt"
 export TARGET=i686-elf
@@ -56,7 +61,7 @@ fi
 git clone git://sourceware.org/git/binutils-gdb.git binutils-src
 
 # downloading latest version of gcc
-svn checkout svn://gcc.gnu.org/svn/gcc/trunk gcc-src
+git clone git://gcc.gnu.org/git/gcc.git gcc-src
 
 clear
 echo "staring build..."

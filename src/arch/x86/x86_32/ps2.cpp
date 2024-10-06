@@ -1,19 +1,27 @@
 #include "arch/x86/include/ps2.h"
 
 PS2::PS2(){
+  kprint("initializing PS2\n\0");
+  //initialize();
+}
+
+void PS2::initialize(){
   // Initialize usb controllers to disable USB Legacy Mode uses PCI/PCIe
   // PCI.DisableUSBLegacy();
   
   // See if PS2 Controller exists. USE ACPI FADT
   if(!acpi.IsPS2Supported()) {
-    kprint("couldn't detect PS2 controller from ACPI\n\0");
+    // looks like an issue with Qemu bios?
+    kprint("couldn't detect PS2 controller from ACPI. Continue anyway\n\0");
   }
- 
+
+  // First we want to do controller self test
+  // we disable interrupts, and translation, and enable clocks
   configure();
   readData(NO_WAIT_READY);
 
-  // Disable all PS/2 devices
-  disableDevices();
+  // Disable all PS/2 Ports
+  disablePorts();
   
   readData(NO_WAIT_READY);
   readData(NO_WAIT_READY);
@@ -22,22 +30,54 @@ PS2::PS2(){
   
   // Flush the output buffer
   flushOutput();
-
+  
   selfTest();
   if (!testPassed){
     initialized = false;
     kprint("not initializing ps2. self test failed\n\0");
   }
 
+  // Second we want to detect if we are a single or dual port controller
+  // Enalbe all clocks, make sure interrupts and translation are disabled
+  configure();
+  
+  // Disable the devices
+  disablePorts();
+
+  // if port 2 is still enabled then no port2
   detectChannel2();
 
+  // test the interfaces
   interfaceTest();
+  if (!port2TestPass){
+    hasTwoPorts = false;
+  }
 
-  enableDevices();
+  // final phase
+  configure();
 
-  resetDevices();
+  // enable the ports available 
+  enablePorts();
 
-  kprint("PS2 Controller Initialized\n\0");
+  // disallow all devices from sending data until their drivers are inplace
+  disableScanning();
+
+  if (!port1TestPass){
+    kprint("PS2 controller didn't pass initialization. assuming no PS2\n\0");
+    initialized = false;
+  } else {
+    kprint("PS2 Controller Initialized\n\0");
+    initialized = true;
+  }
+
+
+}
+
+void PS2::disableScanning(){
+  writePort1(DISABLE_DEV);
+  if (hasTwoPorts){
+    writePort2(DISABLE_DEV);
+  }
 }
 
 uint8_t PS2::readStatus(){
@@ -63,7 +103,7 @@ void PS2::writeCommand(uint8_t cmd){
   outb(CMD_PORT, cmd);
 }
 
-void PS2::disableDevices() {
+void PS2::disablePorts() {
   writeCommand(DISABLE_PORT1);
   writeCommand(DISABLE_PORT2);
 }
@@ -158,24 +198,30 @@ void PS2::selfTest(){
 
 
 /**
- * try enable second port. if there is 2 channels then bit 5 should be cleared
+ * so far we have write the cfg byte to enable clocks for both ports.
+ * then we have disabled both devices. by default any PS2 controller
+ * would support at least one port. if a port is not supported
+ * and we enabled the clock and disabled the devices then
+ * the controller would disable the clock of the device disabled if 
+ * it supports it.
+ * hence if we check now on the clock of the second port and found it
+ * still enabled, after we disabled the device, that means this 
+ * device is not supported;
  *
 */
 void PS2::detectChannel2(){
   uint8_t testRes;
-
-  writeCommand(ENABLE_PORT2);
-  
+ 
   writeCommand(READ_CFG_BYTE);
   testRes = readData(WAIT_READY);
-  if (!(testRes & 1 << 4)){
+  if (!(testRes & (1 << 4))){
+    kprint("Controller doesn't have two ports\n\0");
+    hasTwoPorts = false;
+  } else {
+    kprint("Controller has two ports\n\0");
     hasTwoPorts = true;
-    return;
   }
-  kprint("Controller doesn't have two ports\n\0");
-  // TODO: PS/2 controllers more likely than not support 2 ports.
-  // and most PCs have 2 channels. add the try again logic.
-}
+ }
 
 void PS2::testPorts(){
   writeCommand(TEST_PORT1);
@@ -220,7 +266,7 @@ void PS2::interfaceTest(){
   }
 }
 
-void PS2::enableDevices(){
+void PS2::enablePorts(){
   writeCommand(ENABLE_PORT1);
   if (hasTwoPorts){
     writeCommand(ENABLE_PORT2);
@@ -233,12 +279,37 @@ void PS2::resetDevices(){
 }
 
 void PS2::writePort1(uint8_t data){
+  uint8_t buf;
+  flushOutput();
+retry:
   writeData(data);
+  buf = readData(WAIT_READY);
+  switch(buf){
+    case ACK:
+      return;
+    case RESEND:
+      goto retry;
+    default:
+      return; // TODO: add err
+  }
 }
 
 void PS2::writePort2(uint8_t data){
+  uint8_t buf;
+  flushOutput();
+retry:
   writeCommand(WRITE_PORT2);
   writeData(data);
+  buf = readData(WAIT_READY);
+  switch(buf){
+    case ACK:
+      return;
+    case RESEND:
+      goto retry;
+    default:
+      return; // TODO: add err
+  }
+
 }
 
 void PS2::resetPort1(){
@@ -304,4 +375,32 @@ check:
 
 void PS2::resetPC(){
   writeCommand(0xfe); 
+}
+
+void PS2::EnableInterrupt1(){
+  uint8_t cfg;
+  
+  flushOutput();
+  writeCommand(READ_CFG_BYTE);
+  cfg = readData(WAIT_READY);
+
+  cfg |= 1;
+  writeCommand(WRITE_CFG_BYTE);
+  writeData(cfg);
+}
+
+uint8_t PS2::WriteCommand(uint8_t cmd, enum PORT port){
+  switch (port){
+    case PORT1:
+      writePort1(cmd);
+      break;
+    case PORT2:
+      writePort2(cmd);
+      break;
+  }
+  return 0;
+}
+
+uint8_t PS2::ReadData(){
+  return readData(WAIT_READY);
 }

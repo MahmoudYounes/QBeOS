@@ -36,9 +36,15 @@
 #define ERRNO_RDATA -1
 
 #define ECHO 0xee
-#define ENABLE_KBD 0xf4
+#define ENABLE_DEV 0xf4
+#define DISABLE_DEV 0xf5
 #define ACK 0xfa
 
+
+enum PORT{
+  PORT1,
+  PORT2
+};
 
 extern ACPIM acpi;
 
@@ -56,6 +62,7 @@ extern ACPIM acpi;
   */
 class PS2 {
 private:
+  void initialize();
   bool canWriteCommand();
   void writeCommand(uint8_t cmd);
   uint8_t readStatus();
@@ -65,8 +72,8 @@ private:
   void writeData(uint8_t data);
   void writePort1(uint8_t data);
   void writePort2(uint8_t data);
-  void disableDevices();
-  void enableDevices();
+  void disablePorts();
+  void enablePorts();
   void flushOutput();
   void configure();
   void selfTest();
@@ -77,6 +84,7 @@ private:
   void resetPort1();
   void resetPort2();
   void resetPC();
+  void disableScanning();
  
   bool testPassed;
   bool port1TestPass;
@@ -86,6 +94,12 @@ private:
 public:
   // default constructor
   PS2();
+
+  void EnableInterrupt1();
+  void EnableInterrupt2();
+
+  uint8_t WriteCommand(uint8_t cmd, enum PORT port);
+  uint8_t ReadData();
 };
 
 inline PS2 ps2;

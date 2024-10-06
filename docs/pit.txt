@@ -1,0 +1,158 @@
+# Overview
+PIT is intel chip programmable interval timer. responsible for timer operations
+like generating an interrupt in a specific time.
+it has 3 channels, channel 0 output is wired to PIC and generates an interrupt
+on deadline.
+channel 1 output was used to refresh the RAM or DRAM cells. read the memory paper 
+in the references folder to understand how memory is structured and layed out.
+channel 2 output is connected to speakers. 
+
+each channel has also a gate input that decides whether the input signal
+from the oscilator gets to the channel.
+by default this is controlable only on channel 2 with bit 0 on io port 0x61
+
+# Programming the PIT
+channel 0 rw 0x40
+channel 1 rw 0x41
+channel 2 rw 0x42
+pit comnd rw 0x43
+
+write port: set reload counter
+read port: after the read back command returns status.
+
+## commands channel
+Bits         Usage
+6 and 7      Select channel :
+                0 0 = Channel 0
+                0 1 = Channel 1
+                1 0 = Channel 2
+                1 1 = Read-back command (8254 only)
+4 and 5      Access mode :
+                0 0 = Latch count value command
+                0 1 = Access mode: lobyte only
+                1 0 = Access mode: hibyte only
+                1 1 = Access mode: lobyte/hibyte
+1 to 3       Operating mode :
+                0 0 0 = Mode 0 (interrupt on terminal count)
+                0 0 1 = Mode 1 (hardware re-triggerable one-shot)
+                0 1 0 = Mode 2 (rate generator)
+                0 1 1 = Mode 3 (square wave generator)
+                1 0 0 = Mode 4 (software triggered strobe)
+                1 0 1 = Mode 5 (hardware triggered strobe)
+                1 1 0 = Mode 2 (rate generator, same as 010b)
+                1 1 1 = Mode 3 (square wave generator, same as 011b)
+0            BCD/Binary mode: 0 = 16-bit binary, 1 = four-digit BCD
+
+for the read-back command and the latch count command the bits have different
+meanings.
+
+## operating modes
+- each time the command channel is written to the PIT internal logic resets
+- you can write to the channels at any time. depending on the operating mode
+  different effects can happen.
+- current counter is decremented or reset on falling edge
+- reload of counter happens on next cycle.
+
+### interrupt on terminal count
+output of PIT goes to zero. PIT waits for seting reload counter. then counter
+starts and once it reaches zero output goes high and remains high until 
+the reload register is set again.
+
+### hardware retriggerable one-shot
+like the mode above but is delayed until the gate input is activated. so only
+valid for channel 2.
+
+### rate generator
+output of PIT goes high. PIT waits for counter reload register to be set, then
+counting starts. once counter goes from 2 t 1. output goes low. from 1 to zero
+output goes high again and counter register is reloaded and counting starts again.
+
+the input gate controls goes to zero, counter stops and the when enabled again
+PIT waits for counter reload register to be set to start counting again.
+
+### square wave generator
+same as above but output is fed to flip flop
+
+### sofware and hardware triggered strobes
+tbd
+
+# latch command
+the PIT only allows transfers in bytes. so if you wish to read the current
+count register you may read incorrect data as you will read low byte
+counter changes and then read high byte.
+send XX000000 to the command register to tell PIT you want to latch the counter.
+then read from corresponding channel the value of the counter as 16 bits.
+don't do often as it affects accuracy.
+
+# readback command
+use this command to read the status of the counters in the PIT
+
+Bits         Usage
+7 and 6      Must be set for the read back command
+5            Latch count flag (0 = latch count, 1 = don't latch count)
+4            Latch status flag (0 = latch status, 1 = don't latch status)
+3            Read back timer channel 2 (1 = yes, 0 = no)
+2            Read back timer channel 1 (1 = yes, 0 = no)
+1            Read back timer channel 0 (1 = yes, 0 = no)
+0            Reserved (should be clear)
+
+## post readback channel status
+Bit/s        Usage
+7            Output pin state
+6            Null count flags
+4 and 5      Access mode :
+                0 0 = Latch count value command
+                0 1 = Access mode: lobyte only
+                1 0 = Access mode: hibyte only
+                1 1 = Access mode: lobyte/hibyte
+1 to 3       Operating mode :
+                0 0 0 = Mode 0 (interrupt on terminal count)
+                0 0 1 = Mode 1 (hardware re-triggerable one-shot)
+                0 1 0 = Mode 2 (rate generator)
+                0 1 1 = Mode 3 (square wave generator)
+                1 0 0 = Mode 4 (software triggered strobe)
+                1 0 1 = Mode 5 (hardware triggered strobe)
+                1 1 0 = Mode 2 (rate generator, same as 010b)
+                1 1 1 = Mode 3 (square wave generator, same as 011b)
+0            BCD/Binary mode: 0 = 16-bit binary, 1 = four-digit BCD
+
+
+
+
+
+
+# how to pic a divisor for the PIT
+suppose we are using channel 0.
+the PIT oscilator runs at frequency 1.193182 MHz. that is
+1193182 Hz. this means if you divide this by 1 you have an interrupt every
+8.3809511e-7 second that is 0.83806511 microseconds. the larger the denominator
+the more time it will take for the interrupt to generate.
+
+as an exercise what is the number I need to divide by to get an interrupt
+every second??
+
+1193182 / divisor = interruptInterval in seconds
+1193182 / divisor = 1s
+1193182 = 1 * divisor
+divisor = 1193182 -> can this number be represented in 16 bits? no.
+it takes 21 bits to represent this number
+
+okay if we set the 16 bits to all ones 0xff that is the maximum divisor we can
+get. how many interrupts we can get per second?
+
+freq = 1193182 / 65535 = 18.2067...
+T = 1 / freq = 0.054..s .. so we get 1 interrupt every 0.054..s
+1 / 0.054.. = 18.2067 interrupts per second :grin:
+
+easy right?
+
+frequency is the number of oscilations (events) per second
+1 / freq = T the interval between each event
+https://en.wikipedia.org/wiki/Frequency
+
+# finally
+thankgod for APIC
+
+
+
+

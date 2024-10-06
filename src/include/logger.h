@@ -7,8 +7,10 @@
 
 extern Screen screen;
 
-void __attribute__((noreturn)) __attribute__((no_callee_saved_registers)) panic(const char *msg);
+void __attribute__((noreturn)) panic(const char *msg);
 void kprint(const char *msg);
+//void kprintf(const char *msg, ...);
+
 
 #define sprintf(resBuf, str, ...) Formater().Format(resBuf, str, __VA_ARGS__)
 

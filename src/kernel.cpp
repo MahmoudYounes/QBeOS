@@ -20,7 +20,11 @@
 #include "arch/x86/include/processor.h"
 #include "arch/x86/include/pt_entry.h"
 #include "arch/x86/include/tss.h"
+#include "arch/x86/include/pit.h"
 #include "arch/x86/include/ps2.h"
+#include "drivers/include/atkbd.h"
+#include "drivers/include/driver.h"
+#include "drivers/include/atkbd.h"
 #include "include/common.h"
 #include "include/logger.h"
 #include "include/math.h"
@@ -46,6 +50,7 @@ extern ACPIM acpi;
 extern PCI pci;
 extern PS2 ps2;
 extern TSSManager tssManager;
+extern PIT pit;
 
 // For now it's easier for me to just look at the screen. I have a way in mind
 // to automate this, so guess what... here is another TODO!
@@ -398,13 +403,19 @@ void kmain() {
   vmm = VirtualMemory(true /* should run vmm self tests before paging */);
   tssManager = TSSManager();
   idt = IDT();
-  pci = PCI(args);
-  pic = PIC();
-  acpi = ACPIM();
-  apic = APIC(); 
+  //pci = PCI(args);
+  pit = PIT();
   ps2 = PS2();
-  pci = PCI(args);
+  pic = PIC();
+  //acpi = ACPIM();
+  //apic = APIC(); 
+
+  sti();
   pic.STI();
+
+  pit.Reload();
+  //Driver *kbd = new ATKBD(&ps2);
+  //kbd->Initialize();  
 
   // at this point interrupts are disabled... need to setup IDT to renable them.
 

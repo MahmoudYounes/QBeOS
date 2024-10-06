@@ -1,0 +1,16 @@
+# Overview
+the ps2 is an intel controller chip that is responsible for driving 2 specific devices
+a mouse and a keyboard. while it can drive other devices instead of these 2 devices
+on x86 PCs it is mainly used to drive the mouse and the keyboard.
+these are the purple and green socket mouse and keyboard from my childhood :)
+
+the successors of this controller is to talk to the keyboard and mouse via the PCI bus.
+the PCI bus has a USB Controller listening and attached to it. the USB controller
+can talk to a USB Keyboard but this will be explained in another documentation.
+
+# Keyboard
+the keyboard has a keyboard encoder on it. this is what the PS2 controller talks with.
+we can talk to the encoder via the controller. everything has to eventually go through
+the controller.
+
+

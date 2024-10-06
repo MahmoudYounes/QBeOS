@@ -12,8 +12,8 @@
 #define SLAVE_DPORT    0xa1
 
 #define ICW1 0x11
-#define ICW2M 0x20
-#define ICW2S 0x28
+#define ICW2M 0x30 // interrupt begin
+#define ICW2S 0x3a // interrupt begin
 #define ICW3M 0x04
 #define ICW3S 0x02
 #define ICW4 0x01
@@ -31,7 +31,9 @@ public:
   void STI();
   void CLI();
   void DisablePIC();
-  void SendEOI();
+  void SendEOI(uint8_t);
 };
+
+inline PIC pic;
 
 #endif /* PIC_H */

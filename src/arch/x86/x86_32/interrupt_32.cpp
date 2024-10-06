@@ -1,94 +1,233 @@
 #include "arch/x86/include/interrupt_32.h"
+#include "arch/x86/include/pic.h"
 
-DEFINE_INTERRUPT(BadInterrupt) {
-  panic("Interrupt is not implemented...\nhalting...\0");
+void BadInterrupt9(struct interruptFrame *hwregs){
+  panic("Interrupt 9 is not implemented...\nhalting...\0");
 }
 
-DEFINE_INTERRUPT(DivZero) {
+void BadInterrupt15(struct interruptFrame *hwregs){
+  panic("Interrupt 15 is not implemented...\nhalting...\0");
+}
+
+void BadInterrupt22(struct interruptFrame *hwregs){
+  panic("Interrupt 22 is not implemented...\nhalting...\0");
+}
+
+void BadInterrupt23(struct interruptFrame *hwregs){
+  panic("Interrupt 23 is not implemented...\nhalting...\0");
+}
+
+void BadInterrupt24(struct interruptFrame *hwregs){
+  panic("Interrupt 24 is not implemented...\nhalting...\0");
+}
+
+void BadInterrupt25(struct interruptFrame *hwregs){
+  panic("Interrupt 25 is not implemented...\nhalting...\0");
+
+}
+
+void BadInterrupt26(struct interruptFrame *hwregs){
+panic("Interrupt 26 is not implemented...\nhalting...\0");
+
+}
+
+void BadInterrupt27(struct interruptFrame *hwregs){
+panic("Interrupt 27 is not implemented...\nhalting...\0");
+
+}
+
+void BadInterrupt28(struct interruptFrame *hwregs){
+panic("Interrupt 28 is not implemented...\nhalting...\0");
+
+}
+
+void BadInterrupt29(struct interruptFrame *hwregs){
+panic("Interrupt 29 is not implemented...\nhalting...\0");
+
+}
+
+void BadInterrupt30(struct interruptFrame *hwregs){
+panic("Interrupt 30 is not implemented...\nhalting...\0");
+
+}
+
+void BadInterrupt31(struct interruptFrame *hwregs){
+panic("Interrupt 31 is not implemented...\nhalting...\0");
+
+}
+
+void BadInterrupt38(struct interruptFrame *hwregs){
+panic("Interrupt 38 is not implemented...\nhalting...\0");
+
+}
+
+void BadInterrupt39(struct interruptFrame *hwregs){
+panic("Interrupt 39 is not implemented...\nhalting...\0");
+
+}
+
+void BadInterrupt40(struct interruptFrame *hwregs){
+panic("Interrupt 40 is not implemented...\nhalting...\0");
+
+}
+
+void BadInterrupt41(struct interruptFrame *hwregs){
+panic("Interrupt 41 is not implemented...\nhalting...\0");
+
+}
+
+void BadInterrupt42(struct interruptFrame *hwregs){
+panic("Interrupt 42 is not implemented...\nhalting...\0");
+
+}
+
+void BadInterrupt43(struct interruptFrame *hwregs){
+panic("Interrupt 43 is not implemented...\nhalting...\0");
+
+}
+
+void BadInterrupt44(struct interruptFrame *hwregs){
+panic("Interrupt 44 is not implemented...\nhalting...\0");
+
+}
+
+void BadInterrupt45(struct interruptFrame *hwregs){
+panic("Interrupt 45 is not implemented...\nhalting...\0");
+
+}
+
+void BadHRDWRInterrupt(struct interruptFrame *hwregs){
+  panic("Bad hardware interrupt\n\0");  
+};
+
+void DivZero(struct interruptFrame *hwregs){
   panic("Div By Zero in kernel. unrecoverable...\n\0");
 }
 
-DEFINE_INTERRUPT(DebugException) {
+void DebugException(struct interruptFrame *hwregs){
   panic("Debug exception is not supported. check docs debug.md\n\0");
 }
 
-DEFINE_INTERRUPT(NMI) {
+void NMI(struct interruptFrame *hwregs){
   panic("Non maskable interrupts are not implemented yet\n\0");
 }
 
-DEFINE_INTERRUPT(Breakpoint) {
+void Breakpoint(struct interruptFrame *hwregs){
   panic("Breakpoint interrupts are not supported. check docs debug.md\n\0");
 }
 
-DEFINE_INTERRUPT(Overflow) { panic("Unsupported interrupt: overflow\n\0"); }
+void Overflow(struct interruptFrame *hwregs){ panic("Unsupported interrupt: overflow\n\0"); }
 
-DEFINE_INTERRUPT(BoundRangeExceeded) {
+void BoundRangeExceeded(struct interruptFrame *hwregs){
   panic("Unsupported interrupt: out of bounds\n\0");
 }
 
-DEFINE_INTERRUPT(InvalidOpcode) {
+void InvalidOpcode(struct interruptFrame *hwregs){
   panic("Unsupported interrupt: invalid opcode\n\0");
 }
 
-DEFINE_INTERRUPT(DeviceNotAbailable) {
+void DeviceNotAbailable(struct interruptFrame *hwregs){
   panic("Unsupported interrupt: device not available\n\0");
 }
 
-DEFINE_EXCEPTION(DoubleFault) {
+void DoubleFault(struct interruptFrame *hwregs, uint32_t errCode){
   panic("Unsupported interrupt: Double fault\n\0");
 }
 
-DEFINE_EXCEPTION(InvalidTSS) {
+void InvalidTSS(struct interruptFrame *hwregs, uint32_t errCode){
   panic("Unsupported interrupt: invalid tss\n\0");
 }
 
-DEFINE_EXCEPTION(SegmentNotPresent) {
+void SegmentNotPresent(struct interruptFrame *hwregs, uint32_t errCode){
   panic("Unsupported interrupt: segment not present\n\0");
 }
 
-DEFINE_EXCEPTION(StackSegmentFault) {
+void StackSegmentFault(struct interruptFrame *hwregs, uint32_t errCode){
   panic("Unsupported interrupt: stack segment fault\n\0");
 }
 
-DEFINE_EXCEPTION(GeneralProtectionFault) {
-  panic("Unsupported interrupt: general protection fault\n\0");
+void GeneralProtectionFault(struct interruptFrame *hwregs, uint32_t errCode){
+  uint32_t isExternal, idt, ti;
+  uint32_t descriptorIndex;
+  char buf[256];
+
+  isExternal = errCode & 1;
+  idt = errCode & 2;
+  ti = errCode & 4;
+
+  descriptorIndex = errCode & ~0x7; 
+
+  kprint("panic: general protection fault\n\0");
+  kprintf(buf, "fault codes are isExternal: %d isIDT: %d is isTI: %d\n\0", isExternal, idt, ti);
+  kprintf(buf, "descriptor index: %d\n\0", descriptorIndex);
+
+  panic("stopping execution\n\0");
 }
 
-DEFINE_EXCEPTION(PageFault) { panic("Unsupported interrupt: page fault\n\0"); }
+void PageFault(struct interruptFrame *hwregs, uint32_t errCode){ 
+  panic("Unsupported interrupt: page fault\n\0"); 
+}
 
-DEFINE_INTERRUPT(MathFault) { panic("Unsupported interrupt: math fault\n\0"); }
+void MathFault(struct interruptFrame *hwregs){ 
+  panic("Unsupported interrupt: math fault\n\0"); 
+}
 
-DEFINE_EXCEPTION(AligmentCheckFault) {
+void AligmentCheckFault(struct interruptFrame *hwregs, uint32_t errCode){
   panic("Unsupported interrupt: Alignment check\n\0");
 }
 
-DEFINE_INTERRUPT(MachineCheckFault) {
+void MachineCheckFault(struct interruptFrame *hwregs){
   panic("Unsupported interrupt: machine check fault\n\0");
 }
 
-DEFINE_INTERRUPT(SIMDFault) { panic("Unsupported interrupt: SIMD fault\n\0"); }
+void SIMDFault(struct interruptFrame *hwregs){ 
+  panic("Unsupported interrupt: SIMD fault\n\0"); 
+}
 
-DEFINE_INTERRUPT(VirtualizationFault) {
+void VirtualizationFault(struct interruptFrame *hwregs){
   panic("Unsupported interrupt: Virtualization fault\n\0");
 }
 
-DEFINE_EXCEPTION(ControlProtectionException) {
+void ControlProtectionException(struct interruptFrame *hwregs, uint32_t errCode){
   panic("Unsupported interrupt: control protection\n\0");
 }
 
-DEFINE_INTERRUPT(TimerHandler) {
+void TimerHandler(struct interruptFrame *hwregs){
   kprint("timer called\n\0");
   apic.WriteEOI();
 }
 
-DEFINE_INTERRUPT(LINT0Handler) { kprint("LINT0 called\n\0"); }
+void LINT0Handler(struct interruptFrame *hwregs){ 
+  kprint("LINT0 called\n\0"); 
+}
 
-DEFINE_INTERRUPT(LINT1Handler) { kprint("LINT1 Called\n\0"); }
+void LINT1Handler(struct interruptFrame *hwregs){ 
+  kprint("LINT1 Called\n\0"); 
+}
 
-DEFINE_INTERRUPT(PMCHandler) { kprint("PMC Called\n\0"); }
+void PMCHandler(struct interruptFrame *hwregs){ 
+  kprint("PMC Called\n\0"); 
+}
 
-DEFINE_INTERRUPT(CMCIHandler) { kprint("CMCI called\n\0"); }
+void CMCIHandler(struct interruptFrame *hwregs){ 
+  kprint("CMCI called\n\0"); 
+}
 
-DEFINE_INTERRUPT(SpuriousHandler) { kprint("Spurious interrupt occured\n\0"); }
+void SpuriousHandler(struct interruptFrame *hwregs){ 
+  kprint("Spurious interrupt occured\n\0"); 
+}
 
-DEFINE_INTERRUPT(APICErrHandler) { kprint("Error interrupt\n\0"); }
+void APICErrHandler(struct interruptFrame *hwregs){ 
+  kprint("Error interrupt\n\0"); 
+}
+
+void PITTimerHandler(struct interruptFrame *hwregs){
+  kprint("handling timer interrupt\n\0"); 
+  pit.Reload();
+  pic.SendEOI(0);
+}
+
+void KeyboardHandler(struct interruptFrame *hwregs){
+  kprint("recieved keyboard interrupt\n\0");
+  pic.SendEOI(1); 
+}

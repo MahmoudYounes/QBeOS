@@ -50,11 +50,9 @@ uint8_t PIC::getIMRS(){
 void PIC::STI(){
   uint8_t mimr, simr;
   
-  mimr = getIMRM();
   mimr = 0; // enable all interrupts on the master chip
   outb(MASTER_DPORT, mimr);
 
-  simr = getIMRS();
   simr = 0;
   outb(SLAVE_DPORT, simr);
 }
@@ -62,18 +60,21 @@ void PIC::STI(){
 void PIC::CLI(){
   uint8_t mimr, simr;
   
-  mimr = getIMRM();
   mimr = 0xff; // enable all interrupts on the master chip
   outb(MASTER_DPORT, mimr);
 
-  simr = getIMRS();
   simr = 0xff;
   outb(SLAVE_DPORT, simr);
 }
 
-void SendEOI(){
-  // this will propagte the EOI to all PICs
-  outb(MASTER_DPORT, EOI);  
+void PIC::SendEOI(uint8_t irq){
+  char buf[256];
+  if (irq > 8){
+    kprintf(buf, "sending EOI for slave for irq %d\n\0", irq);
+    outb(SLAVE_CMDPORT, EOI);
+  }
+
+  kprintf(buf, "sending EOI for irq %d\n\0", irq);
+  outb(MASTER_CMDPORT, EOI);  
 }
 
-PIC pic;

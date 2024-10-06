@@ -55,12 +55,16 @@ void ACPIM::parseRSDP(uintptr_t p) {
 }
 
 void ACPIM::parseRSDPV1() {
+#if DEBUG
   printTableInfo();
+#endif
   rsdt = new RSDTM(rsdp.rsdtAddr);
 }
 
 void ACPIM::parseRSDPV2() {
+#if DEBUG
   printTableInfo();
+#endif
   panic("XSDT is not implemented yet\0\n");
 }
 
