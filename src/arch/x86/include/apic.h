@@ -1,6 +1,7 @@
 #ifndef APIC_H
 #define APIC_H
 
+#include "include/configs.h"
 #include "arch/include/vmm.h"
 #include "arch/x86/include/cpuinfo.h"
 #include "arch/x86/include/processor.h"

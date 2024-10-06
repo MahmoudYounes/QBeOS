@@ -26,11 +26,7 @@
 #include "include/math.h"
 #include "include/kargs.h"
 #include "pci/include/pci.h"
-
-
-#ifndef ARCH_X86_32
-#define ARCH_X86_32
-#endif
+#include "include/configs.h"
 
 void kmain() __attribute__((noreturn));
 void bootEnd() __attribute__((noreturn));
@@ -376,6 +372,8 @@ kargs *parseBootArgs(){
 }
 
 void kmain() {
+  // clearing the interrupts from BIOS because we havn't setup any interrupt
+  // controller handler yet
   cli();
   setupConsole();
 
@@ -406,7 +404,7 @@ void kmain() {
   apic = APIC(); 
   ps2 = PS2();
   pci = PCI(args);
-  sti();
+  pic.STI();
 
   // at this point interrupts are disabled... need to setup IDT to renable them.
 
