@@ -1,6 +1,11 @@
 #include "arch/x86/include/apic.h"
 
 APIC::APIC() {
+  if (DISABLE_APIC){
+    kprint("Disabling APIC\n\0");
+    return;
+  }
+
   kprint("Initializing APIC\n\0");
   validateAPIC();
   initializeAPIC();
