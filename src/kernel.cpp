@@ -20,7 +20,11 @@
 #include "arch/x86/include/processor.h"
 #include "arch/x86/include/pt_entry.h"
 #include "arch/x86/include/tss.h"
+#include "arch/x86/include/pit.h"
 #include "arch/x86/include/ps2.h"
+#include "drivers/include/atkbd.h"
+#include "drivers/include/driver.h"
+#include "drivers/include/atkbd.h"
 #include "include/common.h"
 #include "include/logger.h"
 #include "include/math.h"
@@ -46,6 +50,7 @@ extern ACPIM acpi;
 extern PCI pci;
 extern PS2 ps2;
 extern TSSManager tssManager;
+extern PIT pit;
 
 // For now it's easier for me to just look at the screen. I have a way in mind
 // to automate this, so guess what... here is another TODO!
@@ -113,19 +118,19 @@ void testMemoryPageAt() {
   bool failed = false;
   MemoryRegion mem = sysMemory.GetPageAt(0x8000);
   if ((uintptr_t)mem.baseAddress != 0x8000) {
-    kprintf(buf, "FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
+    kprintf("FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
     failed = true;
   }
 
   mem = sysMemory.GetPageAt(0x8020);
   if ((uintptr_t)mem.baseAddress != 0x8000) {
-    kprintf(buf, "FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
+    kprintf("FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
     failed = true;
   }
 
   mem = sysMemory.GetPageAt(0x50000000);
   if ((uintptr_t)mem.baseAddress != 0x50000000) {
-    kprintf(buf, "FAILED: expected %p found %p\n\0", 0x50000000,
+    kprintf("FAILED: expected %p found %p\n\0", 0x50000000,
             mem.baseAddress);
     failed = true;
   }
@@ -208,7 +213,7 @@ void testPDTEntry() {
   uint32_t expectedEntry = 0b00000000100000010111000010000111;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -224,7 +229,7 @@ void testPDTEntry() {
   expectedEntry = 0b00000000101101010101000000000011;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -234,7 +239,7 @@ void testPDTEntry() {
   expectedEntry = 0b10010100000001000000000011;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -244,7 +249,7 @@ void testPDTEntry() {
   expectedEntry = 0b10010100000001000000000111;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -267,7 +272,7 @@ void testPTEntry() {
   uint32_t expectedEntry = 0b10110000000100000101;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -277,7 +282,7 @@ void testPTEntry() {
   expectedEntry = 0b11111111111111111111000000000000;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -287,7 +292,7 @@ void testPTEntry() {
   expectedEntry = 0b10010100000001000000000011;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -297,7 +302,7 @@ void testPTEntry() {
   expectedEntry = 0b10010100000001000000000111;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -319,17 +324,17 @@ void testIDTEntry() {
   uint64_t entry = *((uint64_t *)pg);
   IDTEntry actualEntry = IDTEntry(entry);
   if (actualEntry.GetFlags() != 0x4e00) {
-    kprintf(buf, "Expected 0x4e00 found %x\n\0", actualEntry.GetFlags());
+    kprintf("Expected 0x4e00 found %x\n\0", actualEntry.GetFlags());
     panic("FAILED: IDTEntry tests\n\0");
   }
 
   if (actualEntry.GetSegment() != 0x8) {
-    kprintf(buf, "Expected 0x8 found %x\n\0", actualEntry.GetSegment());
+    kprintf("Expected 0x8 found %x\n\0", actualEntry.GetSegment());
     panic("FAILED: IDTEntry tests\n\0");
   }
 
   if (actualEntry.GetOffset() != 0xff) {
-    kprintf(buf, "Expected 0xff found %x\n\0", actualEntry.GetOffset());
+    kprintf("Expected 0xff found %x\n\0", actualEntry.GetOffset());
     panic("FAILED: IDTEntry tests\n\0");
   }
 }
@@ -378,17 +383,16 @@ void kmain() {
   setupConsole();
 
   kargs * args;
-  char buf[255];
   args = parseBootArgs();
   if (args == NULL){
     panic("incorrect boot header\n\0");
   }
 
   kprint("booting kernel with the following args\n\0");
-  kprintf(buf, "memRegionsCount: %d\n\0", args->memRegionsCount);
-  kprintf(buf, "memTableStartAdrr: %p\n\0", args->memTableStartAddr);
-  kprintf(buf, "pciSupported: %d\n\0", args->pciSupported);
-  kprintf(buf, "pciConfigMechanism: %d\n\0", args->pciConfigMech);
+  kprintf("memRegionsCount: %d\n\0", args->memRegionsCount);
+  kprintf("memTableStartAdrr: %p\n\0", args->memTableStartAddr);
+  kprintf("pciSupported: %d\n\0", args->pciSupported);
+  kprintf("pciConfigMechanism: %d\n\0", args->pciConfigMech);
 
   cpu = CPUInfo();
   // sys initializations
@@ -398,13 +402,19 @@ void kmain() {
   vmm = VirtualMemory(true /* should run vmm self tests before paging */);
   tssManager = TSSManager();
   idt = IDT();
-  pci = PCI(args);
-  pic = PIC();
-  acpi = ACPIM();
-  apic = APIC(); 
+  //pci = PCI(args);
+  pit = PIT();
   ps2 = PS2();
-  pci = PCI(args);
-  pic.STI();
+  pic = PIC();
+  //acpi = ACPIM();
+  //apic = APIC(); 
+
+  sti();
+  //pic.STI();
+
+  //pit.Reload();
+  Driver *kbd = new ATKBD(&ps2);
+  kbd->Initialize();  
 
   // at this point interrupts are disabled... need to setup IDT to renable them.
 

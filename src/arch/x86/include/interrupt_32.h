@@ -8,7 +8,11 @@
 #include "include/common.h"
 #include "include/logger.h"
 #include "arch/x86/include/apic.h"
+#include "arch/x86/include/pit.h"
+#include "arch/x86/include/pic.h"
 
+extern PIC pic;
+extern PIT pit;
 extern APIC apic;
 
 #define DEFINE_INTERRUPT(interruptName) void __attribute__((interrupt)) interruptName(struct interruptFrame *hwRegs)
@@ -24,7 +28,29 @@ struct interruptFrame {
 };
 
 // definitions of all functions here. implementation is found in cpp file
-DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt9);
+DEFINE_INTERRUPT(BadInterrupt15);
+DEFINE_INTERRUPT(BadInterrupt22);
+DEFINE_INTERRUPT(BadInterrupt23);
+DEFINE_INTERRUPT(BadInterrupt24);
+DEFINE_INTERRUPT(BadInterrupt25);
+DEFINE_INTERRUPT(BadInterrupt26);
+DEFINE_INTERRUPT(BadInterrupt27);
+DEFINE_INTERRUPT(BadInterrupt28);
+DEFINE_INTERRUPT(BadInterrupt29);
+DEFINE_INTERRUPT(BadInterrupt30);
+DEFINE_INTERRUPT(BadInterrupt31);
+DEFINE_INTERRUPT(BadInterrupt38);
+DEFINE_INTERRUPT(BadInterrupt39);
+DEFINE_INTERRUPT(BadInterrupt40);
+DEFINE_INTERRUPT(BadInterrupt41);
+DEFINE_INTERRUPT(BadInterrupt42);
+DEFINE_INTERRUPT(BadInterrupt43);
+DEFINE_INTERRUPT(BadInterrupt44);
+DEFINE_INTERRUPT(BadInterrupt45);
+
+
+DEFINE_INTERRUPT(BadHRDWRInterrupt);
 DEFINE_INTERRUPT(DivZero);
 DEFINE_INTERRUPT(DebugException);
 DEFINE_INTERRUPT(NMI);
@@ -52,5 +78,7 @@ DEFINE_INTERRUPT(PMCHandler);
 DEFINE_INTERRUPT(CMCIHandler);
 DEFINE_INTERRUPT(APICErrHandler);
 DEFINE_INTERRUPT(SpuriousHandler);
+DEFINE_INTERRUPT(PITTimerHandler);
+DEFINE_INTERRUPT(KeyboardHandler);
 
 #endif /* INTERRUPT_32_H */

@@ -1,6 +1,7 @@
 #ifndef ACPI_H
 #define ACPI_H
 
+#include "include/configs.h"
 #include "acpi/include/rsdt.h"
 #include "arch/include/vmm.h"
 #include "include/common.h"

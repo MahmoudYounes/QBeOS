@@ -1,8 +1,6 @@
 #include "arch/include/vmm.h"
 #include "arch/x86/include/pt_entry.h"
 
-static char *buf;
-
 void VirtualMemory::testVirtualMemory() {
   if (!shouldTestMemoryBeforePaging) {
     return;
@@ -38,20 +36,19 @@ void VirtualMemory::testAddrTranslation(uintptr_t expectedAddr) {
   uintptr_t addr = paddr | offsetInPage;
 
   if (addr != expectedAddr) {
-    kprintf(buf, "testing mapping of address %p\n\0", expectedAddr);
-    kprintf(buf, "page tables are incorrectly set up. expected %p found %p\n\0",
+    kprintf("testing mapping of address %p\n\0", expectedAddr);
+    kprintf("page tables are incorrectly set up. expected %p found %p\n\0",
             expectedAddr, addr);
-    kprintf(buf, "offseting pdt %p with %x yielded \0", PDTAddress, pdtOffset);
-    kprintf(buf, "%p\n\0", pdtEntryPtr);
-    kprintf(buf, "addresss of PT from PDT Entry is %p\n\0", ptPtr);
-    kprintf(buf, "offseting pt %p with %d yielded \0", ptPtr, ptOffset);
-    kprintf(buf, "%p\n\0", ptEntryPtr);
-    kprintf(buf, "address of Page from PT Entry is %p\n\0", paddr);
-    kprintf(buf,
-            "constructing address from Page Base %p, and offset %d in page "
+    kprintf("offseting pdt %p with %x yielded \0", PDTAddress, pdtOffset);
+    kprintf("%p\n\0", pdtEntryPtr);
+    kprintf("addresss of PT from PDT Entry is %p\n\0", ptPtr);
+    kprintf("offseting pt %p with %d yielded \0", ptPtr, ptOffset);
+    kprintf("%p\n\0", ptEntryPtr);
+    kprintf("address of Page from PT Entry is %p\n\0", paddr);
+    kprintf("constructing address from Page Base %p, and offset %d in page "
             "yielded \0",
             paddr, offsetInPage);
-    kprintf(buf, "%p\n\0", addr);
+    kprintf("%p\n\0", addr);
     panic("vmm test failed");
   }
 }

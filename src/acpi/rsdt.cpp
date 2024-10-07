@@ -14,8 +14,7 @@ RSDTM::RSDTM(uintptr_t rsdtAddr) {
     return;
   }
 
-  char *buf = new char[256];
-  kprintf(buf, "found a valid RSDT with %d entries. allocating memory...\n\0",
+  kprintf("found a valid RSDT with %d entries. allocating memory...\n\0",
           rsdt.length);
   entries = new uint32_t[rsdt.length];
   kprint("allocated memory \n\0");
