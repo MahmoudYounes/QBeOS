@@ -31,6 +31,8 @@ public:
   void STI();
   void CLI();
   void DisablePIC();
+  int8_t EnableInterrupt(uint8_t irqn);
+  int8_t DisableInterrupt(uint8_t irqn);
   void SendEOI(uint8_t);
 };
 

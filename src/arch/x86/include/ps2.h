@@ -74,7 +74,6 @@ private:
   void writePort2(uint8_t data);
   void disablePorts();
   void enablePorts();
-  void flushOutput();
   void configure();
   void selfTest();
   void detectChannel2();
@@ -100,6 +99,8 @@ public:
 
   uint8_t WriteCommand(uint8_t cmd, enum PORT port);
   uint8_t ReadData();
+  void FlushOutput();
+
 };
 
 inline PS2 ps2;

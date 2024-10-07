@@ -35,7 +35,7 @@ public:
 
   uint64_t EncodeEntryAt(uintptr_t addr);
 
-  void PrintEntryInfo(char *buf);
+  void PrintEntryInfo();
 };
 
 #endif /* PDT_ENTRY_H */

@@ -16,7 +16,6 @@ PCI::PCI(kargs *args){
 
 void PCI::enumeratePCIDevices(){
   uint16_t val;
-  char buf[255];
   Device device;
   devices = new Device[1]();
   
@@ -24,11 +23,10 @@ void PCI::enumeratePCIDevices(){
     for (int devNum = 0; devNum < 0x1f; devNum++){
         val = readConf(busNum, devNum, 0, 0);
         if (val == 0xffff){
-          //kprintf(buf, "no device on bus %d dev %d\n\0", busNum, devNum);
           continue;
         } else {
           parseDevice(busNum, devNum, &device); 
-          kprintf(buf, "found device %d on bus %d with vendorID %x and deviceID %x\n\0", devNum, busNum, device.vendorID, device.deviceID); 
+          kprintf("found device %d on bus %d with vendorID %x and deviceID %x\n\0", devNum, busNum, device.vendorID, device.deviceID); 
         }
     }
   }

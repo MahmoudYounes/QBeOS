@@ -149,7 +149,6 @@ void StackSegmentFault(struct interruptFrame *hwregs, uint32_t errCode){
 void GeneralProtectionFault(struct interruptFrame *hwregs, uint32_t errCode){
   uint32_t isExternal, idt, ti;
   uint32_t descriptorIndex;
-  char buf[256];
 
   isExternal = errCode & 1;
   idt = errCode & 2;
@@ -158,8 +157,8 @@ void GeneralProtectionFault(struct interruptFrame *hwregs, uint32_t errCode){
   descriptorIndex = errCode & ~0x7; 
 
   kprint("panic: general protection fault\n\0");
-  kprintf(buf, "fault codes are isExternal: %d isIDT: %d is isTI: %d\n\0", isExternal, idt, ti);
-  kprintf(buf, "descriptor index: %d\n\0", descriptorIndex);
+  kprintf("fault codes are isExternal: %d isIDT: %d is isTI: %d\n\0", isExternal, idt, ti);
+  kprintf("descriptor index: %d\n\0", descriptorIndex);
 
   panic("stopping execution\n\0");
 }

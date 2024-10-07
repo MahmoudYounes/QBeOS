@@ -29,7 +29,7 @@ void PS2::initialize(){
   readData(NO_WAIT_READY);
   
   // Flush the output buffer
-  flushOutput();
+  FlushOutput();
   
   selfTest();
   if (!testPassed){
@@ -130,7 +130,7 @@ int8_t PS2::readData(bool wait){
   return inb(DATA_PORT);
 }
 
-void PS2::flushOutput(){
+void PS2::FlushOutput(){
   inb(DATA_PORT);
 }
 
@@ -280,7 +280,7 @@ void PS2::resetDevices(){
 
 void PS2::writePort1(uint8_t data){
   uint8_t buf;
-  flushOutput();
+  FlushOutput();
 retry:
   writeData(data);
   buf = readData(WAIT_READY);
@@ -296,7 +296,7 @@ retry:
 
 void PS2::writePort2(uint8_t data){
   uint8_t buf;
-  flushOutput();
+  FlushOutput();
 retry:
   writeCommand(WRITE_PORT2);
   writeData(data);
@@ -370,7 +370,7 @@ check:
     panic("failed to reset port2\n\0");
   }
   
-  flushOutput();
+  FlushOutput();
 }
 
 void PS2::resetPC(){
@@ -380,7 +380,7 @@ void PS2::resetPC(){
 void PS2::EnableInterrupt1(){
   uint8_t cfg;
   
-  flushOutput();
+  FlushOutput();
   writeCommand(READ_CFG_BYTE);
   cfg = readData(WAIT_READY);
 

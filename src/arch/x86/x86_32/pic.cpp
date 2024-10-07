@@ -35,8 +35,7 @@ void PIC::initialize(){
   outb(MASTER_DPORT, ICW4);
   outb(SLAVE_DPORT, ICW4);
 
-  outb(MASTER_DPORT, 0);
-  outb(SLAVE_DPORT, 0);
+  CLI();
 }
 
 uint8_t PIC::getIMRM(){
@@ -68,13 +67,51 @@ void PIC::CLI(){
 }
 
 void PIC::SendEOI(uint8_t irq){
-  char buf[256];
   if (irq > 8){
-    kprintf(buf, "sending EOI for slave for irq %d\n\0", irq);
+    kprintf("sending EOI for slave for irq %d\n\0", irq);
     outb(SLAVE_CMDPORT, EOI);
   }
 
-  kprintf(buf, "sending EOI for irq %d\n\0", irq);
+  kprintf("sending EOI for irq %d\n\0", irq);
   outb(MASTER_CMDPORT, EOI);  
 }
 
+int8_t PIC::EnableInterrupt(uint8_t irqn){
+  uint8_t r = irqn, mimr, port = MASTER_DPORT;
+
+  if (irqn >= 16){
+    return -1;
+  }
+
+  if (irqn >= 8){
+    r = irqn % 8;
+    port = SLAVE_DPORT;
+  }
+
+  r = 1 << r; 
+  r = ~r;
+  mimr = getIMRM();
+  mimr &= r;
+  outb(port, mimr);
+
+  return 0;
+}
+
+int8_t PIC::DisableInterrupt(uint8_t irqn){
+  uint8_t r = irqn, mimr, port = MASTER_DPORT;
+
+  if (irqn >= 16){
+    return -1;
+  }
+ 
+  if (irqn >= 8){
+    r = irqn % 8;
+    port = SLAVE_DPORT;
+  }
+  
+  r = 1 << r; 
+  mimr = getIMRM();
+  mimr |= r;
+  outb(port, mimr);
+  return 0;
+}
