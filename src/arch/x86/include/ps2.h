@@ -91,15 +91,15 @@ private:
   bool initialized;
   bool hasTwoPorts;
 public:
-  // default constructor
   PS2();
 
   void EnableInterrupt1();
   void EnableInterrupt2();
 
   uint8_t WriteCommand(uint8_t cmd, enum PORT port);
-  uint8_t ReadData();
+  int8_t ReadData();
   void FlushOutput();
+  uint8_t ReadStatus();
 
 };
 

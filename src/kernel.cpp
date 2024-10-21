@@ -51,6 +51,7 @@ extern PCI pci;
 extern PS2 ps2;
 extern TSSManager tssManager;
 extern PIT pit;
+extern ATKBD kbdDriver;
 
 // For now it's easier for me to just look at the screen. I have a way in mind
 // to automate this, so guess what... here is another TODO!
@@ -384,9 +385,9 @@ void kmain() {
 
   kargs * args;
   args = parseBootArgs();
-  if (args == NULL){
-    panic("incorrect boot header\n\0");
-  }
+  //if (args == NULL){
+  //  panic("incorrect boot header\n\0");
+  //}
 
   kprint("booting kernel with the following args\n\0");
   kprintf("memRegionsCount: %d\n\0", args->memRegionsCount);
@@ -394,28 +395,29 @@ void kmain() {
   kprintf("pciSupported: %d\n\0", args->pciSupported);
   kprintf("pciConfigMechanism: %d\n\0", args->pciConfigMech);
 
-  cpu = CPUInfo();
-  // sys initializations
-  kprint("Initializing all systems...\n\0");
+  //cpu = CPUInfo();
+  //kprint("Initializing all systems...\n\0");
   sysMemory = Memory(args);
   gdt = GDT();
   vmm = VirtualMemory(true /* should run vmm self tests before paging */);
-  tssManager = TSSManager();
+  //tssManager = TSSManager();
   idt = IDT();
-  //pci = PCI(args);
-  pit = PIT();
-  ps2 = PS2();
   pic = PIC();
+  pic.CLI();
+  //pci = PCI(args);
+  //pit = PIT(&pic);
+  ps2 = PS2();
   //acpi = ACPIM();
   //apic = APIC(); 
+  kbdDriver = ATKBD(&pic, &ps2);
+  kbdDriver.Initialize();  
 
+  pic.Initialize();
+  pic.CLI();
+  pic.EnableInterrupt(1);
   sti();
-  //pic.STI();
 
   //pit.Reload();
-  Driver *kbd = new ATKBD(&ps2);
-  kbd->Initialize();  
-
   // at this point interrupts are disabled... need to setup IDT to renable them.
 
   bootEnd();

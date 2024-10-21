@@ -19,21 +19,27 @@
 #define ICW4 0x01
 #define EOI 0x20
 
+#define READ_ISR 0x0b
+#define READ_IRR 0x0a
+
 // By default we are disabling PIC
 class PIC {
 private:
-  void initialize();
-  uint8_t getIMRM();
+    uint8_t getIMRM();
   uint8_t getIMRS();
 
 public:
   PIC();
+  void Initialize();
+
   void STI();
   void CLI();
   void DisablePIC();
   int8_t EnableInterrupt(uint8_t irqn);
   int8_t DisableInterrupt(uint8_t irqn);
   void SendEOI(uint8_t);
+  uint16_t GetISR();
+  uint16_t GetIRR();
 };
 
 inline PIC pic;

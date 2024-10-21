@@ -9,8 +9,34 @@ the PCI bus has a USB Controller listening and attached to it. the USB controlle
 can talk to a USB Keyboard but this will be explained in another documentation.
 
 # Keyboard
-the keyboard has a keyboard encoder on it. this is what the PS2 controller talks with.
+the keyboard has a keyboard encoder on it. this is what the PS2/USB controller talks with.
 we can talk to the encoder via the controller. everything has to eventually go through
 the controller.
 
+# PS2
+PS2 Controller supports can be interacted with via one port 0x64.
+0x64 Read gets the status of the controller
+0x64 Write writes a command for the controller to execute
+
+## The status register of the PS2 controller can tell us the following:
+0	Output buffer status (0 = empty, 1 = full)
+(must be set before attempting to read data from IO port 0x60)
+
+1	Input buffer status (0 = empty, 1 = full)
+(must be clear before attempting to write data to IO port 0x60 or IO port 0x64)
+
+2	System Flag
+Meant to be cleared on reset and set by firmware (via. PS/2 Controller Configuration Byte) if the system passes self tests (POST)
+
+3	Command/data (0 = data written to input buffer is data for PS/2 device, 1 = data written to input buffer is data for PS/2 controller command)
+4	Unknown (chipset specific)
+May be "keyboard lock" (more likely unused on modern systems)
+
+5	Unknown (chipset specific)
+May be "receive time-out" or "second PS/2 port output buffer full"
+
+6	Time-out error (0 = no error, 1 = time-out error)
+7	Parity error (0 = no error, 1 = parity error)
+
+## the commands to be written to the command register are
 

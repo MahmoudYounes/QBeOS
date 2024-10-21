@@ -5,6 +5,7 @@
 #include "arch/x86/include/interrupt_32.h"
 #include "include/common.h"
 #include "include/mem_encodeable.h"
+#include "drivers/include/atkbd.h"
 
 #define GATE_32INTR_F 0x8e00 // 1P 00PL 0R  e(32bit intr gate) 00R
 

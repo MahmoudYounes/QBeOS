@@ -222,11 +222,8 @@ void APICErrHandler(struct interruptFrame *hwregs){
 
 void PITTimerHandler(struct interruptFrame *hwregs){
   kprint("handling timer interrupt\n\0"); 
-  pit.Reload();
+  //pit.Reload();
   pic.SendEOI(0);
 }
 
-void KeyboardHandler(struct interruptFrame *hwregs){
-  kprint("recieved keyboard interrupt\n\0");
-  pic.SendEOI(1); 
-}
+

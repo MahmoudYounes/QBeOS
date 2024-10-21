@@ -15,8 +15,8 @@ extern PIC pic;
 extern PIT pit;
 extern APIC apic;
 
-#define DEFINE_INTERRUPT(interruptName) void __attribute__((interrupt)) interruptName(struct interruptFrame *hwRegs)
-#define DEFINE_EXCEPTION(exceptionName) void __attribute__((interrupt)) exceptionName(struct interruptFrame *hwRegs, uint32_t errCode)
+#define DEFINE_INTERRUPT(interruptName) void __attribute__((interrupt,target("general-regs-only"))) interruptName(struct interruptFrame *hwRegs)
+#define DEFINE_EXCEPTION(exceptionName) void __attribute__((interrupt,target("general-regs-only"))) exceptionName(struct interruptFrame *hwRegs, uint32_t errCode)
 // interruptFrame is the frame used to hold register values. this is setup by
 // the compiler.
 struct interruptFrame {
@@ -79,6 +79,5 @@ DEFINE_INTERRUPT(CMCIHandler);
 DEFINE_INTERRUPT(APICErrHandler);
 DEFINE_INTERRUPT(SpuriousHandler);
 DEFINE_INTERRUPT(PITTimerHandler);
-DEFINE_INTERRUPT(KeyboardHandler);
 
 #endif /* INTERRUPT_32_H */

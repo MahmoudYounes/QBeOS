@@ -2,12 +2,13 @@
 #include "include/common.h"
 
 PIC::PIC() {
-  if (DISABLE_PIC){
+#if DISABLE_PIC
     DisablePIC();
     return;
-  }
+#else
 
-  initialize();
+  Initialize();
+#endif
 }
 
 void PIC::DisablePIC(){
@@ -22,7 +23,7 @@ void PIC::DisablePIC(){
   CLI();
 }
 
-void PIC::initialize(){
+void PIC::Initialize(){
   outb(MASTER_CMDPORT, ICW1);
   outb(SLAVE_CMDPORT, ICW1);
 
@@ -35,7 +36,7 @@ void PIC::initialize(){
   outb(MASTER_DPORT, ICW4);
   outb(SLAVE_DPORT, ICW4);
 
-  CLI();
+  //CLI();
 }
 
 uint8_t PIC::getIMRM(){
@@ -93,7 +94,7 @@ int8_t PIC::EnableInterrupt(uint8_t irqn){
   mimr = getIMRM();
   mimr &= r;
   outb(port, mimr);
-
+  kprintf("imr status is %b\n\0", (uint32_t)inb(port));
   return 0;
 }
 
@@ -114,4 +115,16 @@ int8_t PIC::DisableInterrupt(uint8_t irqn){
   mimr |= r;
   outb(port, mimr);
   return 0;
+}
+
+uint16_t PIC::GetIRR(){
+  outb(MASTER_CMDPORT, READ_IRR);
+  outb(SLAVE_CMDPORT, READ_IRR);
+  return (inb(SLAVE_CMDPORT) << 8) | (inb(MASTER_CMDPORT));
+}
+
+uint16_t PIC::GetISR(){
+  outb(MASTER_CMDPORT, READ_ISR);
+  outb(SLAVE_CMDPORT, READ_ISR);
+  return (inb(SLAVE_CMDPORT) << 8) | (inb(MASTER_CMDPORT));
 }

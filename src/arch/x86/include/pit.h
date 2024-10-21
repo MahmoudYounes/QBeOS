@@ -3,6 +3,7 @@
 
 #include "include/common.h"
 #include "include/logger.h"
+#include "arch/x86/include/pic.h"
 
 #define CHAN0 0x40
 #define CHAN1 0x41
@@ -23,8 +24,11 @@
 #define DIVISOR 0x1
 
 class PIT {
+private:
+  PIC *pic;
 public:
   PIT();
+  PIT(PIC *pic);
   void Reload();
 };
 
