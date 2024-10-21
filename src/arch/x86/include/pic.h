@@ -31,7 +31,7 @@ public:
   void STI();
   void CLI();
   void DisablePIC();
-  void SendEOI();
+  void SendEOI(uint8_t TRIGGERED_ISR);
 };
 
 #endif /* PIC_H */

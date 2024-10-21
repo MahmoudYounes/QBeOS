@@ -71,9 +71,13 @@ void PIC::CLI(){
   outb(SLAVE_DPORT, simr);
 }
 
-void SendEOI(){
-  // this will propagte the EOI to all PICs
-  outb(MASTER_DPORT, EOI);  
+void SendEOI(uint8_t TRIGGERED_ISR){
+  
+  if(TRIGGERED_ISR >= 8){
+    outb(SLAVE_CMDPORT, EOI);
+  }
+
+  outb(MASTER_CMDPORT, EOI);  
 }
 
-PIC pic;
+PIC pic; 
