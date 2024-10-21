@@ -2,14 +2,13 @@
 
 ACPIM::ACPIM() {
   bool found = false;
-  char *buf = new char[256];
   uint16_t ebdaPtr;
 
   kprint("locating ACPI rsdt pointer\n\0");
 
   memcpy(&ebdaPtr, (uint8_t *)ACPI_EBDA_REG_START, 2);
 
-  kprintf(buf, "found EBDA at %x\n\0", (uint32_t)ebdaPtr);
+  kprintf("found EBDA at %x\n\0", (uint32_t)ebdaPtr);
 
   char sig[9];
   int steps = 0;
@@ -33,7 +32,6 @@ ACPIM::ACPIM() {
     }
   }
 
-  delete[] buf;
 
   if (!found) {
     panic("didn't find ACPI tables\n\0");
@@ -41,26 +39,27 @@ ACPIM::ACPIM() {
 }
 
 void ACPIM::parseRSDP(uintptr_t p) {
-  char *buf = new char[256];
   memcpy(&rsdp, (uint8_t *)p, sizeof(ACPIRSDP));
   if (rsdp.rev == 0) {
-    kprintf(buf, "found v1 acpi rsdp at %x\n\0", (uint32_t)p);
+    kprintf("found v1 acpi rsdp at %x\n\0", (uint32_t)p);
     parseRSDPV1();
   } else {
-    kprintf(buf, "found v2 acpi rsdp at %x\n\0", (uint32_t)p);
+    kprintf("found v2 acpi rsdp at %x\n\0", (uint32_t)p);
     parseRSDPV2();
   }
-
-  delete[] buf;
 }
 
 void ACPIM::parseRSDPV1() {
+#if DEBUG
   printTableInfo();
+#endif
   rsdt = new RSDTM(rsdp.rsdtAddr);
 }
 
 void ACPIM::parseRSDPV2() {
+#if DEBUG
   printTableInfo();
+#endif
   panic("XSDT is not implemented yet\0\n");
 }
 
@@ -72,20 +71,20 @@ void ACPIM::printTableInfo() {
   buf[9] = '\0';
   kprint(buf);
 
-  kprintf(buf, "%d\n\0", (uint32_t)rsdp.checksum);
+  kprintf("%d\n\0", (uint32_t)rsdp.checksum);
 
   memcpy(buf, rsdp.oemid, 6);
   buf[5] = '\n';
   buf[6] = '\0';
   kprint(buf);
 
-  kprintf(buf, "%d\n\0", rsdp.rev);
+  kprintf("%d\n\0", rsdp.rev);
 
-  kprintf(buf, "%x\n\0", rsdp.rsdtAddr);
+  kprintf("%x\n\0", rsdp.rsdtAddr);
 
-  kprintf(buf, "%d\n\0", rsdp.lengthBytes); 
+  kprintf("%d\n\0", rsdp.lengthBytes); 
 
-  kprintf(buf, "%d\n\0", (uint32_t)rsdp.extChecksum);
+  kprintf("%d\n\0", (uint32_t)rsdp.extChecksum);
 
   kprint("print rsdp info end\n\0");
 }

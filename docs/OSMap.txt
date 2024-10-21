@@ -251,6 +251,7 @@ on x86 architecture the hardware interrupts are handled via an external chip nam
 master and slave chip. Each chip provides 8 interrupts but a total of 15 interrupts can be handled becuase there is
 one interrupt line to connect the master chip with the slave chip.
 This chip is a legacy chip since the intel apic and ioapic came out in the early pentiums.
+PIC serves only external hardware generated interrupts. the PIC hardware generated interrupt handlers start at 0x30
 
 ## APIC: Advanced programmable interrupt controller
 This is the next generation succeeding PIC. This is used for more sophisticated interrupt redirection mechanisms and

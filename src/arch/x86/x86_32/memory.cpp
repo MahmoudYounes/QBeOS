@@ -50,9 +50,8 @@ void Memory::splitRegion(const MemTableEntry *mtentry,
 
 void Memory::reserverKernelMemory() {
   // this needs to be statically alloced like this. can't use vmm
-  char buf[256];
   uint64_t sizeToReserver = KERNEL_MEMORY_REGION_SIZE_BYTES;
-  kprintf(buf, "reserving %dMBs for kernel\n\0", BYTE_TO_MB(sizeToReserver));
+  kprintf("reserving %dMBs for kernel\n\0", BYTE_TO_MB(sizeToReserver));
   MemoryRegion *ptr = memoryListHead;
   uint64_t actualReserved = 0;
   while (actualReserved < sizeToReserver) {
@@ -64,7 +63,7 @@ void Memory::reserverKernelMemory() {
     ptr = ptr->next;
   }
 
-  kprintf(buf, "reserved %dMBs for kernel\n\0", BYTE_TO_MB(actualReserved));
+  kprintf("reserved %dMBs for kernel\n\0", BYTE_TO_MB(actualReserved));
 }
 
 void Memory::setupFreePagePtr() {
@@ -100,7 +99,6 @@ Memory::Memory(){}
 
 Memory::Memory(kargs *args) {
   kprint("Initializing memory...\n");
-  char buf[256];
   uint64_t bootMemRegionsCount = 0;
   uint64_t prevRegionEndAddr = 0;
 
@@ -125,7 +123,7 @@ Memory::Memory(kargs *args) {
                  .size = mtentry.baseAddr - prevRegionEndAddr,
                  .state = reserved};
       uint64_t memHoleEndAddr = mtentry.baseAddr + mtentry.size;
-      kprintf(buf, "found memory hole. start: %X end: at %X\n\0",
+      kprintf("found memory hole. start: %X end: at %X\n\0",
               mtentry.baseAddr, memHoleEndAddr);
       splitRegion(&mtentry, bootMemRegionsCount);
 
@@ -139,7 +137,7 @@ Memory::Memory(kargs *args) {
 
     prevRegionEndAddr = mtentry.baseAddr + mtentry.size;
 
-    kprintf(buf, "found memory region. start: %X end: %X state: %d\n\0",
+    kprintf("found memory region. start: %X end: %X state: %d\n\0",
             mtentry.baseAddr, prevRegionEndAddr, mtentry.state);
 
     // This is not a reliable exit condition.
@@ -157,7 +155,7 @@ Memory::Memory(kargs *args) {
     // test: all pointers are set correctly
     if ((i != physicalPagesCount - 1 && memoryListHead[i].next == NULL) ||
         (i == physicalPagesCount - 1 && memoryListHead[i].next != NULL)) {
-      kprintf(buf, "failed to set list pointers correctly at %d\n\0", i);
+      kprintf("failed to set list pointers correctly at %d\n\0", i);
       panic("memory self tests failed");
     }
 
@@ -169,7 +167,7 @@ Memory::Memory(kargs *args) {
 
     // monotonically increasing memory to detect memory overlaps
     if ((uintptr_t) memoryListHead[i].baseAddress > lastSeenAddr) {
-      kprintf(buf, "lsa: %p ba: %p\n\0", lastSeenAddr, memoryListHead[i].baseAddress);
+      kprintf("lsa: %p ba: %p\n\0", lastSeenAddr, memoryListHead[i].baseAddress);
         panic("memory overlap detected\n\0");
     }
    
@@ -210,7 +208,6 @@ Memory::Memory(kargs *args) {
 }
 
 void Memory::PrintMemory() {
-  char buf[256];
   uint64_t availableMemory = 0;
   uint64_t kernelMemory = 0;
   uint64_t reservedMemory = 0;
@@ -224,10 +221,10 @@ void Memory::PrintMemory() {
     }
   }
 
-  kprintf(buf, "system ram: %d MBs.\n\0", BYTE_TO_MB(memInfo.memSizeBytes));
-  kprintf(buf, "usable memory: %d MBs.\n\0", BYTE_TO_MB(availableMemory));
-  kprintf(buf, "kernel memory: %d MBs.\n\0", BYTE_TO_MB(kernelMemory));
-  kprintf(buf, "reserved memory: %d MBs.\n\0", BYTE_TO_MB(reservedMemory));
+  kprintf("system ram: %d MBs.\n\0", BYTE_TO_MB(memInfo.memSizeBytes));
+  kprintf("usable memory: %d MBs.\n\0", BYTE_TO_MB(availableMemory));
+  kprintf("kernel memory: %d MBs.\n\0", BYTE_TO_MB(kernelMemory));
+  kprintf("reserved memory: %d MBs.\n\0", BYTE_TO_MB(reservedMemory));
 }
 
 void *Memory::AllocPhysicalPage() { return Allocate(PAGE_SIZE_BYTES); }

@@ -90,6 +90,6 @@ uint64_t PDTEntry::EncodeEntryAt(uintptr_t addr) {
   return sizeof(entry);
 }
 
-void PDTEntry::PrintEntryInfo(char *buf) {
-  kprintf(buf, "entry info %b\n\0", entry);
+void PDTEntry::PrintEntryInfo() {
+  kprintf("entry info %b\n\0", entry);
 }
