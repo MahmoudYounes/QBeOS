@@ -7,6 +7,8 @@
 #include "drivers/include/driver.h"
 #include "arch/x86/include/pic.h"
 #include "arch/x86/include/interrupt_32.h"
+#include "kstdlib/include/vector.h"
+
 
 #define ENABLE 0xf4
 #define RESET 0xff
@@ -19,6 +21,10 @@ class ATKBD : public Driver{
 private:
   PIC *pic;
   PS2 *psc;
+  
+  // store the queue of characters?  
+  Vector<char> charQueue;
+
   void printKeyboardStatus();
   void enableLeds();
   void handleData(uint8_t data);

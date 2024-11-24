@@ -5,70 +5,10 @@ PS2::PS2(){
   initialize();
 }
 
-void PS2::initialize(){
-  // Initialize usb controllers to disable USB Legacy Mode uses PCI/PCIe
-  // PCI.DisableUSBLegacy();
-  
-  // See if PS2 Controller exists. USE ACPI FADT
-  //if(!acpi.IsPS2Supported()) {
-    // looks like an issue with Qemu bios?
-  //  kprint("couldn't detect PS2 controller from ACPI. Continue anyway\n\0");
-  //}
-  
+void PS2::initialize(){ 
   uint8_t status = inb(CMD_PORT);
-  //writeCommand(READ_CFG_BYTE);
-  //uint8_t cfgb = ReadData();
-  //uint8_t secb = ReadData();
+  writeCommand(READ_CFG_BYTE);
   kprintf("current ps2 status is: %b\n\0", status);
-  // First we want to do controller self test
-  // we disable interrupts, and translation, and enable clocks
-  //configure();
-  //FlushOutput();
-
-  // Disable all PS/2 Ports
-  //disablePorts();
-   
-  // Flush the output buffer
-  //FlushOutput();
-  
-  //selfTest();
-  //if (!testPassed){
-  //  initialized = false;
-  //  kprint("not initializing ps2. self test failed\n\0");
-  //}
-
-  // Second we want to detect if we are a single or dual port controller
-  // Enalbe all clocks, make sure interrupts and translation are disabled
-  //configure();
-  
-  // Disable the devices
-  //disablePorts();
-
-  // if port 2 is still enabled then no port2
-  //detectChannel2();
-
-  // test the interfaces
-  //interfaceTest();
-  //if (!port2TestPass){
-  //  hasTwoPorts = false;
-  //}
-
-  // final phase
-  //configure();
-
-  // enable the ports available 
-  //enablePorts();
-
-  // disallow all devices from sending data until their drivers are inplace
-  //disableScanning();
-
-  //if (!port1TestPass){
-  //  kprint("PS2 controller didn't pass initialization. assuming no PS2\n\0");
-  //  initialized = false;
-  //} else {
-  //  kprint("PS2 Controller Initialized\n\0");
-  //  initialized = true;
- // }
 }
 
 void PS2::disableScanning(){
@@ -441,7 +381,7 @@ uint8_t PS2::WriteCommand(uint8_t cmd, enum PORT port){
   return 0;
 }
 
-  int8_t PS2::ReadData(uint8_t *buf){
+int8_t PS2::ReadData(uint8_t *buf){
   return readData(WAIT_READY, buf);
 }
 

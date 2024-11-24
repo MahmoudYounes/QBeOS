@@ -6,8 +6,12 @@
 
 class Hasher{
 public:
-  Hasher();
-  uint32_t Hash();
+  Hasher(){};
+  virtual uint32_t Hash(uint32_t item)=0;
+  virtual uint32_t Hash(uint64_t item)=0;
+  virtual uint32_t Hash(char *item)=0;
+  virtual uint32_t Hash(char item)=0;
+
 };
 
 #endif

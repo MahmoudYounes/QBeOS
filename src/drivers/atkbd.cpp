@@ -42,7 +42,8 @@ void ATKBD::printKeyboardStatus(){
 }
 
 void ATKBD::handleData(uint8_t data){
-  kprintf("recieved data %d\n\0", data);
+  kprintf("recieved data %x\n\0", data);
+
 }
 
 void ATKBD::Handler(){

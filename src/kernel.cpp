@@ -17,20 +17,21 @@
 #include "arch/x86/include/memory.h"
 #include "arch/x86/include/pdt_entry.h"
 #include "arch/x86/include/pic.h"
-#include "arch/x86/include/processor.h"
 #include "arch/x86/include/pt_entry.h"
 #include "arch/x86/include/tss.h"
 #include "arch/x86/include/pit.h"
 #include "arch/x86/include/ps2.h"
 #include "drivers/include/atkbd.h"
-#include "drivers/include/driver.h"
 #include "drivers/include/atkbd.h"
 #include "include/common.h"
 #include "include/logger.h"
-#include "include/math.h"
 #include "include/kargs.h"
+#include "kstdlib/include/hash.h"
+#include "kstdlib/include/hashtable.h"
+#include "kstdlib/include/linkedlist.h"
+#include "kstdlib/include/simplehasher.h"
+#include "kstdlib/include/vector.h"
 #include "pci/include/pci.h"
-#include "include/configs.h"
 
 void kmain() __attribute__((noreturn));
 void bootEnd() __attribute__((noreturn));
@@ -377,6 +378,88 @@ kargs *parseBootArgs(){
   return args;
 }
 
+void TestVectors(){
+  Vector<int> v;
+  for (int i = 0; i < 10;i++){
+    v.Push(i);
+  }
+
+  for (int i = 9; i >= 0;i--){
+    if (i != v.Pop()) {
+      kprintf("vector failed at item: %d\n\0", i);
+      panic("tests failed\n\0");
+    }
+  }
+}
+
+void TestHasher(){
+  SimpleHasher sh(5);
+  Hasher *hasher = &sh;
+  if (3 != hasher->Hash(uint32_t(3))){
+    kprintf("incorrect hash: the hash of 3 is %d\n\0", hasher->Hash(uint32_t(3)));
+    panic("hasher tests failed\n\0");
+  }
+}
+
+void TestLinkedLists(){
+  LinkedList<int> l1(5);
+  LinkedList<int> l2(1, &l1); 
+  
+  if (l2.next->data != 5){
+    kprintf("second linked list node != 1 but equal %d\n\0", l1.next->data);
+  }  
+}
+
+void TestHashTables(){
+  bool shouldPanic = false;
+  HashTable<int,int> ht(10);
+  
+  
+  ht.Insert(0, 0);
+  uint32_t v = ht.Get(0);
+  if (v != 0){
+    kprintf("searched 0 got %d instead of 0", v);
+    shouldPanic = true;
+  }
+
+  ht.Insert(1, 0);
+  v = ht.Get(1);
+  if (v != 0){
+    kprintf("searched 1 got %d instead of 0", v);
+    shouldPanic = true;
+  }
+
+  ht.Insert(1, 0);
+  v = ht.Get(1);
+  if (v != 0){
+    kprintf("searched 1 got %d instead of 0", v);
+    shouldPanic = true;
+  }
+
+
+  ht.Insert(8, 2);
+  v = ht.Get(8);
+  if (v != 2){
+    kprintf("searched 8 got %d instead of 2", v);
+    shouldPanic = true;
+  }
+
+
+  ht.Insert(0, 3);
+  v = ht.Get(0);
+  if (v != 3){
+    kprintf("searched 0 got %d instead of 0", v);
+    shouldPanic = true;
+  }
+
+  ht.Insert(15, 30);
+  v = ht.Get(15);
+  if (v != 30){
+    kprintf("searched 15 got %d instead of 30", v);
+    shouldPanic = true;
+  }
+}
+
 void kmain() {
   // clearing the interrupts from BIOS because we havn't setup any interrupt
   // controller handler yet
@@ -395,20 +478,20 @@ void kmain() {
   kprintf("pciSupported: %d\n\0", args->pciSupported);
   kprintf("pciConfigMechanism: %d\n\0", args->pciConfigMech);
 
-  //cpu = CPUInfo();
+  cpu = CPUInfo();
   kprint("Initializing all systems...\n\0");
   sysMemory = Memory(args);
   gdt = GDT();
   vmm = VirtualMemory(true /* should run vmm self tests before paging */);
-  //tssManager = TSSManager();
+  tssManager = TSSManager();
   idt = IDT();
   pic = PIC();
   pic.CLI();
   pci = PCI(args);
-  //pit = PIT(&pic);
+  pit = PIT(&pic);
   ps2 = PS2();
   //acpi = ACPIM();
-  //apic = APIC(); 
+  apic = APIC(); 
   kbdDriver = ATKBD(&pic, &ps2);
   kbdDriver.Initialize();  
 
@@ -418,8 +501,9 @@ void kmain() {
   sti();
 
   //pit.Reload();
-  // at this point interrupts are disabled... need to setup IDT to renable them.
-
+  
+  TestHasher();
+  TestLinkedLists();
   bootEnd();
   // Systems initialized and we are booted yay!
   printHelloMessage();

@@ -36,13 +36,13 @@ run-qemu: $(BIN_DIR)/$(ISO_NAME)
 	-monitor stdio                                        \
   -L /usr/share/qemu/sgabios.bin                        
 
-run-vbox: $(BIN_DIR)/$(ISO_NAME)
+run: $(BIN_DIR)/$(ISO_NAME)
 	virtualboxvm --startvm QBeOS	
 
 run-bochs: $(BIN_DIR)/$(ISO_NAME)
 	bochs -f bochsrc.txt
 
-debug-qemu: $(BIN_DIR)/$(ISO_NAME)
+debug: $(BIN_DIR)/$(ISO_NAME)
 	qemu-system-i386                                 	   \
 	-cpu host                                  			     \
 	-enable-kvm											                     \

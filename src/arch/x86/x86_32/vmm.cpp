@@ -213,14 +213,15 @@ void VirtualMemory::Free(void *ptr) {
 
   for (MemoryRegion *walker = &startPage; walker != NULL;
        walker = walker->next) {
-    unmap(vptr);
     if (walker->allocRequestID != allocId) {
       break;
     }
 
+    unmap(vptr);
     vptr += PAGE_SIZE_BYTES;
-    walker = walker->next;
   }
+
+  // this frees the page string of the allocation
   sysMemory.Free((void *)paddr);
   flushTLB();
 }
