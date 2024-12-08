@@ -7,11 +7,7 @@
 class Hasher{
 public:
   Hasher(){};
-  virtual uint32_t Hash(uint32_t item)=0;
-  virtual uint32_t Hash(uint64_t item)=0;
-  virtual uint32_t Hash(char *item)=0;
-  virtual uint32_t Hash(char item)=0;
-
+  virtual void *Hash(uint8_t *msg, uint64_t msgSize)=0;
 };
 
 #endif

@@ -247,6 +247,7 @@ void PS2::resetDevices(){
 void PS2::writePort1(uint8_t data){
   uint8_t buf;
   int8_t err;
+  uint32_t output_buf, output_data;
 retry:
   writeData(data);
   err = readData(WAIT_READY, &buf);
@@ -260,7 +261,9 @@ retry:
     case RESEND:
       goto retry;
     default:
-      kprint("returning from writePort1 without any valid keyboard response\n\0");
+      output_buf = (uint32_t) buf;
+      output_data = (uint32_t) data;
+      kprintf("returning from writePort1 without any valid keyboard response. response is %x for data %x\n\0", output_buf, output_data);
       return; // TODO: add err
   }
 }

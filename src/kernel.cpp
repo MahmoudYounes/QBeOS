@@ -395,8 +395,11 @@ void TestVectors(){
 void TestHasher(){
   SimpleHasher sh(5);
   Hasher *hasher = &sh;
-  if (3 != hasher->Hash(uint32_t(3))){
-    kprintf("incorrect hash: the hash of 3 is %d\n\0", hasher->Hash(uint32_t(3)));
+
+  uint64_t input = 3, expected = 3;
+  uint64_t output = *(uint64_t *)hasher->Hash((uint8_t *)&input, sizeof(input));
+  if (expected != output){
+    kprintf("incorrect hash: the hash of %D is %D expected %D\n\0", input, output, expected);
     panic("hasher tests failed\n\0");
   }
 }
@@ -418,21 +421,21 @@ void TestHashTables(){
   ht.Insert(0, 0);
   uint32_t v = ht.Get(0);
   if (v != 0){
-    kprintf("searched 0 got %d instead of 0", v);
+    kprintf("searched 0 got %d instead of 0\n\0", v);
     shouldPanic = true;
   }
 
   ht.Insert(1, 0);
   v = ht.Get(1);
   if (v != 0){
-    kprintf("searched 1 got %d instead of 0", v);
+    kprintf("searched 1 got %d instead of 0\n\0", v);
     shouldPanic = true;
   }
 
   ht.Insert(1, 0);
   v = ht.Get(1);
   if (v != 0){
-    kprintf("searched 1 got %d instead of 0", v);
+    kprintf("searched 1 got %d instead of 0\n\0", v);
     shouldPanic = true;
   }
 
@@ -440,7 +443,7 @@ void TestHashTables(){
   ht.Insert(8, 2);
   v = ht.Get(8);
   if (v != 2){
-    kprintf("searched 8 got %d instead of 2", v);
+    kprintf("searched 8 got %d instead of 2\n\0", v);
     shouldPanic = true;
   }
 
@@ -448,15 +451,19 @@ void TestHashTables(){
   ht.Insert(0, 3);
   v = ht.Get(0);
   if (v != 3){
-    kprintf("searched 0 got %d instead of 0", v);
+    kprintf("searched 0 got %d instead of 0\n\0", v);
     shouldPanic = true;
   }
 
   ht.Insert(15, 30);
   v = ht.Get(15);
   if (v != 30){
-    kprintf("searched 15 got %d instead of 30", v);
+    kprintf("searched 15 got %d instead of 30\n\0", v);
     shouldPanic = true;
+  }
+
+  if (shouldPanic){
+    panic("HashTables tests failed\n\0");
   }
 }
 
@@ -504,6 +511,7 @@ void kmain() {
   
   TestHasher();
   TestLinkedLists();
+  TestHashTables();
   bootEnd();
   // Systems initialized and we are booted yay!
   printHelloMessage();

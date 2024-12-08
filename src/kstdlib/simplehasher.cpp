@@ -1,26 +1,23 @@
 #include <kstdlib/include/simplehasher.h>
 
-SimpleHasher::SimpleHasher(uint32_t sc){
+SimpleHasher::SimpleHasher(uint64_t sc){
   slotsCount = sc;
 }
 
-uint32_t SimpleHasher::Hash(uint32_t item){
-  return item % slotsCount; 
-}
+// SimpleHasher takes any msg and returns the module of that message in a 64
+// bit buffer
+void *SimpleHasher::Hash(uint8_t *msg, uint64_t msgSize){
+  uint64_t buf, idx;
+  uint8_t *ptr;
 
-uint32_t SimpleHasher::Hash(uint64_t item){
-  return item % slotsCount;
-}
-
-uint32_t SimpleHasher::Hash(char item){
-  return item % slotsCount;
-}
-
-uint32_t SimpleHasher::Hash(char *item){
-  uint32_t charSum = 0;
-  for (char *ptr = item; *ptr != '\0'; ptr++){
-    charSum += *ptr;
+  buf = 0;
+  ptr = msg;
+  for (idx = 0; idx < msgSize; idx += 8){
+    buf |= *ptr << idx;
+    ptr++;
   }
-
-  return charSum % slotsCount;
+  
+  uint64_t *res = new uint64_t;
+  *res = buf % slotsCount;
+  return res; 
 }

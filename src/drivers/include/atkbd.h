@@ -12,8 +12,9 @@
 
 #define ENABLE 0xf4
 #define RESET 0xff
-#define ID 0xf2
+#define GET_ID 0xf2
 #define SET_LEDS 0xed
+#define MOD_SCANSET 0xf0
 
 DEFINE_INTERRUPT(KeyboardHandler);
 
@@ -21,12 +22,17 @@ class ATKBD : public Driver{
 private:
   PIC *pic;
   PS2 *psc;
-  
+
+  uint8_t id[2];
+  uint8_t ledStatus;
+
   // store the queue of characters?  
   Vector<char> charQueue;
 
   void printKeyboardStatus();
-  void enableLeds();
+  void idkbd();
+  void setScanSet();
+  void updateLeds();
   void handleData(uint8_t data);
 public:
   ATKBD();

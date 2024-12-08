@@ -7,11 +7,7 @@
 #include "kstdlib/include/simplehasher.h"
 
 template <typename K, typename V> class HashTable{
-private:
-  Hasher *h;
-  uint32_t capacity;
-  uintptr_t *store;
-  
+private:  
   class Node{
   public:
     K key;
@@ -22,24 +18,28 @@ private:
     } 
   };
 
+  Hasher *h;
+  uint32_t capacity;
+  LinkedList<Node*> **store;
+
 public:
   HashTable(uint32_t cap){
     capacity = cap;
     h = new SimpleHasher(capacity); 
-    store = new uintptr_t[capacity]; 
+    store = new LinkedList<Node*>*[capacity]; 
   };
 
   void Insert(K key, V val){
-    uint32_t hash = h->Hash(key);
-    Node node(key, val);
+    uint64_t hash = *(uint64_t *)h->Hash((uint8_t*)&key, sizeof(key));
+    Node *node = new Node(key, val);
 
-    LinkedList<Node> *ptr, *pptr = ptr = store[hash];
+    LinkedList<Node*> *ptr, *pptr = ptr = store[hash];
     if (ptr == NULL){
       // first insertion
-      store[hash] = &LinkedList<Node>(node);
+      store[hash] = new LinkedList<Node*>(node);
     } else {
       while (ptr != NULL){
-        if (ptr->data.key == node.key){
+        if (ptr->data->key == node->key){
           // if we found the same key, we override it
           ptr->data = node;
           return;
@@ -50,17 +50,17 @@ public:
       }
 
       // if we found same hash different values
-      pptr->AddNext(&LinkedList<Node>(Node(key, val)));
+      pptr->AddNext(new LinkedList<Node*>(node));
     } 
   };
 
   V Get(K key){
-    uint32_t hash = h->Hash(key);
+    uint64_t hash = *(uint64_t *)h->Hash((uint8_t*)&key, sizeof(key));
 
-    LinkedList<Node> *ptr = store[hash];
-    while (ptr->next != NULL){
-      if (ptr->data.key == key){
-        return ptr->data.val;
+    LinkedList<Node*> *ptr = store[hash];
+    while (ptr != NULL){
+      if (ptr->data->key == key){
+        return ptr->data->val;
       }
 
       ptr = ptr->next;

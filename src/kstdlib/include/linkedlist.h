@@ -10,11 +10,12 @@ public:
   LinkedList<T> *next;
   LinkedList(){};
   LinkedList(T item){
-    LinkedList(item, NULL);
+    this->data = item;
+    this->next = NULL;
   };
   LinkedList(T item, LinkedList *ll){
-    data = item;
-    next = ll;
+    this->data = item;
+    this->next = ll;
   };
 
   void AddNext(LinkedList *ll){
