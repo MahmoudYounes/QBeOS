@@ -13,6 +13,7 @@
 #define WRITE_CFG_BYTE 0x60
 #define SELF_TEST 0xaa
 #define RESEND 0xfe
+#define ERRIBUF 0x0
 
 #define PORT_TEST_PASS 0x0
 
@@ -62,14 +63,13 @@ extern ACPIM acpi;
 class PS2 {
 private:
   void initialize();
-  bool canWriteCommand();
   void writeCommand(uint8_t cmd);
   uint8_t readStatus();
-  bool canReadData();
+  bool canRead();
   int8_t readData(bool wait, uint8_t *buf);
-  bool canWriteData();
+  bool canWrite();
   void writeData(uint8_t data);
-  void writePort1(uint8_t data);
+  void writePort1(uint8_t *data);
   void writePort2(uint8_t data);
   void disablePorts();
   void enablePorts();

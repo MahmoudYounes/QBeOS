@@ -15,6 +15,7 @@
 #define GET_ID 0xf2
 #define SET_LEDS 0xed
 #define MOD_SCANSET 0xf0
+#define RESEND_LST_BYTE 0xfe
 
 DEFINE_INTERRUPT(KeyboardHandler);
 

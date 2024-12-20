@@ -4,315 +4,357 @@
 #include <include/common.h>
 
 // PKEY is pressed key, RKEY is released key
-enum KBDKEY {
-  _ESC_PKEY = 0x01,
-  _1_PKEY = 0x02,
-  _2_PKEY = 0x03,
-  _3_PKEY = 0x04,
-  _4_PKEY = 0x05,
-  _5_PKEY = 0x06,
-  _6_PKEY = 0x07,
-  _7_PKEY = 0x08,
-  _8_PKEY = 0x09,
-  _9_PKEY = 0x0A,
-  _0_PKEY = 0x0B,
-  _HYPHN_PKEY = 0x0C,
-  _EQ_PKEY = 0x0D,
-  _BKSPC_PKEY = 0x0E,
-  _TAB_PKEY = 0x0F,
-  _Q_PKEY = 0x10,
-  _W_PKEY = 0x11,
-  _E_PKEY = 0x12,
-  _R_PKEY = 0x13,
-  _T_PKEY = 0x14,
-  _Y_PKEY = 0x15,
-  _U_PKEY = 0x16,
-  _I_PKEY = 0x17,
-  _O_PKEY = 0x18,
-  _P_PKEY = 0x19,
-  _SQBRKTO_PKEY = 0x1A,
-  _SQBRKTC_PKEY = 0x1B,
-  _ENTR_PKEY = 0x1C,
-  _LCTRL_PKEY = 0x1D,
-  _A_PKEY = 0x1E,
-  _S_PKEY = 0x1F,
-  _D_PKEY = 0x20,
-  _F_PKEY = 0x21,
-  _G_PKEY = 0x22,
-  _H_PKEY = 0x23,
-  _J_PKEY = 0x24,
-  _K_PKEY = 0x25,
-  _L_PKEY = 0x26,
-  _SMICOLN_PKEY = 0x27,
-  _SQOT_PKEY = 0x28,
-  _BKTIK_PKEY = 0x29,
-  _LSHFT_PKEY = 0x2A,
-  _BKSLSH_PKEY = 0x2B,
-  _Z_PKEY = 0x2C,
-  _X_PKEY = 0x2D,
-  _C_PKEY = 0x2E,
-  _V_PKEY = 0x2F,
-  _B_PKEY = 0x30,
-  _N_PKEY = 0x31,
-  _M_PKEY = 0x32,
-  _COMA_PKEY = 0x33,
-  _DOT_PKEY = 0x34,
-  _FRWDSLSH_PKEY = 0x35,
-  _RSHIFT_PKEY = 0x36,
-  _STR_PKEY = 0x37,
-  _LALT_PKEY = 0x38,
-  _SPC_PKEY = 0x39,
-  _CPS_PKEY = 0x3A,
-  _F1_PKEY = 0x3B,
-  _F2_PKEY = 0x3C,
-  _F3_PKEY = 0x3D,
-  _F4_PKEY = 0x3E,
-  _F5_PKEY = 0x3F,
-  _F6_PKEY = 0x40,
-  _F7_PKEY = 0x41,
-  _F8_PKEY = 0x42,
-  _F9_PKEY = 0x43,
-  _F10_PKEY = 0x44,
-  _NUMLCK_PKEY = 0x45,
-  _SCRLLCK_PKEY = 0x46,
-  _F11_PKEY = 0x57,
-  _F12_PKEY = 0x58,
-
-  _ESC_RKEY = 0x81,
-  _1_RKEY = 0x82,
-  _2_RKEY = 0x83,
-  _3_RKEY = 0x84,
-  _4_RKEY = 0x85,
-  _5_RKEY = 0x86,
-  _6_RKEY = 0x87,
-  _7_RKEY = 0x88,
-  _8_RKEY = 0x89,
-  _9_RKEY = 0x8A,
-  _0_RKEY = 0x8B,
-  _HYPHN_RKEY = 0x8C,
-  _EQ_RKEY = 0x8D,
-  _BKSPC_RKEY = 0x8E,
-  _TAB_RKEY = 0x8F,
-  _Q_RKEY = 0x90,
-  _W_RKEY = 0x91,
-  _E_RKEY = 0x92,
-  _R_RKEY = 0x93,
-  _T_RKEY = 0x94,
-  _Y_RKEY = 0x95,
-  _U_RKEY = 0x96,
-  _I_RKEY = 0x97,
-  _O_RKEY = 0x98,
-  _P_RKEY = 0x99,
-  _SQBRKTO_RKEY = 0x9A,
-  _SQBRKTC_RKEY = 0x9B,
-  _ENTR_RKEY = 0x9C,
-  _LCTRL_RKEY = 0x9D,
-  _A_RKEY = 0x9E,
-  _S_RKEY = 0x9F,
-  _D_RKEY = 0xA0,
-  _F_RKEY = 0xA1,
-  _G_RKEY = 0xA2,
-  _H_RKEY = 0xA3,
-  _J_RKEY = 0xA4,
-  _K_RKEY = 0xA5,
-  _L_RKEY = 0xA6,
-  _SMICOLN_RKEY = 0xA7,
-  _SQOT_RKEY = 0xA8,
-  _BKTIK_RKEY = 0xA9,
-  _LSHFT_RKEY = 0xAA,
-  _BKSLSH_RKEY = 0xAB,
-  _Z_RKEY = 0xAC,
-  _X_RKEY = 0xAD,
-  _C_RKEY = 0xAE,
-  _V_RKEY = 0xAF,
-  _B_RKEY = 0xB0,
-  _N_RKEY = 0xB1,
-  _M_RKEYz0xB2,
-  _COMA_RKEY = 0xB3,
-  _DOT_RKEY = 0xB4,
-  _FWDSLSH_RKEY = 0xB5,
-  _RSHFT_RKEY = 0xB6,
-  _STR_RKEY = 0xB7,
-  _LALT_RKEY = 0xB8,
-  _SPC_RKEY = 0xB9,
-  _CPS_RKEY = 0xBA,
-  _F1_RKEY = 0xBB,
-  _F2_RKEY = 0xBC,
-  _F3_RKEY = 0xBD,
-  _F4_RKEY = 0xBE,
-  _F5_RKEY = 0xBF,
-  _F6_RKEY = 0xC0,
-  _F7_RKEY = 0xC1,
-  _F8_RKEY = 0xC2,
-  _F9_RKEY = 0xC3,
-  _F10_RKEY = 0xC4,
-  _NUMLCK_RKEY = 0xC5,
-  _SCRLLCK_RKEY = 0xC6,
-  _F11_RKEY = 0xD7,
-  _F12_RKEY = 0xD8,
+enum SC1_KBDKEY {
+ SC1_ESC_PKEY = 0x01,
+ SC1_1_PKEY = 0x02,
+ SC1_2_PKEY = 0x03,
+ SC1_3_PKEY = 0x04,
+ SC1_4_PKEY = 0x05,
+ SC1_5_PKEY = 0x06,
+ SC1_6_PKEY = 0x07,
+ SC1_7_PKEY = 0x08,
+ SC1_8_PKEY = 0x09,
+ SC1_9_PKEY = 0x0A,
+ SC1_0_PKEY = 0x0B,
+ SC1_HYPHN_PKEY = 0x0C,
+ SC1_EQ_PKEY = 0x0D,
+ SC1_BKSPC_PKEY = 0x0E,
+ SC1_TAB_PKEY = 0x0F,
+ SC1_Q_PKEY = 0x10,
+ SC1_W_PKEY = 0x11,
+ SC1_E_PKEY = 0x12,
+ SC1_R_PKEY = 0x13,
+ SC1_T_PKEY = 0x14,
+ SC1_Y_PKEY = 0x15,
+ SC1_U_PKEY = 0x16,
+ SC1_I_PKEY = 0x17,
+ SC1_O_PKEY = 0x18,
+ SC1_P_PKEY = 0x19,
+ SC1_SQBRKTO_PKEY = 0x1A,
+ SC1_SQBRKTC_PKEY = 0x1B,
+ SC1_ENTR_PKEY = 0x1C,
+ SC1_LCTRL_PKEY = 0x1D,
+ SC1_A_PKEY = 0x1E,
+ SC1_S_PKEY = 0x1F,
+ SC1_D_PKEY = 0x20,
+ SC1_F_PKEY = 0x21,
+ SC1_G_PKEY = 0x22,
+ SC1_H_PKEY = 0x23,
+ SC1_J_PKEY = 0x24,
+ SC1_K_PKEY = 0x25,
+ SC1_L_PKEY = 0x26,
+ SC1_SMICOLN_PKEY = 0x27,
+ SC1_SQOT_PKEY = 0x28,
+ SC1_BKTIK_PKEY = 0x29,
+ SC1_LSHFT_PKEY = 0x2A,
+ SC1_BKSLSH_PKEY = 0x2B,
+ SC1_Z_PKEY = 0x2C,
+ SC1_X_PKEY = 0x2D,
+ SC1_C_PKEY = 0x2E,
+ SC1_V_PKEY = 0x2F,
+ SC1_B_PKEY = 0x30,
+ SC1_N_PKEY = 0x31,
+ SC1_M_PKEY = 0x32,
+ SC1_COMA_PKEY = 0x33,
+ SC1_DOT_PKEY = 0x34,
+ SC1_FRWDSLSH_PKEY = 0x35,
+ SC1_RSHIFT_PKEY = 0x36,
+ SC1_STR_PKEY = 0x37,
+ SC1_LALT_PKEY = 0x38,
+ SC1_SPC_PKEY = 0x39,
+ SC1_CPS_PKEY = 0x3A,
+ SC1_F1_PKEY = 0x3B,
+ SC1_F2_PKEY = 0x3C,
+ SC1_F3_PKEY = 0x3D,
+ SC1_F4_PKEY = 0x3E,
+ SC1_F5_PKEY = 0x3F,
+ SC1_F6_PKEY = 0x40,
+ SC1_F7_PKEY = 0x41,
+ SC1_F8_PKEY = 0x42,
+ SC1_F9_PKEY = 0x43,
+ SC1_F10_PKEY = 0x44,
+ SC1_NUMLCK_PKEY = 0x45,
+ SC1_SCRLLCK_PKEY = 0x46,
+ SC1_F11_PKEY = 0x57,
+ SC1_F12_PKEY = 0x58,
+ SC1_ESC_RKEY = 0x81,
+ SC1_1_RKEY = 0x82,
+ SC1_2_RKEY = 0x83,
+ SC1_3_RKEY = 0x84,
+ SC1_4_RKEY = 0x85,
+ SC1_5_RKEY = 0x86,
+ SC1_6_RKEY = 0x87,
+ SC1_7_RKEY = 0x88,
+ SC1_8_RKEY = 0x89,
+ SC1_9_RKEY = 0x8A,
+ SC1_0_RKEY = 0x8B,
+ SC1_HYPHN_RKEY = 0x8C,
+ SC1_EQ_RKEY = 0x8D,
+ SC1_BKSPC_RKEY = 0x8E,
+ SC1_TAB_RKEY = 0x8F,
+ SC1_Q_RKEY = 0x90,
+ SC1_W_RKEY = 0x91,
+ SC1_E_RKEY = 0x92,
+ SC1_R_RKEY = 0x93,
+ SC1_T_RKEY = 0x94,
+ SC1_Y_RKEY = 0x95,
+ SC1_U_RKEY = 0x96,
+ SC1_I_RKEY = 0x97,
+ SC1_O_RKEY = 0x98,
+ SC1_P_RKEY = 0x99,
+ SC1_SQBRKTO_RKEY = 0x9A,
+ SC1_SQBRKTC_RKEY = 0x9B,
+ SC1_ENTR_RKEY = 0x9C,
+ SC1_LCTRL_RKEY = 0x9D,
+ SC1_A_RKEY = 0x9E,
+ SC1_S_RKEY = 0x9F,
+ SC1_D_RKEY = 0xA0,
+ SC1_F_RKEY = 0xA1,
+ SC1_G_RKEY = 0xA2,
+ SC1_H_RKEY = 0xA3,
+ SC1_J_RKEY = 0xA4,
+ SC1_K_RKEY = 0xA5,
+ SC1_L_RKEY = 0xA6,
+ SC1_SMICOLN_RKEY = 0xA7,
+ SC1_SQOT_RKEY = 0xA8,
+ SC1_BKTIK_RKEY = 0xA9,
+ SC1_LSHFT_RKEY = 0xAA,
+ SC1_BKSLSH_RKEY = 0xAB,
+ SC1_Z_RKEY = 0xAC,
+ SC1_X_RKEY = 0xAD,
+ SC1_C_RKEY = 0xAE,
+ SC1_V_RKEY = 0xAF,
+ SC1_B_RKEY = 0xB0,
+ SC1_N_RKEY = 0xB1,
+ SC1_M_RKEYz0xB2,
+ SC1_COMA_RKEY = 0xB3,
+ SC1_DOT_RKEY = 0xB4,
+ SC1_FWDSLSH_RKEY = 0xB5,
+ SC1_RSHFT_RKEY = 0xB6,
+ SC1_STR_RKEY = 0xB7,
+ SC1_LALT_RKEY = 0xB8,
+ SC1_SPC_RKEY = 0xB9,
+ SC1_CPS_RKEY = 0xBA,
+ SC1_F1_RKEY = 0xBB,
+ SC1_F2_RKEY = 0xBC,
+ SC1_F3_RKEY = 0xBD,
+ SC1_F4_RKEY = 0xBE,
+ SC1_F5_RKEY = 0xBF,
+ SC1_F6_RKEY = 0xC0,
+ SC1_F7_RKEY = 0xC1,
+ SC1_F8_RKEY = 0xC2,
+ SC1_F9_RKEY = 0xC3,
+ SC1_F10_RKEY = 0xC4,
+ SC1_NUMLCK_RKEY = 0xC5,
+ SC1_SCRLLCK_RKEY = 0xC6,
+ SC1_F11_RKEY = 0xD7,
+ SC1_F12_RKEY = 0xD8,
 };
 
-char SC1_ToASCII(uint8_t data) {
+inline char SC1_ToASCII(uint8_t data) {
   switch (data) {
-  case _1_PKEY:
+  case SC1_1_PKEY:
     return '1';
-  case _2_PKEY:
+  case SC1_2_PKEY:
     return '2';
-  case _3_PKEY:
+  case SC1_3_PKEY:
     return '3';
-  case _4_PKEY:
+  case SC1_4_PKEY:
     return '4';
-  case _5_PKEY:
+  case SC1_5_PKEY:
     return '5';
-  case _6_PKEY:
+  case SC1_6_PKEY:
     return '6';
-  case _7_PKEY:
+  case SC1_7_PKEY:
     return '7';
-  case _8_PKEY:
+  case SC1_8_PKEY:
     return '8';
-  case _9_PKEY:
+  case SC1_9_PKEY:
     return '9';
-  case _0_PKEY:
+  case SC1_0_PKEY:
     return '0';
-  case _HYPHN_PKEY:
+  case SC1_HYPHN_PKEY:
     return '-';
-  case _EQ_PKEY:
+  case SC1_EQ_PKEY:
     return '=';
-  case _BKSPC_PKEY:
+  case SC1_BKSPC_PKEY:
     return '\r';
-  case _TAB_PKEY:
+  case SC1_TAB_PKEY:
     return '\t';
-  case _Q_PKEY:
+  case SC1_Q_PKEY:
     return 'Q';
-  case _W_PKEY:
-  case _E_PKEY:
-  case _R_PKEY:
-  case _T_PKEY:
-  case _Y_PKEY:
-  case _U_PKEY:
-  case _I_PKEY:
-  case _O_PKEY:
-  case _P_PKEY:
-  case _SQBRKTO_PKEY:
-  case _SQBRKTC_PKEY:
-  case _ENTR_PKEY:
-  case _LCTRL_PKEY:
-  case _A_PKEY:
-  case _S_PKEY:
-  case _D_PKEY:
-  case _F_PKEY:
-  case _G_PKEY:
-  case _H_PKEY:
-  case _J_PKEY:
-  case _K_PKEY:
-  case _L_PKEY:
-  case _SMICOLN_PKEY:
-  case _SQOT_PKEY:
-  case _BKTIK_PKEY:
-  case _LSHFT_PKEY:
-  case _BKSLSH_PKEY:
-  case _Z_PKEY:
-  case _X_PKEY:
-  case _C_PKEY:
-  case _V_PKEY:
-  case _B_PKEY:
-  case _N_PKEY:
-  case _M_PKEY:
-  case _COMA_PKEY:
-  case _DOT_PKEY:
-  case _FRWDSLSH_PKEY:
-  case _RSHIFT_PKEY:
-  case _STR_PKEY:
-  case _LALT_PKEY:
-  case _SPC_PKEY:
-  case _CPS_PKEY:
-  case _F1_PKEY:
-  case _F2_PKEY:
-  case _F3_PKEY:
-  case _F4_PKEY:
-  case _F5_PKEY:
-  case _F6_PKEY:
-  case _F7_PKEY:
-  case _F8_PKEY:
-  case _F9_PKEY:
-  case _F10_PKEY:
-  case _NUMLCK_PKEY:
-  case _SCRLLCK_PKEY:
-  case _F11_PKEY:
-  case _F12_PKEY:
-  case _ESC_RKEY:
-  case _1_RKEY:
-  case _2_RKEY:
-  case _3_RKEY:
-  case _4_RKEY:
-  case _5_RKEY:
-  case _6_RKEY:
-  case _7_RKEY:
-  case _8_RKEY:
-  case _9_RKEY:
-  case _0_RKEY:
-  case _HYPHN_RKEY:
-  case _EQ_RKEY:
-  case _BKSPC_RKEY:
-  case _TAB_RKEY:
-  case _Q_RKEY:
-  case _W_RKEY:
-  case _E_RKEY:
-  case _R_RKEY:
-  case _T_RKEY:
-  case _Y_RKEY:
-  case _U_RKEY:
-  case _I_RKEY:
-  case _O_RKEY:
-  case _P_RKEY:
-  case _SQBRKTO_RKEY:
-  case _SQBRKTC_RKEY:
-  case _ENTR_RKEY:
-  case _LCTRL_RKEY:
-  case _A_RKEY:
-  case _S_RKEY:
-  case _D_RKEY:
-  case _F_RKEY:
-  case _G_RKEY:
-  case _H_RKEY:
-  case _J_RKEY:
-  case _K_RKEY:
-  case _L_RKEY:
-  case _SMICOLN_RKEY:
-  case _SQOT_RKEY:
-  case _BKTIK_RKEY:
-  case _LSHFT_RKEY:
-  case _BKSLSH_RKEY:
-  case _Z_RKEY:
-  case _X_RKEY:
-  case _C_RKEY:
-  case _V_RKEY:
-  case _B_RKEY:
-  case _N_RKEY:
-  case _M_RKEYz0xB2:
-  case _COMA_RKEY:
-  case _DOT_RKEY:
-  case _FWDSLSH_RKEY:
-  case _RSHFT_RKEY:
-  case _STR_RKEY:
-  case _LALT_RKEY:
-  case _SPC_RKEY:
-  case _CPS_RKEY:
-  case _F1_RKEY:
-  case _F2_RKEY:
-  case _F3_RKEY:
-  case _F4_RKEY:
-  case _F5_RKEY:
-  case _F6_RKEY:
-  case _F7_RKEY:
-  case _F8_RKEY:
-  case _F9_RKEY:
-  case _F10_RKEY:
-  case _NUMLCK_RKEY:
-  case _SCRLLCK_RKEY:
-  case _F11_RKEY:
-  case _F12_RKEY:
-    break;
+  case SC1_W_PKEY:
+    return 'W';
+  case SC1_E_PKEY:
+    return 'E';
+  case SC1_R_PKEY:
+    return 'R';
+  case SC1_T_PKEY:
+    return 'T';
+  case SC1_Y_PKEY:
+    return 'Y';
+  case SC1_U_PKEY:
+    return 'U';
+  case SC1_I_PKEY:
+    return 'I';
+  case SC1_O_PKEY:
+    return 'O';
+  case SC1_P_PKEY:
+    return 'P';
+  case SC1_SQBRKTO_PKEY:
+    return '0';
+  case SC1_SQBRKTC_PKEY:
+    return '0';
+  case SC1_ENTR_PKEY:
+    return 'E';
+  case SC1_LCTRL_PKEY:
+    return 'L';
+  case SC1_A_PKEY:
+    return 'A';
+  case SC1_S_PKEY:
+    return 'S';
+  case SC1_D_PKEY:
+    return 'D';
+  case SC1_F_PKEY:
+    return 'F';
+  case SC1_G_PKEY:
+    return 'G';
+  case SC1_H_PKEY:
+    return 'H';
+  case SC1_J_PKEY:
+    return 'J';
+  case SC1_K_PKEY:
+    return 'K';
+  case SC1_L_PKEY:
+    return 'L';
+  case SC1_SMICOLN_PKEY:
+  case SC1_SQOT_PKEY:
+  case SC1_BKTIK_PKEY:
+  case SC1_LSHFT_PKEY:
+  case SC1_BKSLSH_PKEY:
+  case SC1_Z_PKEY:
+    return 'Z';
+  case SC1_X_PKEY:
+    return 'X';
+  case SC1_C_PKEY:
+    return 'C';
+  case SC1_V_PKEY:
+    return 'V';
+  case SC1_B_PKEY:
+    return 'B';
+  case SC1_N_PKEY:
+    return 'N';
+  case SC1_M_PKEY:
+    return 'M';
+  case SC1_COMA_PKEY:
+    return ',';
+  case SC1_DOT_PKEY:
+    return '.';
+  case SC1_FRWDSLSH_PKEY:
+  case SC1_RSHIFT_PKEY:
+  case SC1_STR_PKEY:
+  case SC1_LALT_PKEY:
+  case SC1_SPC_PKEY:
+  case SC1_CPS_PKEY:
+  case SC1_F1_PKEY:
+  case SC1_F2_PKEY:
+  case SC1_F3_PKEY:
+  case SC1_F4_PKEY:
+  case SC1_F5_PKEY:
+  case SC1_F6_PKEY:
+  case SC1_F7_PKEY:
+  case SC1_F8_PKEY:
+  case SC1_F9_PKEY:
+  case SC1_F10_PKEY:
+  case SC1_NUMLCK_PKEY:
+  case SC1_SCRLLCK_PKEY:
+  case SC1_F11_PKEY:
+  case SC1_F12_PKEY:
+  case SC1_ESC_RKEY:
+  case SC1_1_RKEY:
+    return '1';
+  case SC1_2_RKEY:
+    return '2';
+  case SC1_3_RKEY:
+    return '3';
+  case SC1_4_RKEY:
+    return '4';
+  case SC1_5_RKEY:
+    return '5';
+  case SC1_6_RKEY:
+    return '6';
+  case SC1_7_RKEY:
+    return '7';
+  case SC1_8_RKEY:
+    return '8';
+  case SC1_9_RKEY:
+    return '9';
+  case SC1_0_RKEY:
+    return '0';
+  case SC1_HYPHN_RKEY:
+  case SC1_EQ_RKEY:
+  case SC1_BKSPC_RKEY:
+  case SC1_TAB_RKEY:
+  case SC1_Q_RKEY:
+  case SC1_W_RKEY:
+  case SC1_E_RKEY:
+  case SC1_R_RKEY:
+  case SC1_T_RKEY:
+  case SC1_Y_RKEY:
+  case SC1_U_RKEY:
+  case SC1_I_RKEY:
+  case SC1_O_RKEY:
+  case SC1_P_RKEY:
+  case SC1_SQBRKTO_RKEY:
+  case SC1_SQBRKTC_RKEY:
+  case SC1_ENTR_RKEY:
+  case SC1_LCTRL_RKEY:
+  case SC1_A_RKEY:
+  case SC1_S_RKEY:
+  case SC1_D_RKEY:
+  case SC1_F_RKEY:
+  case SC1_G_RKEY:
+  case SC1_H_RKEY:
+  case SC1_J_RKEY:
+  case SC1_K_RKEY:
+  case SC1_L_RKEY:
+  case SC1_SMICOLN_RKEY:
+  case SC1_SQOT_RKEY:
+  case SC1_BKTIK_RKEY:
+  case SC1_LSHFT_RKEY:
+  case SC1_BKSLSH_RKEY:
+  case SC1_Z_RKEY:
+  case SC1_X_RKEY:
+  case SC1_C_RKEY:
+  case SC1_V_RKEY:
+  case SC1_B_RKEY:
+  case SC1_N_RKEY:
+  case SC1_M_RKEYz0xB2:
+  case SC1_COMA_RKEY:
+  case SC1_DOT_RKEY:
+  case SC1_FWDSLSH_RKEY:
+  case SC1_RSHFT_RKEY:
+  case SC1_STR_RKEY:
+  case SC1_LALT_RKEY:
+  case SC1_SPC_RKEY:
+  case SC1_CPS_RKEY:
+  case SC1_F1_RKEY:
+  case SC1_F2_RKEY:
+  case SC1_F3_RKEY:
+  case SC1_F4_RKEY:
+  case SC1_F5_RKEY:
+  case SC1_F6_RKEY:
+  case SC1_F7_RKEY:
+  case SC1_F8_RKEY:
+  case SC1_F9_RKEY:
+  case SC1_F10_RKEY:
+  case SC1_NUMLCK_RKEY:
+  case SC1_SCRLLCK_RKEY:
+  case SC1_F11_RKEY:
+  case SC1_F12_RKEY:
+    return 'R';
+  default:
+    return 'N';
   }
 }
 

@@ -14,71 +14,53 @@ void PS2::initialize(){
     // looks like an issue with Qemu bios?
   //  kprint("couldn't detect PS2 controller from ACPI. Continue anyway\n\0");
   //}
-  
-  //uint8_t status = inb(CMD_PORT);
-  //writeCommand(READ_CFG_BYTE);
+    
+  // Disable all PS/2 Ports
+  disablePorts();
+  FlushOutput();
 
-  //uint8_t cfgb = ReadData();
-  //uint8_t secb = ReadData();
-  //kprintf("current ps2 status is: %b\n\0", status);
+
   // First we want to do controller self test
   // we disable interrupts, and translation, and enable clocks
-  //configure();
-  //FlushOutput();
-
-  // Disable all PS/2 Ports
-  //disablePorts();
-   
-  // Flush the output buffer
-  //FlushOutput();
+  configure();
   
-  //selfTest();
-  //if (!testPassed){
-  //  initialized = false;
-  //  kprint("not initializing ps2. self test failed\n\0");
-  //}
-
-  // Second we want to detect if we are a single or dual port controller
-  // Enalbe all clocks, make sure interrupts and translation are disabled
-  //configure();
-  
-  // Disable the devices
-  //disablePorts();
+  selfTest();
+  if (!testPassed){
+    initialized = false;
+    panic("not initializing ps2. self test failed\n\0");
+  }
 
   // if port 2 is still enabled then no port2
-  //detectChannel2();
+  detectChannel2();
 
   // test the interfaces
-  //interfaceTest();
-  //if (!port2TestPass){
-  //  hasTwoPorts = false;
-  //}
-
-  // final phase
-  //configure();
+  interfaceTest();
+  if (!port2TestPass){
+    hasTwoPorts = false;
+  }
 
   // enable the ports available 
-  //enablePorts();
+  enablePorts();
 
   // disallow all devices from sending data until their drivers are inplace
-  //disableScanning();
+  disableScanning();
 
-  //if (!port1TestPass){
-  //  kprint("PS2 controller didn't pass initialization. assuming no PS2\n\0");
-  //  initialized = false;
-  //} else {
-  //  kprint("PS2 Controller Initialized\n\0");
-  //  initialized = true;
- // }
-  uint8_t status = inb(CMD_PORT);
-  writeCommand(READ_CFG_BYTE);
-  kprintf("current ps2 status is: %b\n\0", status);
+  if (!port1TestPass){
+    kprint("PS2 controller didn't pass initialization. assuming no PS2\n\0");
+    initialized = false;
+  } else {
+    kprint("PS2 Controller Initialized\n\0");
+    initialized = true;
+  }  
 }
 
 void PS2::disableScanning(){
-  writePort1(DISABLE_DEV);
+  uint8_t portData;
+  portData = DISABLE_DEV;
+  writePort1(&portData);
   if (hasTwoPorts){
-    writePort2(DISABLE_DEV);
+    portData = DISABLE_DEV;
+    writePort2(portData);
   }
 }
 
@@ -86,7 +68,7 @@ uint8_t PS2::readStatus(){
   return inb(CMD_PORT);
 }
 
-bool PS2::canWriteCommand(){
+bool PS2::canWrite(){
   uint8_t status;
 
   // check bit 1 is clear in STATUS_REG(Read CMD_PORT)
@@ -99,7 +81,7 @@ bool PS2::canWriteCommand(){
 
 void PS2::writeCommand(uint8_t cmd){ 
   // wait for controller to be ready
-  while (!canWriteCommand()){}
+  while (!canWrite()){}
  
   // write the command
   outb(CMD_PORT, cmd);
@@ -110,7 +92,7 @@ void PS2::disablePorts() {
   writeCommand(DISABLE_PORT2);
 }
 
-bool PS2::canReadData(){
+bool PS2::canRead(){
   uint8_t status;
 
   // check bit 0 is set in STATUS_REG(Read CMD_PORT)
@@ -125,7 +107,7 @@ int8_t PS2::readData(bool wait, uint8_t *buf){
   // wait until data is ready
   int32_t timeout = 1000;
 
-  while (wait && !canReadData() && timeout > 0) {timeout--;}
+  while (wait && !canRead() && timeout > 0) {timeout--;}
   if (timeout == 0){
     return ERR_TIMEOUT;    
   }
@@ -135,17 +117,13 @@ int8_t PS2::readData(bool wait, uint8_t *buf){
 }
 
 void PS2::FlushOutput(){
-  if (canReadData()){
+  //if (canReadData()){
     inb(DATA_PORT);
-  }
-}
-
-bool PS2::canWriteData(){
-  return canWriteCommand();
+  //}
 }
 
 void PS2::writeData(uint8_t data){
-  while (!canWriteData()){}
+  while (!canWrite()){}
 
   // write the data
   outb(DATA_PORT, data);
@@ -167,7 +145,7 @@ void PS2::configure(){
   }
   
   if (cfgByte & 4){
-    panic("os Shouldn't be running?\n\0");
+    kprint("PS2 POST Checks passed\n\0");
   }
 
   // Disable interrupts clear bit 0
@@ -308,12 +286,12 @@ void PS2::resetDevices(){
   resetPort2();
 }
 
-void PS2::writePort1(uint8_t data){
+void PS2::writePort1(uint8_t *data){
   uint8_t buf;
   int8_t err;
   uint32_t output_buf, output_data;
 retry:
-  writeData(data);
+  writeData(*data);
   err = readData(WAIT_READY, &buf);
   if (err){
     kprintf("failed to write to port1 with err: %d\n\0", err);
@@ -321,10 +299,15 @@ retry:
   }
   switch(buf){
     case ACK:
+      *data = ACK;
       return;
     case RESEND:
+      *data = RESEND;
       goto retry;
+    case ERRIBUF:
+       kprint("kbd internal buffer overrun\n\0");
     default:
+      *data = buf;
       output_buf = (uint32_t) buf;
       output_data = (uint32_t) data;
       kprintf("returning from writePort1 without any valid keyboard response. response is %x for data %x\n\0", output_buf, output_data);
@@ -355,10 +338,11 @@ retry:
 
 void PS2::resetPort1(){
   int8_t trials = MAX_TRIALS, err;
-  uint8_t data, nextCmp = 0xfa;
+  uint8_t data = RESET, nextCmp = 0xfa;
 
 pulsewrite:
-  writePort1(RESET);
+  writePort1(&data);
+
   err = readData(WAIT_READY, &data);
   if (err){
     if (trials == 0){
@@ -437,10 +421,12 @@ void PS2::EnableInterrupt1(){
 }
 
 uint8_t PS2::WriteCommand(uint8_t cmd, enum PORT port){
+  uint8_t buf = cmd;
+
   switch (port){
     case PORT1:
-      writePort1(cmd);
-      break;
+      writePort1(&buf);
+      return buf;
     case PORT2:
       writePort2(cmd);
       break;
