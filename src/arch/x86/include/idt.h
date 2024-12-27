@@ -5,8 +5,10 @@
 #include "arch/x86/include/interrupt_32.h"
 #include "include/common.h"
 #include "include/mem_encodeable.h"
+#include "drivers/include/atkbd.h"
 
 #define GATE_32INTR_F 0x8e00 // 1P 00PL 0R  e(32bit intr gate) 00R
+
 
 class IDTEntry : public MemoryEncodeable {
 private:
@@ -27,9 +29,12 @@ public:
   uint16_t GetFlags();
 };
 
+/**
+ * Keeps track of the state of IDT and manages operations as such 
+ */
 class IDT {
 private:
-  uintptr_t idtTableBase = 0x901000;
+  uintptr_t idtTableBase = 0x9010000;
 
 public:
   struct __attribute__((packed)) IDTInfo {
@@ -37,6 +42,7 @@ public:
     uint32_t offset;
   } idt;
   IDT();
+  uint8_t RegisterInterrupt(uint8_t intNum, void (*intHandler)(struct interruptFrame *));
 };
 
 #endif /* IDT_H */

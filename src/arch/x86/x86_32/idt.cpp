@@ -1,9 +1,12 @@
 #include "arch/x86/include/idt.h"
+#include "arch/x86/include/gdt.h"
+#include "arch/x86/include/interrupt_32.h"
 
 // interruptVector contains pointers to the vector methods that will be used
 // int22 is a bad interrupt handler.
 // int80 is a system call interrupt handler.
 // TODO: a smarter way is to define the whole 256 entries and specify overrides!
+__attribute__((aligned(0x10))) 
 static uintptr_t *interruptVector[] = {(uintptr_t *)DivZero,
                                        (uintptr_t *)DebugException,
                                        (uintptr_t *)NMI,
@@ -41,9 +44,36 @@ static uintptr_t *interruptVector[] = {(uintptr_t *)DivZero,
                                        (uintptr_t *)PMCHandler,
                                        (uintptr_t *)LINT0Handler,
                                        (uintptr_t *)LINT1Handler,
-                                       (uintptr_t *)APICErrHandler};
+                                       (uintptr_t *)APICErrHandler,
+                                       (uintptr_t *)BadInterrupt,
+                                       (uintptr_t *)BadInterrupt,
+                                       (uintptr_t *)BadInterrupt,
+                                       (uintptr_t *)BadInterrupt, 
+                                       (uintptr_t *)BadInterrupt,
+                                       (uintptr_t *)BadInterrupt,
+                                       (uintptr_t *)BadInterrupt,
+                                       (uintptr_t *)BadInterrupt, 
+                                       (uintptr_t *)BadInterrupt,
+                                       (uintptr_t *)BadInterrupt,
+                                       (uintptr_t *)PITTimerHandler, // Pic Interrupts 0x30
+                                       (uintptr_t *)KeyboardHandler,    // Pic Interrupts 0x31
+                                       (uintptr_t *)BadHRDWRInterrupt,    // Pic Interrupts 0x32
+                                       (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x33
+                                       (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x34
+                                       (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x35
+                                       (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x36
+                                       (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x37
+                                       (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x38
+                                       (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x39
+                                       (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x3a
+                                       (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x3b
+                                       (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x3c
+                                       (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x3d
+                                       (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x3f
+                                       (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x40 
+  };
 
-static int countDefinedInterrupts = 38;
+static int countDefinedInterrupts = 63;
 
 IDTEntry::IDTEntry() {}
 
@@ -101,7 +131,7 @@ uint64_t IDTEntry::EncodeEntryAt(uintptr_t addr) {
 
 IDT::IDT() {
   IDTEntry idtEntry;
-  // interrupts should be set up only once
+  // arch specific interrupts. only defined once 
   uint8_t idtIdx = 0;
   for (; idtIdx < countDefinedInterrupts; idtIdx++) {
     idtEntry.SetSegment(GDT_KERNEL_CODE_DESCRIPTOR_SEL);

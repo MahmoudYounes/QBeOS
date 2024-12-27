@@ -17,16 +17,21 @@
 #include "arch/x86/include/memory.h"
 #include "arch/x86/include/pdt_entry.h"
 #include "arch/x86/include/pic.h"
-#include "arch/x86/include/processor.h"
 #include "arch/x86/include/pt_entry.h"
 #include "arch/x86/include/tss.h"
+#include "arch/x86/include/pit.h"
 #include "arch/x86/include/ps2.h"
+#include "drivers/include/atkbd.h"
+#include "drivers/include/atkbd.h"
 #include "include/common.h"
 #include "include/logger.h"
-#include "include/math.h"
 #include "include/kargs.h"
+#include "kstdlib/include/hash.h"
+#include "kstdlib/include/hashtable.h"
+#include "kstdlib/include/linkedlist.h"
+#include "kstdlib/include/simplehasher.h"
+#include "kstdlib/include/vector.h"
 #include "pci/include/pci.h"
-#include "include/configs.h"
 
 void kmain() __attribute__((noreturn));
 void bootEnd() __attribute__((noreturn));
@@ -46,6 +51,8 @@ extern ACPIM acpi;
 extern PCI pci;
 extern PS2 ps2;
 extern TSSManager tssManager;
+extern PIT pit;
+extern ATKBD kbdDriver;
 
 // For now it's easier for me to just look at the screen. I have a way in mind
 // to automate this, so guess what... here is another TODO!
@@ -113,19 +120,19 @@ void testMemoryPageAt() {
   bool failed = false;
   MemoryRegion mem = sysMemory.GetPageAt(0x8000);
   if ((uintptr_t)mem.baseAddress != 0x8000) {
-    kprintf(buf, "FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
+    kprintf("FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
     failed = true;
   }
 
   mem = sysMemory.GetPageAt(0x8020);
   if ((uintptr_t)mem.baseAddress != 0x8000) {
-    kprintf(buf, "FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
+    kprintf("FAILED: expected %p found %p\n\0", 0x8000, mem.baseAddress);
     failed = true;
   }
 
   mem = sysMemory.GetPageAt(0x50000000);
   if ((uintptr_t)mem.baseAddress != 0x50000000) {
-    kprintf(buf, "FAILED: expected %p found %p\n\0", 0x50000000,
+    kprintf("FAILED: expected %p found %p\n\0", 0x50000000,
             mem.baseAddress);
     failed = true;
   }
@@ -208,7 +215,7 @@ void testPDTEntry() {
   uint32_t expectedEntry = 0b00000000100000010111000010000111;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -224,7 +231,7 @@ void testPDTEntry() {
   expectedEntry = 0b00000000101101010101000000000011;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -234,7 +241,7 @@ void testPDTEntry() {
   expectedEntry = 0b10010100000001000000000011;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -244,7 +251,7 @@ void testPDTEntry() {
   expectedEntry = 0b10010100000001000000000111;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -267,7 +274,7 @@ void testPTEntry() {
   uint32_t expectedEntry = 0b10110000000100000101;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -277,7 +284,7 @@ void testPTEntry() {
   expectedEntry = 0b11111111111111111111000000000000;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -287,7 +294,7 @@ void testPTEntry() {
   expectedEntry = 0b10010100000001000000000011;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -297,7 +304,7 @@ void testPTEntry() {
   expectedEntry = 0b10010100000001000000000111;
   if (expectedEntry != actual) {
     kprint("FAILED:\0");
-    kprintf(buf, " read after write value is %b expected %b \0",
+    kprintf(" read after write value is %b expected %b \0",
             *((uint32_t *)pp), expectedEntry);
     panic("Test PDTEntry failed");
   }
@@ -319,17 +326,17 @@ void testIDTEntry() {
   uint64_t entry = *((uint64_t *)pg);
   IDTEntry actualEntry = IDTEntry(entry);
   if (actualEntry.GetFlags() != 0x4e00) {
-    kprintf(buf, "Expected 0x4e00 found %x\n\0", actualEntry.GetFlags());
+    kprintf("Expected 0x4e00 found %x\n\0", actualEntry.GetFlags());
     panic("FAILED: IDTEntry tests\n\0");
   }
 
   if (actualEntry.GetSegment() != 0x8) {
-    kprintf(buf, "Expected 0x8 found %x\n\0", actualEntry.GetSegment());
+    kprintf("Expected 0x8 found %x\n\0", actualEntry.GetSegment());
     panic("FAILED: IDTEntry tests\n\0");
   }
 
   if (actualEntry.GetOffset() != 0xff) {
-    kprintf(buf, "Expected 0xff found %x\n\0", actualEntry.GetOffset());
+    kprintf("Expected 0xff found %x\n\0", actualEntry.GetOffset());
     panic("FAILED: IDTEntry tests\n\0");
   }
 }
@@ -371,6 +378,95 @@ kargs *parseBootArgs(){
   return args;
 }
 
+void TestVectors(){
+  Vector<int> v;
+  for (int i = 0; i < 10;i++){
+    v.Push(i);
+  }
+
+  for (int i = 9; i >= 0;i--){
+    if (i != v.Pop()) {
+      kprintf("vector failed at item: %d\n\0", i);
+      panic("tests failed\n\0");
+    }
+  }
+}
+
+void TestHasher(){
+  SimpleHasher sh(5);
+  Hasher *hasher = &sh;
+
+  uint64_t input = 3, expected = 3;
+  uint64_t output = *(uint64_t *)hasher->Hash((uint8_t *)&input, sizeof(input));
+  if (expected != output){
+    kprintf("incorrect hash: the hash of %D is %D expected %D\n\0", input, output, expected);
+    panic("hasher tests failed\n\0");
+  }
+}
+
+void TestLinkedLists(){
+  LinkedList<int> l1(5);
+  LinkedList<int> l2(1, &l1); 
+  
+  if (l2.next->data != 5){
+    kprintf("second linked list node != 1 but equal %d\n\0", l1.next->data);
+  }  
+}
+
+void TestHashTables(){
+  bool shouldPanic = false;
+  HashTable<int,int> ht(10);
+  
+  
+  ht.Insert(0, 0);
+  uint32_t v = ht.Get(0);
+  if (v != 0){
+    kprintf("searched 0 got %d instead of 0\n\0", v);
+    shouldPanic = true;
+  }
+
+  ht.Insert(1, 0);
+  v = ht.Get(1);
+  if (v != 0){
+    kprintf("searched 1 got %d instead of 0\n\0", v);
+    shouldPanic = true;
+  }
+
+  ht.Insert(1, 0);
+  v = ht.Get(1);
+  if (v != 0){
+    kprintf("searched 1 got %d instead of 0\n\0", v);
+    shouldPanic = true;
+  }
+
+
+  ht.Insert(8, 2);
+  v = ht.Get(8);
+  if (v != 2){
+    kprintf("searched 8 got %d instead of 2\n\0", v);
+    shouldPanic = true;
+  }
+
+
+  ht.Insert(0, 3);
+  v = ht.Get(0);
+  if (v != 3){
+    kprintf("searched 0 got %d instead of 0\n\0", v);
+    shouldPanic = true;
+  }
+
+  ht.Insert(15, 30);
+  v = ht.Get(15);
+  if (v != 30){
+    kprintf("searched 15 got %d instead of 30\n\0", v);
+    shouldPanic = true;
+  }
+
+  if (shouldPanic){
+    panic("HashTables tests failed\n\0");
+  }
+}
+
 void kmain() {
   // clearing the interrupts from BIOS because we havn't setup any interrupt
   // controller handler yet
@@ -378,37 +474,44 @@ void kmain() {
   setupConsole();
 
   kargs * args;
-  char buf[255];
   args = parseBootArgs();
-  if (args == NULL){
-    panic("incorrect boot header\n\0");
-  }
+  //if (args == NULL){
+  //  panic("incorrect boot header\n\0");
+  //}
 
   kprint("booting kernel with the following args\n\0");
-  kprintf(buf, "memRegionsCount: %d\n\0", args->memRegionsCount);
-  kprintf(buf, "memTableStartAdrr: %p\n\0", args->memTableStartAddr);
-  kprintf(buf, "pciSupported: %d\n\0", args->pciSupported);
-  kprintf(buf, "pciConfigMechanism: %d\n\0", args->pciConfigMech);
+  kprintf("memRegionsCount: %d\n\0", args->memRegionsCount);
+  kprintf("memTableStartAdrr: %p\n\0", args->memTableStartAddr);
+  kprintf("pciSupported: %d\n\0", args->pciSupported);
+  kprintf("pciConfigMechanism: %d\n\0", args->pciConfigMech);
 
   cpu = CPUInfo();
-  // sys initializations
   kprint("Initializing all systems...\n\0");
   sysMemory = Memory(args);
   gdt = GDT();
   vmm = VirtualMemory(true /* should run vmm self tests before paging */);
   tssManager = TSSManager();
   idt = IDT();
-  pci = PCI(args);
   pic = PIC();
-  acpi = ACPIM();
-  apic = APIC(); 
-  ps2 = PS2();
+  pic.CLI();
   pci = PCI(args);
-  pic.STI();
+  pit = PIT(&pic);
+  ps2 = PS2();
+  //acpi = ACPIM();
+  apic = APIC(); 
+  kbdDriver = ATKBD(&pic, &ps2);
+  kbdDriver.Initialize();  
 
-  // at this point interrupts are disabled... need to setup IDT to renable them.
+  pic.Initialize();
+  pic.CLI();
+  pic.EnableInterrupt(1);
+  sti();
 
-  bootEnd();
+  //pit.Reload();
+  
+  TestHasher();
+  TestLinkedLists();
+  TestHashTables();
   // Systems initialized and we are booted yay!
   printHelloMessage();
 

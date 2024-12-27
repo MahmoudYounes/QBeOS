@@ -24,19 +24,21 @@ setupEnvironment:
 	if [ ! -d $(BIN_DIR) ]; then mkdir $(BIN_DIR); fi
 	if [ ! -d $(ISO_ROOT_DIR) ]; then mkdir $(ISO_ROOT_DIR); fi
 
-run: $(BIN_DIR)/$(ISO_NAME)
+run-qemu: $(BIN_DIR)/$(ISO_NAME)
 	qemu-system-i386                                      \
-	-cpu host                                             \
   -enable-kvm									                          \
 	-m 4096                                               \
 	-drive format=raw,media=cdrom,file=./bin/QBeOS.iso    \
 	-smp 4                                                \
 	-device i8042           															\
 	-vga std                                              \
-  -d int -no-shutdown -no-reboot                        \
+  -no-shutdown -no-reboot                        \
 	-monitor stdio                                        \
-  -L /usr/share/qemu/sgabios.bin                        \
-  -machine pc-q35-jammy
+  -L /usr/share/qemu/sgabios.bin                        
+
+run: $(BIN_DIR)/$(ISO_NAME)
+	
+	virtualboxvm --startvm QBeOS	
 
 run-bochs: $(BIN_DIR)/$(ISO_NAME)
 	bochs -f bochsrc.txt

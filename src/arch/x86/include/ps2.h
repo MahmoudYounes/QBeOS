@@ -3,6 +3,7 @@
 
 #include "acpi/include/acpi.h"
 #include "include/common.h"
+#include "include/error.h"
 
 #define DATA_PORT 0x60
 #define CMD_PORT 0x64
@@ -12,6 +13,7 @@
 #define WRITE_CFG_BYTE 0x60
 #define SELF_TEST 0xaa
 #define RESEND 0xfe
+#define ERRIBUF 0x0
 
 #define PORT_TEST_PASS 0x0
 
@@ -33,12 +35,16 @@
 
 #define MAX_TRIALS 5
 
-#define ERRNO_RDATA -1
-
 #define ECHO 0xee
-#define ENABLE_KBD 0xf4
+#define ENABLE_DEV 0xf4
+#define DISABLE_DEV 0xf5
 #define ACK 0xfa
 
+
+enum PORT{
+  PORT1,
+  PORT2
+};
 
 extern ACPIM acpi;
 
@@ -56,18 +62,17 @@ extern ACPIM acpi;
   */
 class PS2 {
 private:
-  bool canWriteCommand();
+  void initialize();
   void writeCommand(uint8_t cmd);
   uint8_t readStatus();
-  bool canReadData();
-  int8_t readData(bool wait);
-  bool canWriteData();
+  bool canRead();
+  int8_t readData(bool wait, uint8_t *buf);
+  bool canWrite();
   void writeData(uint8_t data);
-  void writePort1(uint8_t data);
+  void writePort1(uint8_t *data);
   void writePort2(uint8_t data);
-  void disableDevices();
-  void enableDevices();
-  void flushOutput();
+  void disablePorts();
+  void enablePorts();
   void configure();
   void selfTest();
   void detectChannel2();
@@ -77,6 +82,7 @@ private:
   void resetPort1();
   void resetPort2();
   void resetPC();
+  void disableScanning();
  
   bool testPassed;
   bool port1TestPass;
@@ -84,8 +90,16 @@ private:
   bool initialized;
   bool hasTwoPorts;
 public:
-  // default constructor
   PS2();
+
+  void EnableInterrupt1();
+  void EnableInterrupt2();
+
+  uint8_t WriteCommand(uint8_t cmd, enum PORT port);
+  int8_t ReadData(uint8_t *buf);
+  void FlushOutput();
+  uint8_t ReadStatus();
+
 };
 
 inline PS2 ps2;

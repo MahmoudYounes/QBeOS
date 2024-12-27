@@ -1,0 +1,6 @@
+# Overview
+PCI Bus is replacing ISA Buses due to its higher speed and bandwidth in data
+transformaiton. it is a bus with independent microcontroller and data connection
+that arbitrates an amount of connected devices and allows them to interrupt the CPU
+
+

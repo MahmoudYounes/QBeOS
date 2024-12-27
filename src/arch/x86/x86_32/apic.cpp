@@ -29,7 +29,6 @@ void APIC::validateAPIC() {
 
 void APIC::initializeAPIC() {
   uint32_t eax, edx;
-  char *buf = new char[512];
 
   // reads the MSR APIC_ADDR_BASE
   RDMSR(0x1b, eax, edx);
@@ -38,7 +37,7 @@ void APIC::initializeAPIC() {
   isBSP = eax & (1 << 8);
 
   vmm.MMap(initialRegistersAddress, initialRegistersAddress);
-  kprintf(buf, "APIC memory mapped to %x\n\0", initialRegistersAddress);
+  kprintf("APIC memory mapped to %x\n\0", initialRegistersAddress);
 
   uint32_t id = readRegister(ID_REG);
   uint32_t versionReg = readRegister(VER_REG);
@@ -48,10 +47,10 @@ void APIC::initializeAPIC() {
   versionReg >>= 8;
   bool EOIBroadcastSuppressed = versionReg & 0x1;
 
-  kprintf(buf, "Initial APIC ID: %d\n\0", id);
-  kprintf(buf, "Initial APIC Version: %d\n\0", apicVersion);
-  kprintf(buf, "Supports %d LVTs\n\0", maxLVT);
-  kprintf(buf, "Supports EOI Broadcast %d\n\0", EOIBroadcastSuppressed);
+  kprintf("Initial APIC ID: %d\n\0", id);
+  kprintf("Initial APIC Version: %d\n\0", apicVersion);
+  kprintf("Supports %d LVTs\n\0", maxLVT);
+  kprintf("Supports EOI Broadcast %d\n\0", EOIBroadcastSuppressed);
 
   configureCMCI();
   configureTimer();
@@ -138,9 +137,8 @@ int32_t APIC::readRegister(uint32_t reg) {
     return -1;
   }
 
-  char *buf = new char[512];
   uint32_t *regMemAddr = (uint32_t *)(initialRegistersAddress + reg);
-  kprintf(buf, "reading contents of memory address %x\n\0", regMemAddr);
+  kprintf("reading contents of memory address %x\n\0", regMemAddr);
   return *(uint32_t *)(initialRegistersAddress + reg);
 }
 
@@ -194,57 +192,56 @@ void APIC::StartTimer(uint32_t val) {
 uint32_t APIC::ReadTimer() { return readRegister(CURR_COUNT_REG); }
 
 void APIC::DebugPrintAPICState() {
-  char *buf = new char[512];
   uint32_t val = readRegister(ID_REG);
-  kprintf(buf, "ID: %d %x %b\n\0", val, val, val);
+  kprintf("ID: %d %x %b\n\0", val, val, val);
 
   val = readRegister(VER_REG);
-  kprintf(buf, "Version: %d %x %b\n\0", val, val, val);
+  kprintf("Version: %d %x %b\n\0", val, val, val);
 
   val = readRegister(TASK_PRIORITY_REG);
-  kprintf(buf, "Task Priority: %d %x %b\n\0", val, val, val);
+  kprintf("Task Priority: %d %x %b\n\0", val, val, val);
 
   val = readRegister(ARBITR_PRIORITY_REG);
-  kprintf(buf, "Arbitration Priority: %d %x %b\n\0", val, val, val);
+  kprintf("Arbitration Priority: %d %x %b\n\0", val, val, val);
 
   val = readRegister(CPU_PRIORITY_REG);
-  kprintf(buf, "CPU Priority: %d %x %b\n\0", val, val, val);
+  kprintf("CPU Priority: %d %x %b\n\0", val, val, val);
 
   val = readRegister(EOI_REG);
-  kprintf(buf, "EOI: %d %x %b\n\0", val, val, val);
+  kprintf("EOI: %d %x %b\n\0", val, val, val);
 
   val = readRegister(SIV_REG);
-  kprintf(buf, "Spurious Interrupt LVT Register: %d %x %b\n\0", val, val, val);
+  kprintf("Spurious Interrupt LVT Register: %d %x %b\n\0", val, val, val);
 
   val = readRegister(ERR_REG);
-  kprintf(buf, "Error Register: %d %x %b\n\0", val, val, val);
+  kprintf("Error Register: %d %x %b\n\0", val, val, val);
 
   val = readRegister(LVT_CMCI_REG);
-  kprintf(buf, "CMCI LVT: %d %x %b\n\0", val, val, val);
+  kprintf("CMCI LVT: %d %x %b\n\0", val, val, val);
 
   val = readRegister(LVT_TMR_REG);
-  kprintf(buf, "Timer LVT: %d %x %b\n\0", val, val, val);
+  kprintf("Timer LVT: %d %x %b\n\0", val, val, val);
 
   val = readRegister(LVT_PMC_REG);
-  kprintf(buf, "PMC LVT: %d %x %b\n\0", val, val, val);
+  kprintf("PMC LVT: %d %x %b\n\0", val, val, val);
 
   val = readRegister(LVT_LINT0_REG);
-  kprintf(buf, "LINT0 LVT: %d %x %b\n\0", val, val, val);
+  kprintf("LINT0 LVT: %d %x %b\n\0", val, val, val);
 
   val = readRegister(LVT_LINT1_REG);
-  kprintf(buf, "LINT1 LVT: %d %x %b\n\0", val, val, val);
+  kprintf("LINT1 LVT: %d %x %b\n\0", val, val, val);
 
   val = readRegister(LVT_LINTERR_REG);
-  kprintf(buf, "Err LVT Register: %d %x %b\n\0", val, val, val);
+  kprintf("Err LVT Register: %d %x %b\n\0", val, val, val);
 
   val = readRegister(INIT_COUNT_REG);
-  kprintf(buf, "INIT Count: %d %x %b\n\0", val, val, val);
+  kprintf("INIT Count: %d %x %b\n\0", val, val, val);
 
   val = readRegister(CURR_COUNT_REG);
-  kprintf(buf, "Current Count: %d %x %b\n\0", val, val, val);
+  kprintf("Current Count: %d %x %b\n\0", val, val, val);
 
   val = readRegister(DIV_CFG_REG);
-  kprintf(buf, "Divide Configuration: %d %x %b\n\0", val, val, val);
+  kprintf("Divide Configuration: %d %x %b\n\0", val, val, val);
 }
 
 void APIC::WriteEOI() {

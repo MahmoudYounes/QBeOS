@@ -8,11 +8,15 @@
 #include "include/common.h"
 #include "include/logger.h"
 #include "arch/x86/include/apic.h"
+#include "arch/x86/include/pit.h"
+#include "arch/x86/include/pic.h"
 
+extern PIC pic;
+extern PIT pit;
 extern APIC apic;
 
-#define DEFINE_INTERRUPT(interruptName) void __attribute__((interrupt)) interruptName(struct interruptFrame *hwRegs)
-#define DEFINE_EXCEPTION(exceptionName) void __attribute__((interrupt)) exceptionName(struct interruptFrame *hwRegs, uint32_t errCode)
+#define DEFINE_INTERRUPT(interruptName) void __attribute__((interrupt,target("general-regs-only"))) interruptName(struct interruptFrame *hwRegs)
+#define DEFINE_EXCEPTION(exceptionName) void __attribute__((interrupt,target("general-regs-only"))) exceptionName(struct interruptFrame *hwRegs, uint32_t errCode)
 // interruptFrame is the frame used to hold register values. this is setup by
 // the compiler.
 struct interruptFrame {
@@ -25,6 +29,28 @@ struct interruptFrame {
 
 // definitions of all functions here. implementation is found in cpp file
 DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+
+
+DEFINE_INTERRUPT(BadHRDWRInterrupt);
 DEFINE_INTERRUPT(DivZero);
 DEFINE_INTERRUPT(DebugException);
 DEFINE_INTERRUPT(NMI);
@@ -52,5 +78,6 @@ DEFINE_INTERRUPT(PMCHandler);
 DEFINE_INTERRUPT(CMCIHandler);
 DEFINE_INTERRUPT(APICErrHandler);
 DEFINE_INTERRUPT(SpuriousHandler);
+DEFINE_INTERRUPT(PITTimerHandler);
 
 #endif /* INTERRUPT_32_H */

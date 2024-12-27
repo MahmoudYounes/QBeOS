@@ -25,7 +25,7 @@ void Formater::Format(char *res, const char *str, ...) {
         buffi += putNumber(res, buffi, num);
         break;
       }
-      case HEX_SIGN: {
+     case HEX_SIGN: {
         num = va_arg(argPtr, uint32_t);
         buffi += putNumberAsHex(res, buffi, num);
         break;

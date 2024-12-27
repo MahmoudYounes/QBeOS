@@ -2,12 +2,13 @@
 #include "include/common.h"
 
 PIC::PIC() {
-  if (DISABLE_PIC){
+#if DISABLE_PIC
     DisablePIC();
     return;
-  }
+#else
 
-  initialize();
+  Initialize();
+#endif
 }
 
 void PIC::DisablePIC(){
@@ -22,7 +23,7 @@ void PIC::DisablePIC(){
   CLI();
 }
 
-void PIC::initialize(){
+void PIC::Initialize(){
   outb(MASTER_CMDPORT, ICW1);
   outb(SLAVE_CMDPORT, ICW1);
 
@@ -35,8 +36,7 @@ void PIC::initialize(){
   outb(MASTER_DPORT, ICW4);
   outb(SLAVE_DPORT, ICW4);
 
-  outb(MASTER_DPORT, 0);
-  outb(SLAVE_DPORT, 0);
+  //CLI();
 }
 
 uint8_t PIC::getIMRM(){
@@ -50,11 +50,9 @@ uint8_t PIC::getIMRS(){
 void PIC::STI(){
   uint8_t mimr, simr;
   
-  mimr = getIMRM();
   mimr = 0; // enable all interrupts on the master chip
   outb(MASTER_DPORT, mimr);
 
-  simr = getIMRS();
   simr = 0;
   outb(SLAVE_DPORT, simr);
 }
@@ -62,18 +60,69 @@ void PIC::STI(){
 void PIC::CLI(){
   uint8_t mimr, simr;
   
-  mimr = getIMRM();
   mimr = 0xff; // enable all interrupts on the master chip
   outb(MASTER_DPORT, mimr);
 
-  simr = getIMRS();
   simr = 0xff;
   outb(SLAVE_DPORT, simr);
 }
 
-void SendEOI(){
-  // this will propagte the EOI to all PICs
-  outb(MASTER_DPORT, EOI);  
+void PIC::SendEOI(uint8_t irq){
+  if (irq > 8){
+    outb(SLAVE_CMDPORT, EOI);
+  }
+
+  outb(MASTER_CMDPORT, EOI);  
 }
 
-PIC pic;
+int8_t PIC::EnableInterrupt(uint8_t irqn){
+  uint8_t r = irqn, mimr, port = MASTER_DPORT;
+
+  if (irqn >= 16){
+    return -1;
+  }
+
+  if (irqn >= 8){
+    r = irqn % 8;
+    port = SLAVE_DPORT;
+  }
+
+  r = 1 << r; 
+  r = ~r;
+  mimr = getIMRM();
+  mimr &= r;
+  outb(port, mimr);
+  kprintf("imr status is %b\n\0", (uint32_t)inb(port));
+  return 0;
+}
+
+int8_t PIC::DisableInterrupt(uint8_t irqn){
+  uint8_t r = irqn, mimr, port = MASTER_DPORT;
+
+  if (irqn >= 16){
+    return -1;
+  }
+ 
+  if (irqn >= 8){
+    r = irqn % 8;
+    port = SLAVE_DPORT;
+  }
+  
+  r = 1 << r; 
+  mimr = getIMRM();
+  mimr |= r;
+  outb(port, mimr);
+  return 0;
+}
+
+uint16_t PIC::GetIRR(){
+  outb(MASTER_CMDPORT, READ_IRR);
+  outb(SLAVE_CMDPORT, READ_IRR);
+  return (inb(SLAVE_CMDPORT) << 8) | (inb(MASTER_CMDPORT));
+}
+
+uint16_t PIC::GetISR(){
+  outb(MASTER_CMDPORT, READ_ISR);
+  outb(SLAVE_CMDPORT, READ_ISR);
+  return (inb(SLAVE_CMDPORT) << 8) | (inb(MASTER_CMDPORT));
+}

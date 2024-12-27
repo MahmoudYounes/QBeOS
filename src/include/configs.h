@@ -1,4 +1,4 @@
-#ifndef CONGIG_H
+#ifndef CONFIG_H
 #define CONFIG_H
 
 /**
@@ -27,6 +27,7 @@
 // if set, QBeKern is built as an arm 64 bit kernel
 #define ARCH_ARM64 false
 
+#define DEBUG false
 
 #endif
 
