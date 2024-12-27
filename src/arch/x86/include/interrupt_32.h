@@ -28,26 +28,26 @@ struct interruptFrame {
 };
 
 // definitions of all functions here. implementation is found in cpp file
-DEFINE_INTERRUPT(BadInterrupt9);
-DEFINE_INTERRUPT(BadInterrupt15);
-DEFINE_INTERRUPT(BadInterrupt22);
-DEFINE_INTERRUPT(BadInterrupt23);
-DEFINE_INTERRUPT(BadInterrupt24);
-DEFINE_INTERRUPT(BadInterrupt25);
-DEFINE_INTERRUPT(BadInterrupt26);
-DEFINE_INTERRUPT(BadInterrupt27);
-DEFINE_INTERRUPT(BadInterrupt28);
-DEFINE_INTERRUPT(BadInterrupt29);
-DEFINE_INTERRUPT(BadInterrupt30);
-DEFINE_INTERRUPT(BadInterrupt31);
-DEFINE_INTERRUPT(BadInterrupt38);
-DEFINE_INTERRUPT(BadInterrupt39);
-DEFINE_INTERRUPT(BadInterrupt40);
-DEFINE_INTERRUPT(BadInterrupt41);
-DEFINE_INTERRUPT(BadInterrupt42);
-DEFINE_INTERRUPT(BadInterrupt43);
-DEFINE_INTERRUPT(BadInterrupt44);
-DEFINE_INTERRUPT(BadInterrupt45);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
+DEFINE_INTERRUPT(BadInterrupt);
 
 
 DEFINE_INTERRUPT(BadHRDWRInterrupt);
