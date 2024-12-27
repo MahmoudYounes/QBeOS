@@ -29,27 +29,6 @@ struct interruptFrame {
 
 // definitions of all functions here. implementation is found in cpp file
 DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-DEFINE_INTERRUPT(BadInterrupt);
-
-
 DEFINE_INTERRUPT(BadHRDWRInterrupt);
 DEFINE_INTERRUPT(DivZero);
 DEFINE_INTERRUPT(DebugException);

@@ -1,0 +1,11 @@
+# multiprocessing
+this section deals with running multiprocessors together.
+
+## MP Bootprotocol
+One of the logical processors is selected as the bootstrap processor (BSP) and the others are marked as application processors (AP).
+This configuration is defined in the APIC tables. The BSP executes MP initialization code and boots the OS. The AP executes minimal
+initialization code until it recieves a self inter processor interrupt message (SIPI) which ends up with the processor in HALT state
+and ready to be interrupted.
+
+// placeholder for now
+processor initialization should happen before system interrupts are enabled???

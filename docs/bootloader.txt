@@ -1,0 +1,56 @@
+# Bootloader
+## Info: real mode memory addressing
+- segmentAddr << 4 + offset 
+- when storing address in label in nasm, when using this address in a mov
+operation the above equation does not apply. the correct way to move data in
+this case is to load es with label address and load di with the desired offset
+and then use stos(b,w,d,q) to store the data in there.
+remember [<label/register>] is like *label/*register in c/c++
+
+## List of important assumptions made
+* the kernel and bootloader exist both in the root directory. There are no other
+directories on the CD.
+
+## QBeKern bootloader (QBeL)
+the bootloader in boot directory contains all assembly files required to build
+the bootloader. NASM is used for this task. the main file bootloader.asm 
+contains all required files and is the main entry to the bootloader. inside this
+file, other files are imported that holds other functionalities.
+
+## qbeos bootloader kernel boot params
+QBeL passes a specific set of params to the kernel it is booting. these params
+are organized as the following.
+
+# Memory Map of the Bootloader + Kernel
+Lookup memory_layout.md first.
+
+START            END          SIZE           description
+0x00000          0x003ff      1KB            RealMode IVT
+0x00400          0x004ff      256B           BIOS Data Area (BDA)
+0x00500          0x00d00      2KB            PVD of QBeKern ISO
+0x00d00          0x02d00      8KB            Bootloader params area
+0x02d00          0x07bff      19.75KB        QBeKern Bootloader (BL) stack
+0x07c00          0x083ff      2KB            QBeKern BL
+0x08400          0x6ffff      479Kb          QBeKern Kernel
+0x70000          0x77fff      32Kb           Memory Layout Table
+0x78000          0x7ffff      32KB           Boot HDR
+0x80000          0x100000     512KB          Bios Data <- don't mess with this
+0x100000         0x10ffff     64KB           High Memory Area in Real mode
+------------------------------  Protected Mode -------------------------------
+0x00100000       0x003fffff   2MB            OS Stack(s)
+0x00400000       0x004fffff   1MB            GDT table
+0x00500000       0x00500fff   4KB            VMM PDT
+0x00501000       0x00900fff   4MB            VMM PTs
+0x00901000       0x009017ff   2KB            IDT Table
+0x00901800       ??????????   0.01% of Mem   Physical Memory tables
+
+# Boot Header
+Offset      length(bytes)           value
+0           4                       Memory Regions Count
+4           4                       Memory Tables Start Address
+8           1                       PCI Supported or not
+9           1                       ConfigMechanism one of {1, 2}
+10          1                       magic byte 55be
+
+
+

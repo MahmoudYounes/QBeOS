@@ -1,0 +1,96 @@
+# Interrupts in life and QBeKern
+
+## Interrupts handler vs interrupts delivery
+There is a distinction between the interrupts handlers which are defined via the lidt command and the handlers code, and the
+interrupt delivery mechanism, which is the chip (PIC vs LAPIC and IOAPIC) and the configuration for these chips.
+
+## Interrupts in life
+Interrupts are events that causes the CPU to stop whatever it is doing and service them. Interrupts service 3 purposes:
+* informing the kernel there is an Exception that happened (page faults, double faults, general protection fault, etc.)
+* informing the kernel there is a hardware that wants to send/recieve data (hardware interrupt generated externally)
+* informing the kernel there is a process that requires its attention via system call (software interrupts).
+
+## Architecturly defined interrupts
+A system using intel x86 ia32 arch can handle [0, 255] interrupts. The first 32 interrupts [0, 31] interrupts are
+reserved by the arch developers. They are used to signal internal CPU exceptions. The system developer must write
+the necessary code to do the handling.
+to get a list of all the arch defined interrupts, see the intel reference manual in repo section 6-2 vol. 3A
+
+## From a hardware prespective
+### PIC: Programmable interrupt controller
+on x86 architecture the hardware interrupts are handled via an external chip named PIC. this has a layout of a
+master and slave chip. Each chip provides 8 interrupts but a total of 15 interrupts can be handled becuase there is
+one interrupt line to connect the master chip with the slave chip.
+This chip is a legacy chip since the intel apic and ioapic came out in the early pentiums.
+PIC serves only external hardware generated interrupts. the PIC hardware generated interrupt handlers start at 0x30
+
+## APIC: Advanced programmable interrupt controller
+This is the next generation succeeding PIC. This is used for more sophisticated interrupt redirection mechanisms and
+allows CPUs interrupting each other.
+This is a necessity in SMP/SIMD envs.
+
+There are two components of the APIC, an on chip APIC called local APIC and an IO APIC that is attached to the
+system bus. The local APIC is attached to a cpu core and responsible for signals comming to this CPU. The IO APIC is
+part of the chipset, and provides multiprocessor interrupt management. we have 1 APIC per cpu core and one IO APIC
+for the whole chipset.
+
+For each CPU Core, the local APIC is connected to pins LINT[1:0]. When the APIC is disabled these pins serve as
+INTR and NMI pins. When the APIC is enabled, these pins can be programmed to remap the interrupts.
+
+The processor may recieve interrupts from the local APIC which is connected to the external devices like,
+other devices such as Keyboard, GPU, etc. or the IO APIC.
+
+local and IO APIC can be programmed via registers that are memory mapped. the area of memory they are mapped to is FEE00000H.
+this area must be designated to the processor as strongly unchachable. the registers are 128-bit aligned though not all of them
+are 128bits in size. all memory stores should be 32-bit memory store commands.
+
+to enable the APIC or disable it, we use the MSR register IA32_APIC_BASE[11] set it to 0 to disable to enable it again a system
+reset has to occur. it can be set to 1 but the spurious register is cleared which puts the APIC in a specific state in which it is
+disabled but.... using this way can all the apic to be renabled later.
+
+These are the interrupt sources:
+* interrupt on pins LINT0 LINT1 which resembles the interrupts recieved on the PIC.
+* interrupt from IO APIC: this is called external interrupt source, the rest is called local interrupt source.
+* interrupt from other processors AKA inter process interrupt (IPI)
+* interrupt from APIC timer: a timer can be programmed every x period (useful for scheduling processes?)
+* interrupt from performance counters
+* interrupt from thermal sensors
+* interrupt from local apic errors
+every interrupt source has an associated vector to it. it also has a mask bit that can disable a specific interrupt source.
+
+to program the APIC you need to interface with it via memory read/writes. check table 11.1 - Local APIC Register address map in
+intel manual.
+
+we use IA32_APIC_BASE MSR register to understand the current status and where the registers of APIC are mapped.
+IA32_APIC_BASE[8]: signals if the processor is the boot processor (every processor has its own MSR registers)
+IA32_APIC_BASE[11]: global enable/disable APIC
+IA32_APIC_BASE[12..35]: contains the 24 bit high part of the memory address where the APIC table is mapped. the rest is 0s.
+rest of the bits of this register are reserved.
+to relocate the APIC table you can write to the base address field. note here that while every CPU has its own local APIC,
+they all start pointing to the same APIC table. it's a must to relocate the APIC tables per processor in case of multiprocessor
+environments.
+
+## Configuring the LAPIC
+the LVT is what allows configuring the interrupt sources. this happens via writing to specific LAPIC registers. all registers first
+eight bits specify the vector number (hence LVT). this vector number is the number used to index into the IDT. the rest of the bits
+define the interrupt delivery mechanisms. look into intel manual Vol3 Table 11-8
+
+### Error handling
+the Error status register (ESR) must be written to, to rearm the error functionalities of the APIC and to update the ESR before
+reading from it.
+
+### APIC Timer
+LAPIC contains timer functionality. there is two important modes we care about, one shot mode and period mode.
+Divide configuration register is used to divide the frequency of the PC clock and the generated number is the new frequency for
+the interrupt. You configure the timer vector and mode by writing to the timer LVT register. to start the timer you need to write
+to the initial timer count register.
+
+## IVT
+This is the interrupt table that exists in real mode. The BIOS sets this table up. This is a 4 byte per table entry
+table where each entry has 2 bytes.
+referencing segment and 2 bytes referencing offset, both mark the address of the routine to run when this interrupt
+happens. These are the routines that run when we do for example int 15h in real mode.
+
+## IDT
+TODO: fill in the IDT documentation with every interrupt implementation design.
+

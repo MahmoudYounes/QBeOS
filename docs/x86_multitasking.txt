@@ -1,0 +1,29 @@
+# Overview
+This document explains how the multitasking works in x86 processor architecture
+and how qbekern handles this.
+
+# Task
+a task is a unit of execution. it is the code, data, and stack of the execution
+in linux terms a task is a thread. a process is composed of multiple tasks
+or multiple threads.
+in a multi-ring execution environment the task state segment carries pointers
+to different stack segments used at different privileges.
+
+the code segment, stack segment, and data segment(s) are called task execution
+space. the task state segment is a segment in memory that holds the information
+or pointers to the segments above. these exist in the GDT or LDT for each 
+processor by means of a task segment selector (TSS) a selector is just
+a pointer for the task segment with the information about the task.
+
+the processor task register is used to carry the TSS for the current executing
+task. ltr is the assembly command used to to interact with this register.
+
+# Multitasking
+x86 IA32 supports two types of multitasking: software multitasking and 
+hardware multitasking. the difference between both is that hardware multitasking
+saves all the task information for the hypervisor without intervention and 
+does the same as loading. in software multitasking, it is up to the hypervisor
+to save and load the task information. note that in x86_64 hardware task
+switching is not supported.
+
+

@@ -1,0 +1,45 @@
+# Overview
+tracking the road map and progress of the project so far.
+
+# Road map
+Highlevel overview of the road map of development for QBeKern
+* GDT
+* PMM
+* VMM
+  * Paging
+  * Public APIs
+* IDT
+  * IDT Structures
+  * ISRs
+* LDT
+* TSS
+* SIMD
+* ACPI
+* APIC
+* IOAPIC
+* LAPIC
+* HPET
+* APIC-TIMER
+* SMP
+* Multitasking
+* Syscalls
+* Userspace
+* The fun begin
+
+# TODOs 
+these are some cool features 
+* Implement config for kernel features (Should self test or no fx)
+  the config should be created via makefile and be placed in a file that enables
+  and disables certain features in the kernel.
+* Refactor testing to be automated with asserts because testing is important ofc
+* Implement EFI loading
+  Currently the kernel is bootable via legacy BIOS only.
+* Switch to CMake at some point. This enables flexible generation of make files
+* Compile libgcc with no-red-zone and mcmodel=kernel.
+  This is a must in long mode and/or x86_64 modes.
+* Port the kernel to x86_64
+* Port the kernel to aarch and aarch64 (ARM)
+* Support loading ELF file format
+* Remove default compilation with debug symbols
+
+
