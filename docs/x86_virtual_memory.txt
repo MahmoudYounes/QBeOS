@@ -1,0 +1,89 @@
+# Virtual Memory management
+The essential objective of virtual memory management is to implement how addresses are
+translated and memory access control. There are three types of addresses into
+memory.
+Virtual address(AKA logical address), linear address, physical address.
+At the end of the day physical address is the address used to access the memory.
+If we have a flat memory model, i.e, GDT: Code Segment == Data Segment == The
+whole memory (this is set by having 2 GDT entries spanning the whole
+memory limits), then Virtual address is the same as a linear address.
+This is because linear address is produced from virtual address by means of
+segmentation. The virtual address consists of 16 bit selector and 32 bit offset.
+The selectors are selectors into the GDT or LDT depending on the context.
+LDT is associated with tasks. When in flat memory model, the selectors
+are preloaded during boot after switching to protected mode from real mode.
+The physical address is calculated from the linear address via paging. the linear
+address is split into 10 10 12 bits. The first 10 bits point into page directory.
+it is the index of a page directory entry. A page directory entry then points to
+a page table. The second 10 bits point into the index of a page table entry.
+A page table entry points to the start of a page in physical memory. the last 12
+bits is the index of the byte in the page. That means each page can be 4096 byte
+or 4kbs.
+Likewise, if paging is disabled then Virtual address maps to linear address via
+the GDT and linear address in this case is the same as physical address.
+
+In conclusion, segmentation and paging are two different memory protection modes.
+They can be used together or one can be used and not the other. Segemntation can
+be used to isolate tasks in a multitasking or multiprocess environments. The
+latter is the environment you get when the CPU has multicores. Segmentation is
+deprecated so in QBeKern we use a flat memory model. We will only protect kernel
+code and data memory space.
+
+
+Note: All of this information can be found in intel manuals Vol3 Chapter 3.
+
+# QBeKern Memory Management model
+Right after the bootloader is done and before jumping to the kernel, the memory
+model is flat memory model. i.e, both code and data descriptors in GDT map to
+the whole available memory address space.
+
+QBeKern for the time being is 32 bit OS (TODO: Switch to 64 bits)
+
+After booting, QBeKern defines 4 segments in GDT spanning the whole memory, 2 for
+kernel code and data, and 2 for user code and data + 1 null descriptor:
+index          | Base           | LIMIT         | Description
+0              | 0              | 0             | null descriptor
+1              | 0x00000000     | 0xFFFFF       | executable kernel code
+2              | 0x00000000     | 0xFFFFF       | nonexecutable kernel data
+3              | 0x00c00000     | 0xFFFFFF      | user executable
+4              | 0x00c00000     | 0xFFFFFF      | user data
+
+The purpose of this segmentation model is just to protect kernel area from user
+area. We will rely also on paging to protect kernel and user code from each other as well.
+GDT will be used for LDT and TSS as well.
+
+# MemoryManager
+the memory manager (Memory:memory.h) is responsible for the physical memory. The memory manager is just that
+a memory manager.
+Memory is initialized by reading the memory tables placed by the bootloader at 0x70000.
+It then splits the memory into physical pages.
+Each page will be of size PAGE_SIZE(4k).
+Post initialization, Memory marks the pages used by the kernel as reserved.
+
+Memory Public API (Size is in bytes):
+AllocPhysicalPage(): searches for the first free page and allocates it. return pointer to base of page
+Allocate(size): allocates X + (X + PAGE_SIZE) % PAGE_SIZE pages and returns pointer to first page.
+Free(pagePointer): given a page pointer that begins on the page boundary, free the string of pages marked with allocation ID.
+
+# VirtualMemory and virtual memory management
+QBeKern will place PDT entries starting address 0x2500000. In 32 bit mode we have 2 levels only (PDT, PT) each is 1024 entries.
+each entry is 8 bytes so ideally 16KBs should be sufficient for such tables. However, in 64 bits long mode, we need to expand
+this memory requirement to include a max of 5 levels (5 * 1024 * 8 = 40KBs).
+Since QBeKern is 32 bits for now, we will stick with only 2 levels of page tables. Once paging is enabled, even the kernel
+memory locations will be accessed via MMU.
+QBeKern should be, at some point, a higher half kernel. That means on 32 bits we map the kernel starting address 0xc0000000. For
+now, the kernel and all of its everything exist in the lower 8MBs of the kernel.
+There will be two stages for paging to avoid issues.
+* First 8MBs of virtual address will point to first 8MBs of physical addresses.
+* First 8MBs after 0xc0000000 will point to first 8MBs of physical addresses.
+* Paging Enabled, jump absolute (jmp <from reg>)
+* First 8MBs gets unmapped to zero.
+if memory is 4GBs (Max on 32 bits), 1024 PDTEntries with, 1024 PTEntries
+every PDTEntry is 32bits and each PTEntry is 32bits
+That's PDT Size = 1024 * 32 = 4096 bytes (4kb)
+
+# MSRs
+model specific registers (MSR) are registers defined per cpu model. you can use  RDMSR and WRMSR commands, ax dx to fill in data
+and you provide the instruction with MSR address. list of all MSRs with addresses and functionalities found in intel vol4 chapter 2.
+
+

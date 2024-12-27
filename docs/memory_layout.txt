@@ -1,4 +1,4 @@
-# Memory layout
+# Info Real Mode Memory layout
 ++++++++++++++++
 <1MiB: important in real mode
 _____________________________________________________________________________________________

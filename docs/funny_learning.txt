@@ -1,0 +1,38 @@
+## Important
+I have discovered that if I want to write a kernel that is bigger than 400KBs
+(conventional memory available below 1Mib Boundry) I need to load it into memory
+beyond the 1Mib boundry. in real mode, beyond the 1Mib boundry only 64Kbs
+available so that means the size of my kernel can't be bigger than 464Kbs.
+At the time of writing this, my basic, not so good, kernel that only writes
+stuff to screen is 1.2Kb. I have naively thought I could trick the BIOS bytes
+setting the pointer to the buffer where the kernel is loaded to the 1Mib
+boundary exactly, hoping the BIOS will be able to do so itself
+(i.e, access memory beyond 1Mib + 64Kb) but the BIOS was.. well..
+smarter or dumber than me.. eventually I researched osdev and found out that
+BIOS is not reliable in loading stuff above 1Mib, but I can load below 1Mib and
+relocate data there.
+
+so taking a pause here to evaluate these two decisions:
+
+* Continue as I am now, and leave this problem for future me.
+**Changes:
+*** I will restructure the memory layout to load the kernel in a lower address.
+
+** Pros:
+*** short - no changes really
+*** get to the good stuff (the actual OS things)
+
+** Cons:
+*** may struggle when I hit the limits of the 1Mib memory while loading
+the kernel
+
+* Implement a solution for this.
+** Changes:
+*** to talk to higher memroy I need to be in protected mode. When I am in
+    protected mode, I will not be able to use BIOS Interrupts which means I will
+    not be able to load the kernel while in real mode before jumping to
+    protected mode. That means, to load the kernel I will have to jump to
+    protected mode and load the kernel via a driver. this is already smelling
+    like 2 stage bootloader.
+
+
