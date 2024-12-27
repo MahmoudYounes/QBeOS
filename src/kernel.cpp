@@ -512,7 +512,6 @@ void kmain() {
   TestHasher();
   TestLinkedLists();
   TestHashTables();
-  bootEnd();
   // Systems initialized and we are booted yay!
   printHelloMessage();
 

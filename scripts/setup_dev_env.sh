@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eux
+
 # in this script, we will download and build our gcc cross compiler
 
 # warning message
@@ -23,9 +25,10 @@ createDirIfNotExist () {
     fi
 }
 
-if [ -d $TMP ];
-then
-  rm -rf $TMP
+if [ -f /etc/os-release ]; then
+    # freedesktop.org and systemd
+    . /etc/os-release
+    OS=$NAME
 fi
 
 # setup global vars
@@ -35,6 +38,7 @@ export TMP_DIR="$HOME/tmp"
 export BINUTILS_DIR="$PREFIX/binutils"
 export GCC_DIR="$PREFIX/gcc"
 export PATH="$PREFIX/bin:$PATH"
+export INSTALL_PKG="apt install"
 
 # creating required folders
 echo "creating $PREFIX"
@@ -49,47 +53,105 @@ createDirIfNotExist $GCC_DIR
 echo "downloading packages..."
 
 cd $TMP_DIR
-# download all cross compiler dependiencies
-# check the dependiencies version in this url: https://wiki.osdev.org/GCC_Cross-Compiler
-sudo apt install -y build-essential bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo libisl-dev git subversion
-if [ $? -ne 0 ]; then
-    echo "failed to install dependency libraries"
-    exit 1
-fi
-
-# downloading latest version of binuils through git
-git clone git://sourceware.org/git/binutils-gdb.git binutils-src
-
-# downloading latest version of gcc
-git clone git://gcc.gnu.org/git/gcc.git gcc-src
-
-clear
-echo "staring build..."
-cd $BINUTILS_DIR
-$TMP_DIR/binutils-src/configure --target=$TARGET --prefix="$PREFIX" --with-sysroot --disable-nls --disable-werror
-make
-make install
 
 
-which -- $TARGET-as
-if [ $? -ne 0 ]; then
-    echo $TARGET-as is not in PATH
-    exit 1
-fi
+case $OS in
+  "Arch Linux")
+    # download all cross compiler dependiencies
+    # check the dependiencies version in this url: https://wiki.osdev.org/GCC_Cross-Compiler
+    sudo pacman -Syu base-devel bison flex gmp mpc mpfr texinfo isl git subversion
+    if [ $? -ne 0 ]; then
+        echo "failed to install dependency libraries"
+        exit 1
+    fi
 
-cd $GCC_DIR
-$TMP_DIR/gcc-src/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers
-make all-gcc
-make all-target-libgcc
-make install-gcc
-make install-target-libgcc
+    # downloading latest version of binuils through git
+    git clone git://sourceware.org/git/binutils-gdb.git binutils-src
 
-echo "cross compiler build done."
-echo "installing nasm"
-sudo apt install nasm
+    # downloading latest version of gcc
+    git clone git://gcc.gnu.org/git/gcc.git gcc-src
 
-echo "done installing nasm"
-echo "installing bochs"
-sudo apt install bochs bochs-x
+    clear
+    echo "staring build..."
+    cd $BINUTILS_DIR
+    $TMP_DIR/binutils-src/configure --target=$TARGET --prefix="$PREFIX" --with-sysroot --disable-nls --disable-werror
+    make
+    make install
+
+
+    which -- $TARGET-as
+    if [ $? -ne 0 ]; then
+      echo $TARGET-as is not in PATH
+      exit 1
+    fi
+
+    cd $GCC_DIR
+    $TMP_DIR/gcc-src/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers
+    make all-gcc
+    make all-target-libgcc
+    make install-gcc
+    make install-target-libgcc
+
+    echo "cross compiler build done."
+    
+    echo "installing nasm"
+    sudo pacman -Syu nasm
+    echo "done installing nasm"
+
+    echo "installing bochs"
+    git clone https://aur.archlinux.org/bochs.git bochs
+    pushd bochs
+    makepkg -si
+    popd
+    echo "done installing bochs"
+    ;;
+
+  *)
+    # download all cross compiler dependiencies
+    # check the dependiencies version in this url: https://wiki.osdev.org/GCC_Cross-Compiler
+    sudo apt install -y build-essential bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo libisl-dev git subversion
+    if [ $? -ne 0 ]; then
+        echo "failed to install dependency libraries"
+        exit 1
+    fi
+
+    # downloading latest version of binuils through git
+    git clone git://sourceware.org/git/binutils-gdb.git binutils-src
+
+    # downloading latest version of gcc
+    git clone git://gcc.gnu.org/git/gcc.git gcc-src
+
+    clear
+    echo "staring build..."
+    cd $BINUTILS_DIR
+    $TMP_DIR/binutils-src/configure --target=$TARGET --prefix="$PREFIX" --with-sysroot --disable-nls --disable-werror
+    make
+    make install
+
+
+    which -- $TARGET-as
+    if [ $? -ne 0 ]; then
+      echo $TARGET-as is not in PATH
+      exit 1
+    fi
+
+    cd $GCC_DIR
+    $TMP_DIR/gcc-src/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers
+    make all-gcc
+    make all-target-libgcc
+    make install-gcc
+    make install-target-libgcc
+
+    echo "cross compiler build done."
+    echo "installing nasm"
+    sudo apt install -y nasm
+
+    echo "done installing nasm"
+    echo "installing bochs"
+    sudo apt install -y bochs bochs-x
+    ;;
+esac
+
+
 
 echo "Done! you may need to install qemu and virtualbox if you want to test with these virtualization solutions"

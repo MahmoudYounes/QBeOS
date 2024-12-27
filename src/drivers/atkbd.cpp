@@ -15,7 +15,7 @@ void ATKBD::Initialize() {
   uint8_t err;
 
   idkbd();
-  
+
   setScanSet();
   updateLeds();
 
@@ -45,7 +45,7 @@ void ATKBD::setScanSet() {
   uint8_t scanset;
   uint8_t err;
 
-  psc->WriteCommand(MOD_SCANSET, PORT1); 
+  psc->WriteCommand(MOD_SCANSET, PORT1);
   psc->WriteCommand(0, PORT1);
   err = psc->ReadData(&scanset);
   if (err) {
@@ -68,11 +68,11 @@ void ATKBD::setScanSet() {
       err = psc->ReadData(&scanset);
     }
 
-    if (scanset == 0x1){
+    if (scanset == 0x1) {
       kprint("set keyboard scanset to 1\n\0");
-    } else if (scanset == 0x2){
+    } else if (scanset == 0x2) {
       kprint("set keyboard scanset to 2\n\0");
-    } else if (scanset == 0x3){
+    } else if (scanset == 0x3) {
       kprint("set keyboard scanset to 3\n\0");
     } else {
       kprintf("unknown scanset %x\n\0", scanset);
@@ -92,9 +92,22 @@ void ATKBD::printKeyboardStatus() {
 }
 
 void ATKBD::handleData(uint8_t data) {
-  uint32_t printData = (uint32_t) data;
-  kprintf("recieved data %x\n\0", printData);
-  screen.WriteCharacterToScreen(SC1_ToASCII(printData));
+  uint32_t pdata = (uint32_t)data;
+
+  // assuming we are always able to set scan set 2
+  if (SC2_BREAK == data) {
+    // Handle break codes
+    isBreak = true;
+  } else if (SC2_isKeyboardCommand(data)) {
+    // enqueue keyboard commands
+    kprintf("cmd %x\n\0", pdata);
+  } else {
+    if (isBreak) {
+      isBreak = false;
+    } else {
+      screen.WriteCharacterToScreen(SC2_toASCII(data));
+    }
+  }
 }
 
 void ATKBD::Handler() {

@@ -3,7 +3,8 @@
 
 #include <include/common.h>
 
-const uint8_t BREAK = 0xf0;
+const uint8_t SC2_BREAK = 0xf0;
+const uint8_t SC2_ERR = '\e';
 
 enum SC2_KBDKEY {
  _SC2_F9_PKEY = 0x01,
@@ -78,5 +79,97 @@ enum SC2_KBDKEY {
  _SC2_SCRLLCK_PKEY = 0x7E,
  _SC2_F7_PKEY = 0x83,
 };
+
+inline bool SC2_isKeyboardCommand(uint8_t data){
+  switch (data){
+    case _SC2_NUMLCK_PKEY:
+    case _SC2_SCRLLCK_PKEY:
+    case _SC2_CPSLCK_PKEY:
+      return true;
+    default:
+      return false;
+  }
+}
+
+inline char SC2_toASCII(uint8_t data){
+  switch (data) {
+    case _SC2_0_PKEY:
+      return '0';
+    case _SC2_1_PKEY:
+      return '1';
+    case _SC2_2_PKEY:
+      return '2';
+    case _SC2_3_PKEY:
+      return '3';
+    case _SC2_4_PKEY:
+      return '4';
+    case _SC2_5_PKEY:
+      return '5';
+    case _SC2_6_PKEY:
+      return '6';
+    case _SC2_7_PKEY:
+      return '7';
+    case _SC2_8_PKEY:
+      return '8';
+    case _SC2_9_PKEY:
+      return '9';
+    case _SC2_A_PKEY:
+      return 'a';
+    case _SC2_B_PKEY:
+      return 'b';
+    case _SC2_C_PKEY:
+      return 'c';
+    case _SC2_D_PKEY:
+      return 'd';
+    case _SC2_E_PKEY:
+      return 'e';
+    case _SC2_F_PKEY:
+      return 'f';
+    case _SC2_G_PKEY:
+      return 'g';
+    case _SC2_H_PKEY:
+      return 'h';
+    case _SC2_I_PKEY:
+      return 'i';
+    case _SC2_J_PKEY:
+      return 'j';
+    case _SC2_K_PKEY:
+      return 'k';
+    case _SC2_L_PKEY:
+      return 'l';
+    case _SC2_M_PKEY:
+      return 'm';
+    case _SC2_N_PKEY:
+      return 'n';
+    case _SC2_O_PKEY:
+      return 'o';
+    case _SC2_P_PKEY:
+      return 'p';
+    case _SC2_Q_PKEY:
+      return 'q';
+    case _SC2_R_PKEY:
+      return 'r';
+    case _SC2_S_PKEY:
+      return 's';
+    case _SC2_T_PKEY:
+      return 't';
+    case _SC2_U_PKEY:
+      return 'u';
+    case _SC2_V_PKEY:
+      return 'v';
+    case _SC2_W_PKEY:
+      return 'w';
+    case _SC2_X_PKEY:
+      return 'x';
+    case _SC2_Y_PKEY:
+      return 'y';
+    case _SC2_Z_PKEY:
+      return 'z';
+    case _SC2_SPC_PKEY:
+      return ' ';
+    default:
+      return SC2_ERR;
+  }
+}
 
 #endif

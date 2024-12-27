@@ -28,7 +28,11 @@ private:
   uint8_t ledStatus;
 
   // store the queue of characters?  
-  Vector<char> charQueue;
+  Vector<char> inputQueue;
+  // when the queue reaches this size, it is flushed
+  uint8_t flushSize;
+
+  bool isBreak;
 
   void printKeyboardStatus();
   void idkbd();
