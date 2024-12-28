@@ -1,15 +1,15 @@
 #ifndef PIC_H
 #define PIC_H
 
-#include "include/configs.h"
 #include "include/common.h"
+#include "include/configs.h"
 #include "include/logger.h"
 
 #define MASTER_CMDPORT 0x20
-#define MASTER_DPORT   0x21
+#define MASTER_DPORT 0x21
 
-#define SLAVE_CMDPORT  0xa0
-#define SLAVE_DPORT    0xa1
+#define SLAVE_CMDPORT 0xa0
+#define SLAVE_DPORT 0xa1
 
 #define ICW1 0x11
 #define ICW2M 0x30 // interrupt begin
@@ -22,11 +22,17 @@
 #define READ_ISR 0x0b
 #define READ_IRR 0x0a
 
-// By default we are disabling PIC
+// By default we should be disabling PIC and relying on APIC
+// ISR: in-service register
+// IRR: interrupt request register
+// ISR: interrupt status register 
 class PIC {
 private:
-    uint8_t getIMRM();
+  uint8_t getIMRM();
   uint8_t getIMRS();
+
+  uint8_t masterIMRStatus;
+  uint8_t slaveIMRStatus;
 
 public:
   PIC();
@@ -34,12 +40,19 @@ public:
 
   void STI();
   void CLI();
+  void STAI();
+  void CLAI();
   void DisablePIC();
   int8_t EnableInterrupt(uint8_t irqn);
   int8_t DisableInterrupt(uint8_t irqn);
   void SendEOI(uint8_t);
+  // returns the interrupts that are currently being handled
   uint16_t GetISR();
+  // returns the interrupts that are pending handling
   uint16_t GetIRR();
+  // returns the interrupts mask. hibyte is slave, lobyte is master
+  uint16_t GetIMR();
+
 };
 
 inline PIC pic;

@@ -9,11 +9,11 @@
 */
 
 // if set, disables the initialization of PIC and masks all interrupts from it
-#define DISABLE_PIC false
+#define DISABLE_PIC false 
 
 // if set, disables the initialization of the IOAPIC and masks all interrupts
 // from it
-#define DISABLE_APIC true
+#define DISABLE_APIC true 
 
 // if set, QBeKern is built as a 32 bit kernel
 #define ARCH_X86_32 true

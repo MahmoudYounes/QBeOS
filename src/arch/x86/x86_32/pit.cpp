@@ -8,16 +8,17 @@ PIT::PIT(PIC *pic){
 
   cmd = CHANL0 | LOHIB | TERMC | BIN;
   outb(CMDCH, cmd);
-
-  pic->DisableInterrupt(0);
 }
 
 void PIT::Reload(){
   // we only want to program channel 0 for now.
   // that is the channel connected to IRQ0 in PIC.
   //
-  uint8_t lobyte, hibyte;
+  uint8_t lobyte, hibyte, cmd;
   uint16_t divisor;
+
+  cmd = CHANL0 | LOHIB | TERMC | BIN;
+  outb(CMDCH, cmd);
 
   divisor = DIVISOR;
  

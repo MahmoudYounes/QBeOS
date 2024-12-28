@@ -20,10 +20,6 @@ void ATKBD::Initialize() {
   updateLeds();
 
   psc->WriteCommand(ENABLE, PORT1);
-  err = pic->EnableInterrupt(1);
-  if (err < 0) {
-    kprint("keyboard error: could not enable keyboard interrupts\n\0");
-  }
   psc->EnableInterrupt1();
 }
 
@@ -120,4 +116,6 @@ void ATKBD::Handler() {
   pic->SendEOI(1);
 }
 
-void KeyboardHandler(struct interruptFrame *hwregs) { kbdDriver.Handler(); }
+void KeyboardHandler(struct interruptFrame *hwregs) { 
+  kbdDriver.Handler(); 
+}

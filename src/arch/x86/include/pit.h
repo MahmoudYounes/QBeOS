@@ -22,7 +22,9 @@
 
 #define BIN    0x0
 
-#define DIVISOR 0x1
+// pit will fire approximately 19 times in a second
+// 1193182 (freq of oscilator) / 62800 = 19
+#define DIVISOR 29102
 
 class PIT {
 private:

@@ -133,6 +133,6 @@ void PITTimerHandler(struct interruptFrame *hwregs){
   kprint("handling timer interrupt\n\0"); 
   pit.Reload();
   pic.SendEOI(0);
-}
+ }
 
 

@@ -21,10 +21,10 @@ extern APIC apic;
 // the compiler.
 struct interruptFrame {
   uint16_t ss;
-  uint32_t esp;
+  uint32_t sp;
   uint16_t eflags;
   uint16_t cs;
-  uint32_t eip;
+  uint32_t ip;
 };
 
 // definitions of all functions here. implementation is found in cpp file

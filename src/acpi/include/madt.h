@@ -4,6 +4,7 @@
 #include "include/common.h"
 #include "include/strings.h"
 #include "arch/include/vmm.h"
+#include "kstdlib/include/vector.h"
 
 struct MADT{
     uint32_t signature;
@@ -67,7 +68,8 @@ struct X2LAPIC {
 class MADTM{
 private:
     MADT madtHeader;
-    LAPIC *lapicList; 
+    Vector<LAPIC> lapicList;
+    Vector<IOAPIC> ioapicList;
 public:
     MADTM();
     MADTM(uintptr_t);

@@ -493,7 +493,6 @@ void kmain() {
   tssManager = TSSManager();
   idt = IDT();
   pic = PIC();
-  pic.CLI();
   pci = PCI(args);
   pit = PIT(&pic);
   ps2 = PS2();
@@ -502,8 +501,7 @@ void kmain() {
   kbdDriver = ATKBD(&pic, &ps2);
   kbdDriver.Initialize();  
 
-  pic.Initialize();
-  pic.CLI();
+  pic.EnableInterrupt(0);
   pic.EnableInterrupt(1);
   pic.EnableInterrupt(0);
   sti();
@@ -514,7 +512,7 @@ void kmain() {
   TestLinkedLists();
   TestHashTables();
   // Systems initialized and we are booted yay!
-  printHelloMessage();
+  //printHelloMessage();
 
   // Ideally this would be the init process running or a shell
   // Since I don't have a userspace env yet, this will be just

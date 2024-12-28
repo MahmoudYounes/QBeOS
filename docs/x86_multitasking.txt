@@ -14,6 +14,7 @@ space. the task state segment is a segment in memory that holds the information
 or pointers to the segments above. these exist in the GDT or LDT for each 
 processor by means of a task segment selector (TSS) a selector is just
 a pointer for the task segment with the information about the task.
+it also stores the base pointer for the task pages.
 
 the processor task register is used to carry the TSS for the current executing
 task. ltr is the assembly command used to to interact with this register.

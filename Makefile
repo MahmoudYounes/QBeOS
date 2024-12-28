@@ -9,7 +9,7 @@ SUBDIRS := src boot
 .PHONY: build subdirs $(SUBDIRS)
 build: setupEnvironment subdirs
 	cp $(BLD_DIR)/* $(ISO_ROOT_DIR)/
-	mkisofs -c bootcat -b bootloader.bin -no-emul-boot -boot-load-size 4 -o $(BIN_DIR)/$(ISO_NAME) $(ISO_ROOT_DIR)
+	mkisofs -R -J -c bootcat -b bootloader.bin -no-emul-boot -boot-load-size 4 -boot-info-table -o $(BIN_DIR)/$(ISO_NAME) $(ISO_ROOT_DIR)
 
 .PHONY: subdirs $(SUBDIRS)
 

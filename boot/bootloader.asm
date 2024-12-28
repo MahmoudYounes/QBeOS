@@ -13,6 +13,14 @@
 [BITS 16]
 [ORG 0x7C00]
 jmp _start
+times 8-($-$$) db 0
+iso_boot_info:
+bi_pvd:		dd 16				; LBA of primary volume descriptor
+bi_file:	dd 0				; LBA of boot file
+bi_length:	dd 0xdeadbeef			; Length of boot file
+bi_csum:	dd 0xdeadbeef			; Checksum of boot file
+bi_reserved:	times 10 dd 0xdeadbeef		; Reserved
+bi_end:
 
 global _start
 _start:
