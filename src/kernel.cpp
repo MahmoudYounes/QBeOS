@@ -508,7 +508,7 @@ void kmain() {
   pic.EnableInterrupt(0);
   sti();
 
-  //pit.Reload();
+  pit.Reload();
   
   TestHasher();
   TestLinkedLists();
