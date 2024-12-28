@@ -6,7 +6,7 @@ PIT::PIT(PIC *pic){
   this->pic = pic;
   uint8_t cmd = 0;
 
-  cmd = CHANL0 | LOHIB | MODE3 | BIN;
+  cmd = CHANL0 | LOHIB | TERMC | BIN;
   outb(CMDCH, cmd);
 
   pic->DisableInterrupt(0);
@@ -23,6 +23,6 @@ void PIT::Reload(){
  
   lobyte = divisor & 0xff;
   hibyte = (divisor & 0xff00) >> 8;
-  outb(CHANL0, lobyte);
-  outb(CHANL0, hibyte);
+  outb(CHAN0, lobyte);
+  outb(CHAN0, hibyte);
 }
