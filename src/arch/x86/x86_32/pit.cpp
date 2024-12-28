@@ -6,7 +6,7 @@ PIT::PIT(PIC *pic){
   this->pic = pic;
   uint8_t cmd = 0;
 
-  cmd = CHANL0 | LOHIB | TERMC | BIN;
+  cmd = CHANL0 | LOHIB | MODE3 | BIN;
   outb(CMDCH, cmd);
 
   pic->DisableInterrupt(0);

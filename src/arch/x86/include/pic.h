@@ -13,7 +13,7 @@
 
 #define ICW1 0x11
 #define ICW2M 0x30 // interrupt begin
-#define ICW2S 0x3a // interrupt begin
+#define ICW2S 0x38 // interrupt begin
 #define ICW3M 0x04
 #define ICW3S 0x02
 #define ICW4 0x01

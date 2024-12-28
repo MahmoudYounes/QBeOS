@@ -17,7 +17,8 @@
 
 #define LOHIB  0x30
 
-#define TERMC  0x0
+#define TERMC  0x00
+#define MODE3  0x06
 
 #define BIN    0x0
 
