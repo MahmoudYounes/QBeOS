@@ -505,6 +505,7 @@ void kmain() {
   pic.Initialize();
   pic.CLI();
   pic.EnableInterrupt(1);
+  pic.EnableInterrupt(0);
   sti();
 
   //pit.Reload();

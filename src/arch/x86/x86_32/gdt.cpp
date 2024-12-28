@@ -94,8 +94,8 @@ void GDT::RefreshGDT() {
                "mov ss, eax\n\t"
                "mov fs, eax\n\t"
                "mov gs, eax\n\t"
-               "jmp 0x8:.reload_gdt\n\t"
-               ".reload_gdt:\n\t"
+               "jmp 0x8:1f\n\t"
+               "1:\n\t"
                "popad\n\t"
                :
                : "a"(gdtSize), "r"(gdtBaseAddress)
