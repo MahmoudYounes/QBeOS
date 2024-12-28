@@ -24,19 +24,18 @@ setupEnvironment:
 	if [ ! -d $(BIN_DIR) ]; then mkdir $(BIN_DIR); fi
 	if [ ! -d $(ISO_ROOT_DIR) ]; then mkdir $(ISO_ROOT_DIR); fi
 
-run-qemu: $(BIN_DIR)/$(ISO_NAME)
+run: $(BIN_DIR)/$(ISO_NAME)
 	qemu-system-i386                                      \
   -enable-kvm									                          \
 	-m 4096                                               \
 	-drive format=raw,media=cdrom,file=./bin/QBeOS.iso    \
-	-smp 4                                                \
-	-device i8042           															\
+	-smp 1                                                \
 	-vga std                                              \
   -no-shutdown -no-reboot                        \
 	-monitor stdio                                        \
   -L /usr/share/qemu/sgabios.bin                        
 
-run: $(BIN_DIR)/$(ISO_NAME)
+run-vbox: $(BIN_DIR)/$(ISO_NAME)
 	
 	virtualboxvm --startvm QBeOS	
 
