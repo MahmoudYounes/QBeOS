@@ -15,9 +15,3 @@ JumpUsermode:
   mov ecx, esp
 	sysexit
 
-TestUserMode:
-  xor eax, eax
-  xor ebx, ebx
-  xor edx, edx
-  xor ecx, ecx
-  add eax, 1

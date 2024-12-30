@@ -519,6 +519,11 @@ void kmain() {
   WRMSR(IA32_SYSENTER_CS, 0x8, 0);
   pic.CLAI();
   cli();
+
+  // MUST SETUP PAGING FIRST!!!! otherwise this won't work
+  // to test this implementation, all vmm was mapped to be accessible by
+  // user and it worked. so you need to start thinking about your memory
+  // layout.
   JumpUsermode();
 
   bootEnd();
