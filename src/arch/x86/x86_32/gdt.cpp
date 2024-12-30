@@ -7,21 +7,24 @@ GDT::GDT() {
   lastEntryAddress = (uint8_t *)gdtBaseAddress;
   GDTEntry nullDescriptor =
       ConstructGDTEntry(0x00000000, 0x00000000, 0x0000, 0x0000);
+  
   GDTEntry kernelCodeDescriptor = ConstructGDTEntry(
       0x00000000, 0xfffff, SEGMENT_KERNEL_CODE, SEGMENT_FLAGS_DEFAULT);
+  
   GDTEntry kernelDataDescriptor = ConstructGDTEntry(
       0x00000000, 0xfffff, SEGMENT_KERNEL_DATA, SEGMENT_FLAGS_DEFAULT);
+  
   GDTEntry userCodeDescriptor = ConstructGDTEntry(
-      0x00c00000, 0xfffff, SEGMENT_USER_CODE, SEGMENT_FLAGS_DEFAULT);
+      0x00000000, 0xfffff, SEGMENT_USER_CODE, SEGMENT_FLAGS_DEFAULT);
+  
   GDTEntry userDataDescriptor = ConstructGDTEntry(
-      0x00c00000, 0xfffff, SEGMENT_USER_DATA, SEGMENT_FLAGS_DEFAULT);
+      0x00000000, 0xfffff, SEGMENT_USER_DATA, SEGMENT_FLAGS_DEFAULT);
 
-  AddGDTEntry(&nullDescriptor);
+  AddGDTEntry(&nullDescriptor);      
   AddGDTEntry(&kernelCodeDescriptor);
   AddGDTEntry(&kernelDataDescriptor);
-  AddGDTEntry(&userCodeDescriptor);
-  AddGDTEntry(&userDataDescriptor);
-
+  AddGDTEntry(&userCodeDescriptor); 
+  AddGDTEntry(&userDataDescriptor); 
   RefreshGDT();
 }
 

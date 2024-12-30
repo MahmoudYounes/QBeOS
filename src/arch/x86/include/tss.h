@@ -12,8 +12,8 @@ extern GDT gdt;
 struct tss {
   generalreg_size_t sp0;
   segmentreg_size_t ss0;
-  generalreg_size_t sp3;
-  generalreg_size_t ss3;
+  generalreg_size_t sp2;
+  generalreg_size_t ss2;
   controlreg_size_t cr3;
   generalreg_size_t ip;
   generalreg_size_t eflags;

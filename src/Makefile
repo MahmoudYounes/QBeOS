@@ -4,7 +4,7 @@ export LD := i686-elf-g++
 export OBJCPY := i686-elf-objcopy
 export OBJCPYFLAGS := -O binary
 
-export GCCFLAGS := -g -O3 -masm=intel -ffreestanding -lgcc -Wall -Wextra -fno-exceptions -fno-rtti -nostdlib -ffunction-sections -fno-builtin
+export GCCFLAGS := -g -O0 -masm=intel -ffreestanding -lgcc -Wall -Wextra -fno-exceptions -fno-rtti -nostdlib -ffunction-sections -fno-builtin
 export GCCFLAGS_INTR := -mno-red-zone
 # set of configs fixated for now until we can allow the user to configure them.
 export CFG_DEFS := -D KERN_X86_32

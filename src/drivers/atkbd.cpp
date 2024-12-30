@@ -9,11 +9,10 @@ ATKBD::ATKBD(PIC *pic, PS2 *psc) {
   this->psc = psc;
   this->pic = pic;
   ledStatus = 0x2;
+  Initialize();
 }
 
 void ATKBD::Initialize() {
-  uint8_t err;
-
   idkbd();
 
   setScanSet();

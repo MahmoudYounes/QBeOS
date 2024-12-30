@@ -52,7 +52,7 @@ debug: $(BIN_DIR)/$(ISO_NAME)
 	-serial stdio                                  		   \
 	-smp 1                                         		   \
 	-vga std                                       		   \
-  -d int -no-shutdown -no-reboot -S -s
+  -d int -no-shutdown -no-reboot -S -s 
 
 .PHONY: clean
 clean:

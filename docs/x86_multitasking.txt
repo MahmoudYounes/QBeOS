@@ -11,10 +11,30 @@ to different stack segments used at different privileges.
 
 the code segment, stack segment, and data segment(s) are called task execution
 space. the task state segment is a segment in memory that holds the information
-or pointers to the segments above. these exist in the GDT or LDT for each 
+or pointers to the segment that has information about the task state segment. 
+these TSS structures exist in the GDT or the LDT for each 
 processor by means of a task segment selector (TSS) a selector is just
 a pointer for the task segment with the information about the task.
 it also stores the base pointer for the task pages.
+
+
+TSS register has index of GDT entry in GDT table.
+This entry has the linear address of the TSS. this segment contains the following
+information defined:
+- CS, DS, SS, ES, FS, GS
+- general purpose registers state
+- eflags register state
+- EIP register state
+- CR3 register state
+- TSS register state
+- LDTR register state (only segment selector)
+- i/o map base address
+- SPs to privlege 0, 1, & 2
+- prev executed task
+- shadow sp state
+- rest of the data set by os developer. this is the io bit map and interrupt
+redirection bit map (you don't know those, read ch19 in intel sdm vol 1.
+and section 21.3 intel sdm vol 3)
 
 the processor task register is used to carry the TSS for the current executing
 task. ltr is the assembly command used to to interact with this register.
@@ -26,5 +46,143 @@ saves all the task information for the hypervisor without intervention and
 does the same as loading. in software multitasking, it is up to the hypervisor
 to save and load the task information. note that in x86_64 hardware task
 switching is not supported.
+
+# Task management DS
+- TSS
+- task-gate descriptor
+- TSS descriptor
+- Task register
+- NT flag in the eflags register
+## TSS
+on 32bit the TSS is 107 bytes long.
+
+byte(s) inclusive         description
+0-1,2-3                   previous task link, reserved to 0
+4-7                       esp0
+8-9,10-11                 ss0, reserved to 0
+12-15                     esp1
+16-17,18-19               ss1, reserved to 0
+20-23                     esp2
+24-25,26-27               ss2, reserved to 0
+28-31                     cr3
+32-35                     eip
+36-39                     eflags
+40-43                     eax
+44-47                     ecx
+48-51                     edx
+52-55                     ebx
+56-59                     esp
+60-63                     ebp
+64-67                     esi
+68-71                     edi
+72-73,74-75               es, reserved 0
+76-77,78-79               cs, reserved 0
+80-81,82-83               ss, reserved 0
+84-85,86-87               ds, reserved 0
+88-89,90-91               fs, reserved 0
+92-93,94-95               gs, reserved 0
+96-97,98-99               LDT SegSel, reserved0
+100-101,102-103           bit 0 T, io map base addr
+104-107                   ssp
+
+T: debug trap. when set the processor raises a debug exception (int3)
+when a switch to this task occurs.
+
+## TSS descriptor
+a descriptor that may be placed in the GDT. on 32bit it is 8 bytes as the
+following:
+bits    description 
+0-15  : limit 00:15
+16-31 : base addr 00:15
+32-39 : base addr 16:23
+40-43 : type <10B1> B: busy flag 
+44    : reserved 0
+45-46 : descriptor privilege level
+47    : Present flag
+48-51 : limit 16:19
+52    : Available for use by sys software (AVL)
+53-54 : reserved 0
+55    : Granularity (0: , 1: )
+56-63 : base addr 24:31
+
+minimum size of TSS is 67H or 103 bytes becaause one may chose to disable the
+ssp. switching to a task that has limit less than 67H generates a TSS exception.
+
+on 64bit it is 16 bytes
+0-15  : limit 00:15
+16-31 : base addr 00:15
+32-39 : base addr 16:23
+40-43 : type <10B1> B: busy flag 
+44    : reserved 0
+45-46 : descriptor privilege level
+47    : Present flag
+48-51 : limit 16:19
+52    : Available for use by sys software (AVL)
+53-54 : reserved 0
+55    : Granularity (0: , 1: )
+56-63 : base addr 24:31
+64-95 : base addr 32:63
+95-127: reserved 0
+
+# HardwareSwitch (HWS)
+processor updates dynamic fields:
+general purpose register, segment selectors, eflags
+
+# HW Context Switch
+happens in one of those cases
+- explicit call to a task with CALL
+- jump to a task with JMP
+- implicit call to interrupt-handler
+- implicit call to exception
+- return with IRET where NT in eflags is set
+
+current task execution environment is saved in the TSS
+the information from the TSS of the called task gets loaded.
+page 3259 of intel sdm explains an overview.
+
+# SoftwareSwitch
+in this case you only need two TSS structures. One for the kernel and one for 
+the user space per cpu.. This allows the jump between user space and kernel
+space.
+
+in software context, task switching may happen only in interrupt contexts.
+this is because the eip is automatically pushed on the stack. if every task
+on interrupt has the ip of the current or next instruction pushed on the stack
+then simply a stack could represent a task. this is because changing the info
+about the stack segment and stack pointer in interrupt context then doing
+a return with effectively switch to the next task. it is more complicated
+than this as the state of all registers (basically the dynamic CPU state)
+needs to be saved for every task and pop every time a context switch happens.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

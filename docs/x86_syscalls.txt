@@ -1,0 +1,7 @@
+# Overview
+this document talks about the system calls and how they happen and how they
+are implemented in QBeKern. 
+
+the TSS (see x86_multitasking.txt) has pointers to stack level 0, 1, and 2
+(ring 3). when a syscall happens the processor remains using the same tss.
+this tss has 

@@ -4,6 +4,7 @@
 #include "include/common.h"
 
 // contains all assembly definitions
+#define IA32_SYSENTER_CS 0x174
 #define RDMSR(addr, eax, edx) __asm__ __volatile__("rdmsr": "=a"(eax), "=d"(edx): "c"(addr))
 #define WRMSR(addr, eax, edx) __asm__ __volatile__("wrmsr": : "c"(addr), "a"(eax), "d"(edx))
 
