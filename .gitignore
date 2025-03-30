@@ -34,3 +34,6 @@ debugger-log.out
 **.ini
 
 .gdb_history
+
+# generated image
+*.hdd
