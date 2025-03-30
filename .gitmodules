@@ -1,0 +1,3 @@
+[submodule "FAT32-Parser"]
+	path = FAT32-Parser
+	url = https://github.com/YounesTasra-R4z3rSw0rd/FAT32-Parser

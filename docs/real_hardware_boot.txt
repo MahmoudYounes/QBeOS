@@ -1,0 +1,49 @@
+# Summary
+An operating system should be used on real hardware to make use of it. 
+
+# Prev Status
+The first iteration
+of the bootloader was working with El Torrito boot specification. This 
+boot specification allows a BIOS to know how to boot an OS from an ISO 9660
+formated medium. Currently I have 3 devices that I can run the OS on:
+- x86 Intel PC 
+- x86 AMD Laptop
+- Rasperypi 5
+QBeOS is not bootable on any of these devices due to the following reasons:
+- The BIOS image is too old to support El Torrito boot specification.
+- The BIOS image is too new to support legacy booting as a whole. So only
+  UEFI boot is supported.
+- The CPU has a different architecture not supported by QBeOS yet.
+
+# Solution
+There are three main solutions that would solve this issue.
+the first solution is to boot from a FAT formated hard disk drive.
+the second solution is to implement UEFI load.
+the third solution is to support arm architecture.
+
+## Solution 1: boot from a FAT formated hard disk drive
+this requires chaning the bootloader significantly. The following changes are
+needed:
+- Switch the bootloader to only be around 420 bytes which means I will need
+  a second stage bootloader. The isobootloader will also need to understand
+  this, which means QBeOS will have the option to be booted with one of 2 
+  bootloaders.
+- Write the second stage bootloader to load qbekern. This will require a changed
+  Address scheme unless the second bootloader can relocate itself to 0x7c00
+  again and then we can have more than 2k of code. We can also start using
+  c++ 16bit generated code for this, although I prefer assembly due to its ease.
+  We can further prepare a better environment for the kernel to boot in.
+- Mark the FAT data in bootloader as zero
+- Write a tool that can understand how to create a formated disk image
+  with MBR of the QBeOS bootloader. (See scripts/fatfs/README.md for more details)
+- Test and make sure we get the same results from master branch. 
+
+both solution 2 and 3 will be postponed for now.
+
+# Booting on Emulation and Virtualization solutions
+Unless I am running on VirtualBox, booting from UEFI requires some changes
+in terms of which BIOS image I should use while running QEMU. Moreover, the
+El Torrito boot method works out of the box. Hence, the El Torrito bootloader
+will not be deprecated but it will remain supported for virtual testing while
+also supporting the FAT32 bootloader to test the OS on real hardware.
+
