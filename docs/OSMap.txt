@@ -81,8 +81,9 @@ START            END          SIZE           description
 0x00500          0x00d00      2KB            PVD of QBeOS ISO
 0x00d00          0x02d00      8KB            Bootloader params area
 0x02d00          0x07bff      19.75KB        QBeOS Bootloader (BL) stack
-0x07c00          0x083ff      2KB            QBeOS BL
-0x08400          0x6ffff      479Kb          QBeOS Kernel
+0x07c00          0x083ff      2KB            QBeOS BL or 512b if FAT
+0x08400          0x0a3ff      8Kb            Kernel Loader (stage 2)
+0x0a400          0x6ffff      406kb          Kernel (empty region)
 0x70000          0x77fff      32Kb           Memory Layout Table
 0x78000          0x7ffff      32KB           Boot HDR
 0x80000          0x100000     512KB          Bios Data <- don't mess with this

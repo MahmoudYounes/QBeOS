@@ -1,5 +1,7 @@
 ; ========================================
 ; Function to print to screen using BIOS
+; calls.
+;
 ; args: 
 ; si: address of first character in stack
 ; ========================================

@@ -31,7 +31,7 @@ This tool does multiple things but mainly solves two issues:
 - burn the generated image to any device.
 
 # Caveats
-- this tool maybe or maybe not be tightly coupled with QBeOS.
+- this tool may be or may not be tightly coupled with QBeOS.
 - this tool is not a generic tool to create FAT drives or images. It only supports
   one usecase which is to create a QBeOS boot image formatted as FAT32. However,
   this tool can be extended to be a general purpose tool for FAT filesystem.
