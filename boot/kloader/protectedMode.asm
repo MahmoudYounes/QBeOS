@@ -35,4 +35,4 @@ func_EnableProtectedModeAndJmpKernel:
 
     ; a far jump to flush the processor's pipeline
     ; and fix cs and ip (since we entered 32 bit mode)
-    jmp 8h:0x8400
+    jmp 8h:0xa400

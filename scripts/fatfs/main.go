@@ -25,7 +25,8 @@ func main(){
   //var bootImagePath = flag.String("b", "", `specify the location of the MBR create. this
   //MBR must have the FAT32 data reserved at the end as they will be overwritten.`)
   //var outputPath = flag.String("o", "qbeos.img", "the output image file")
-  
+ 
+	// TODO: Enable flag parse
 	//flag.Parse()
 	dp := "/home/myonaiz/repos/QBeOS/iso_root"
 	directoryPath := &dp
@@ -63,9 +64,10 @@ func main(){
   if err != nil {
     Fatal(err.Error())
   }
+  secondStageBuffer = padBufferToLength(secondStageBuffer, 16 * SECTOR_SIZE) 
 
-  if len(secondStageBuffer) > 15 * SECTOR_SIZE {
-    Fatal(fmt.Sprintf("MBR must be %d bytes or less", SECTOR_SIZE)) 
+  if len(secondStageBuffer) > 16 * SECTOR_SIZE {
+    Fatal(fmt.Sprintf("Second stage bootloader must be %d bytes or less", 16 * SECTOR_SIZE)) 
   }
 
   imgSize, err := CalculateImageSizeBytes(*directoryPath)
@@ -90,4 +92,10 @@ func main(){
 		Fatal(fmt.Sprintf("failed to generate fat image: %s", err.Error()))
 	}
 	
+}
+
+func padBufferToLength(buf []byte, finalLength uint) []byte {
+	nbuf := make([]byte, finalLength)
+	copy(nbuf, buf)
+	return nbuf
 } 

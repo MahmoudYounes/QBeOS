@@ -3,7 +3,7 @@
 ;				        =====================
 ;
 ; boot code to boot the mahcine and load the kernel loader from 
-; iso 9660 compliant CD.
+; block devices using LBA. Requires a bios that support this.
 ; works on 8086 architecture, 32 bits, single CPU.
 ; boot sector size is 512b.
 ;
@@ -49,6 +49,8 @@ lba_read:
 ; dl: drive number as byte in stack
 ; ========================================
 func_ResetDisk:
+  pushad
+
 	mov cx, 3
 rd_loop_trials:
 	mov ah, 0
@@ -58,6 +60,12 @@ rd_loop_trials:
 rd_ResetFail:
 	dec cx
 	cmp cx, 0
-	je bootFailure
+	; TODO: return error codes
+  je bootFailure
 	jmp rd_loop_trials
+
+  popad
+  ret
+
+
 

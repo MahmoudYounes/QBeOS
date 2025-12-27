@@ -86,8 +86,8 @@ func NewFAT32(
   FATSize := (tmpVal1 + (tmpVal2 - 1)) / tmpVal2;
     
 	// BPB
-	fat32.BPB.BS_jmpBoot[0] = 0xeb
-	fat32.BPB.BS_jmpBoot[1] = 0x90
+	fat32.BPB.BS_jmpBoot[0] = bootloaderCode[0]
+	fat32.BPB.BS_jmpBoot[1] = bootloaderCode[1]
 	fat32.BPB.BS_jmpBoot[2] = 0x00
  
 	copy(fat32.BPB.BS_OEMName[:], []byte("qbeosfat"))
@@ -128,7 +128,11 @@ func NewFAT32(
 	fat32.BootCode[421] = 0xaa
 
 	fat32.ReservedSectors = make([]Sector, 16)
-	copy(fat32.Fat32BPB.BPB_Reserved[:], secondStageCode)
+	for i := range 16 {
+		if i * SECTOR_SIZE > len(secondStageCode) { break }
+		fat32.ReservedSectors[i] = [512]byte{}
+		copy(fat32.ReservedSectors[i][:], secondStageCode[i*SECTOR_SIZE:i*SECTOR_SIZE+SECTOR_SIZE - 1])
+	} 
 
   return &fat32, nil
 }
@@ -190,53 +194,32 @@ func (fat *FAT32) Serialize(outputPath string) error {
 	if err != nil {
 		return err
 	}
-
 	totalBytesWritten := 0
-
 
 	buf := make([]byte, unsafe.Sizeof(fat.BPB))
 	binary.Encode(buf, binary.LittleEndian, fat.BPB)
-	
 	n, err := outputImg.Write(buf)
 	if err != nil {
 		return err
-	}
-
-	if n != int(unsafe.Sizeof(fat.BPB)) {
-		return errors.New(fmt.Sprintf("error writing BPB. wrote %d but should have written %d",
-		n, unsafe.Sizeof(fat.BPB)))
-	}
+	}	
 	totalBytesWritten += n
 	
 	buf = make([]byte, unsafe.Sizeof(fat.Fat32BPB))
 	binary.Encode(buf, binary.LittleEndian, fat.Fat32BPB)
-
-	n, err = outputImg	.Write(buf)
+	n, err = outputImg.Write(buf)
 	if err != nil {
 		return err
-	}
-
-	if n != int(unsafe.Sizeof(fat.Fat32BPB)){
-		return errors.New(fmt.Sprintf("error writing Fat32BPB. wrote %d but should have written %d",
-		n, unsafe.Sizeof(fat.Fat32BPB)))	
-	}
+	}	
 	totalBytesWritten += n
 
 
 	buf = make([]byte, unsafe.Sizeof(fat.BootCode))
 	binary.Encode(buf, binary.LittleEndian, fat.BootCode)
-
-	n, err = outputImg	.Write(buf)
+	n, err = outputImg.Write(buf)
 	if err != nil {
 		return err
 	}
-
-	if n != int(unsafe.Sizeof(fat.BootCode)){
-		return errors.New(fmt.Sprintf("error writing BootCode. wrote %d but should have written %d",
-		n, unsafe.Sizeof(fat.BootCode)))	
-	}
 	totalBytesWritten += n
-
 
 	if resSecCount, err := bytesToShort(fat.BPB.BPB_RsvdSecCnt[:]); err != nil {
 		return err
@@ -244,34 +227,36 @@ func (fat *FAT32) Serialize(outputPath string) error {
 		return errors.New("inconsistent reserved sectors and reserved sectors count")	
 	}
 
+	reservedSectorsWritten := 0
 	if len(fat.ReservedSectors) > 0 {
-		buf = make([]byte, SECTOR_SIZE * len(fat.ReservedSectors))
-		binary.Encode(buf, binary.LittleEndian, fat.ReservedSectors)
+		for _, rs := range fat.ReservedSectors {
+			buf = make([]byte, SECTOR_SIZE)
+			binary.Encode(buf, binary.LittleEndian, rs)
+			n, err = outputImg.Write(buf)
+			if err != nil {
+				return err
+			}
+			totalBytesWritten += n
+			reservedSectorsWritten++
+		}
+	}
 
-		n, err = outputImg	.Write(buf)
+	for range 16 - reservedSectorsWritten {
+		buf = make([]byte, SECTOR_SIZE)
+		n, err = outputImg.Write(buf)
 		if err != nil {
 			return err
 		}
-
-		if n != len(fat.ReservedSectors) * SECTOR_SIZE {
-			return errors.New(fmt.Sprintf("error writing ReservedSectors. wrote %d but should have written %d",
-			n, unsafe.Sizeof(fat.ReservedSectors)))	
-		}
 		totalBytesWritten += n
-	}
+	} 
 
 	if len(fat.FAT) != 0 {
 		buf = make([]byte, int(unsafe.Sizeof(fat.FAT[0])) * len(fat.FAT))
 		binary.Encode(buf, binary.LittleEndian, fat.FAT)
 
-		n, err = outputImg	.Write(buf)
+		n, err = outputImg.Write(buf)
 		if err != nil {
 			return err
-		}
-
-		if n != int(unsafe.Sizeof(fat.FAT[0])) * len(fat.FAT){
-			return errors.New(fmt.Sprintf("error writing FATEntries. wrote %d but should have written %d",
-			n, int(unsafe.Sizeof(fat.FAT[0])) * len(fat.FAT)))	
 		}
 		totalBytesWritten += n
 	}
@@ -281,14 +266,9 @@ func (fat *FAT32) Serialize(outputPath string) error {
 		buf = make([]byte, int(unsafe.Sizeof(fat.RootDir[0])) * len(fat.RootDir))
 		binary.Encode(buf, binary.LittleEndian, fat.RootDir)
 
-		n, err = outputImg	.Write(buf)
+		n, err = outputImg.Write(buf)
 		if err != nil {
 			return err
-		}
-
-		if n != int(unsafe.Sizeof(fat.RootDir[0])) * len(fat.RootDir){
-			return errors.New(fmt.Sprintf("error writing RootDirEntries. wrote %d but should have written %d",
-			n, int(unsafe.Sizeof(fat.RootDir[0])) * len(fat.RootDir)))	
 		}
 		totalBytesWritten += n
 	}
@@ -298,14 +278,9 @@ func (fat *FAT32) Serialize(outputPath string) error {
 		buf = make([]byte, int(unsafe.Sizeof(fat.Data[0])) * len(fat.Data))
 		binary.Encode(buf, binary.LittleEndian, fat.Data)
 
-		n, err = outputImg	.Write(buf)
+		n, err = outputImg.Write(buf)
 		if err != nil {
 			return err
-		}
-
-		if n != int(unsafe.Sizeof(fat.Data[0])) * len(fat.Data){
-			return errors.New(fmt.Sprintf("error writing Data. wrote %d but should have written %d",
-			n, int(unsafe.Sizeof(fat.Data[0])) * len(fat.Data)))	
 		}
 		totalBytesWritten += n
 	}
@@ -320,7 +295,7 @@ func (fat *FAT32) Serialize(outputPath string) error {
 	if shouldWrite != totalBytesWritten{
 		fmt.Println("detected drift between shouldWrite and totalWritten.")
 		fmt.Printf("should write is %d, totalWritten is %d\n", shouldWrite, totalBytesWritten)
-		fmt.Printf("filling in the rest with zeros\n")
+		fmt.Printf("hence filling in the rest with zeros\n")
 	}
 
 	outputImg.Write(make([]byte, shouldWrite - totalBytesWritten))

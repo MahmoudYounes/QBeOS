@@ -5,6 +5,7 @@ export SRC_ROOT := ${ROOT_DIR}/src
 export ISO_ROOT_DIR := ${ROOT_DIR}/iso_root
 export ISO_NAME := QBeOS.iso
 export IMG_NAME := QBeOS.IMG
+export HDD_IMG_NAME := QBeOS.hdd
 SUBDIRS := src boot/bootloader boot/kloader
 
 .PHONY: build subdirs $(SUBDIRS)
@@ -29,18 +30,18 @@ run-qemu: $(BIN_DIR)/$(ISO_NAME)
 	qemu-system-i386                                      \
   -enable-kvm									                          \
 	-m 4096                                               \
-	-drive format=raw,media=cdrom,file=./bin/QBeOS.iso    \
+	-drive format=raw,file=QBeOS.hdd                      \
 	-smp 4                                                \
 	-device i8042           															\
 	-vga std                                              \
-  -no-shutdown -no-reboot                        \
+  -no-shutdown -no-reboot                               \
 	-monitor stdio                                        \
   -L /usr/share/qemu/sgabios.bin                        
 
 run: $(BIN_DIR)/$(ISO_NAME)	
 	virtualboxvm --startvm QBeOS	
 
-run-bochs: $(BIN_DIR)/$(IMG_NAME)
+run-bochs: $(HDD_IMG_NAME)
 	bochs -q -f bochsrc.txt
 
 debug: $(BIN_DIR)/$(ISO_NAME)
@@ -49,7 +50,7 @@ debug: $(BIN_DIR)/$(ISO_NAME)
 	-enable-kvm											                     \
 	-m 4096                                         	   \
 	-no-reboot                                     		   \
-	-drive format=raw,media=cdrom,file=./bin/QBeOS.iso   \
+	-drive format=raw,file=QBeOS.hdd                     \
 	-serial stdio                                  		   \
 	-smp 1                                         		   \
 	-vga std                                       		   \
@@ -66,3 +67,11 @@ clean:
 rebuild:
 	$(MAKE) clean
 	$(MAKE) build
+
+.PHONY: $(HDD_IMG_NAME)
+$(HDD_IMG_NAME):
+	go build -C ./scripts/fatfs/ .
+	./scripts/fatfs/fatfs
+	dd if=iso_root/KERNEL.IMG of=QBeOS.hdd oseek=16
+	dd if=/dev/null of=QBeOS.hdd seek=8388608
+

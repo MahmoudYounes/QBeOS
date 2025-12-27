@@ -2,7 +2,7 @@ OUTPUT_FORMAT(elf32-i386)
 
 SECTIONS
 {
-    . = 0x00008400;
+    . = 0x0000a400;
     .text :
     {
         *(.text.*kmain*)

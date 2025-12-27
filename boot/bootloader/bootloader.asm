@@ -12,8 +12,8 @@
 
 [BITS 16]
 [ORG 0x7C00]
-; jmp _start ; this jump will be handled by the tool that will write the MBR
-times 63 db 0
+jmp _start ; this jump will be handled by the tool that will write the MBR
+times 88 db 0 ; a tool will use this area to write require DS 
 global _start
 _start:
   cli
@@ -33,17 +33,12 @@ _start:
 
   ; far jmp to make sure that cs and ip are the correct values
   ; 5 = 1 opcode + 2 segment + 2 offset
-	;jmp 0h: $ + 5
+	jmp 0h: $ + 5
 
   ; preserving boot drive number
 	mov BYTE[BootDrive], dl
 
-  ; print loading msg
-	mov si, BootLoadingMsg
-	call func_biosPrint
- 
   ; resetting boot drive
-	mov dl, [BootDrive]
 	mov cx, 3
 rd_loop_trials:
 	mov ah, 0
@@ -65,105 +60,30 @@ rd_ResetDone:
   int 13h
   jc bootFailure 
 
-  ; don't care which partition is active let's just loop on logical blocks
-  mov ecx, 1 ; currPartIndex 
-loopBlock:
-  mov edx, [PartBegin + ecx*9] ; lba start  
-	mov eax, [MBRBufAddress]     ; buffer to load the block
-	mov es, eax
-	xor edi, edi
-  mov ebx, edx
-	call func_ReadLBA
-
-loopDirs:
-	mov eax, [MBRBufAddress]
-	mov es, eax
-	xor edi, edi
-
-func_LocateKernelLoader:
-	; this address has the LBA of root directory.
-  ; byte offset 156 contains the root directory record.
-  ; byte offset 2 contains LBA of this root directory.
-	; preserving the LBA location in ebx (4bytes LSB LBA) before messing up es
-	mov ebx, [es:di + 158]
-
-	; preparing to read new sector
-	; setting up new buffer for the new volume
-	xor di, di  				; reseting the offset pointer
-	mov ax, [BLBufPointer]
-	mov es, ax
-	mov cx, 1
-	call func_ReadLBA
-
-	xor di, di			; reset buffer pointer
-	mov bx, di			; bx used as a pointer to beginning of the directory entry. 
-                  ; while, di is used to compare names.
-
-	;; TODO: for separation of concerns, this part should be extracted to 
-  ;; isoUtilities library and be as generic as possible.
-	;; an abstraction like func_LocateFile with arguments being pointer to buffer is in need.
-loopLocateKernelLoaderFile:
-	xor edx, edx
-	mov dl, BYTE [es:bx]			; size of entry in buffer
-	xor ecx, ecx
-	mov cl, BYTE [es:bx + 32]		; file identifier length
-	add di, 33						; first byte of file identifier
-	mov si, KernelLoaderName
-cmpStr:
-	cmp cx, 0					    ; loop ended and file found
-	je fileFound
-	dec cx
-	cld
-	cmpsb
-	jne nextEntry
-	jmp cmpStr
-nextEntry:
-	add bx, dx		
-	mov di, bx
-	jmp loopLocateKernelLoaderFile
-fileFound:
-	mov eax, DWORD [es:bx + 2]
-	mov [KernelLoaderLBA], eax
-	mov eax, DWORD [es:bx + 10]
-	mov [KernelLoaderLength], eax
-
-
-
-func_LoadKernelLoader:
-; calculating how many sectors to read
-	xor eax, eax
-	mov ebx, eax
-	mov ecx, eax
-
-	mov eax, [KernelLoaderLength]
-	add eax, 0x0800
-	mov bx, 0x0800
-	div bx
-
-	mov cl, al
-	mov ax, 0x0840
-	mov es, eax
-	xor di, di
-	mov ebx, [KernelLoaderLBA]
-	call func_ReadLBA
-  jmp bootFailure
-
-  ; store boot drive for second stage
+  ; the second stage bootloader exists in the 4 sectors after the first sector
+  ; the second stage bootloader is fixated to 2048 bytes
   xor eax, eax
-  mov al, [BootDrive]
-  push ax
-  jmp 0x08400
+  ; ebx: counter to the number of LBAs loaded and which LBA we will load 
+  xor ebx, ebx
+  ; we move the location in memory we will load the second stage BL into
+  mov ax, [MBRBufAddress]
+	mov es, eax
+	xor edi, edi
+  ; start with the first sector. sector 0 is the MBR
+  mov ebx, 1   
+loadStage2:
+	call func_ReadLBA
+  inc ebx
+  add edi, 512
+  cmp ebx, 4
+  jle loadStage2 
 
-	;call func_DiscoverMemory
 
-  ;call func_DiscoverPCI
+; important TODO: do we need the boot drive here? 
+jumpStage2:
+  mov dl, [BootDrive]
+  jmp 0h:0x8400 
 
-	;call func_PrepareGDT
-
-	;call func_EnableProtectedModeAndJmpKernel
-
-    cli
-    hlt
 bootFailure:
 	mov si, BootFailureMsg
 	call func_biosPrint
@@ -172,6 +92,17 @@ bootloaderEnd:
 	cli
 	hlt
 
+; ========================================
+; Function that reads a sector from disk
+; using LBA
+;
+; args:
+; ebx: sector LBA
+; es : segment to load the lba in
+; di : offset to load the lba in
+;
+; after the end of this function, the LVA will be at es:di in memory
+; ========================================
 func_ReadLBA:
   pushad
 
@@ -213,9 +144,9 @@ end_biosPrint:
 ;; boot loader data
 BootDrive:					        db 0
 
-BootFailureMsg:				      db "Boot failed", 0
+BootFailureMsg:				      db "fail", 0
 ;MemDiscoveryFailureMsg:	    db "Memory discover failed", 0
-BootLoadingMsg:				      db "laoding", 0
+BootLoadingMsg:				      db "laod", 0
 ;PCIErrorMsg:                db "Couldn't discover PCI", 0
 ;BytesPerSector:				      dw 0
 
@@ -224,11 +155,8 @@ KernelLoaderName:					db "KLOADER.BIN", 0x3b, 0x31
 KernelLoaderLBA:					dd 0
 KernelLoaderLength:				dd 0
 
-; PVD begining address
-MBRBufAddress:	dw 0x0050
-
-; Bootloader buffer pointer
-BLBufPointer:	dw 0x00d0
+; kernel load address
+MBRBufAddress:	dw 0x0840
 
 ; Memory Layout Table Buf
 ;MLTBufAddress:     dw 0x7000
@@ -269,11 +197,9 @@ dapSectorNumL:				dd 0; absolute sector number low
 dapSectorNumH:				dd 0; absolute sector number high
 
 ; fill in the rest of the output file for isofs compatability
-TIMES 440 - ($ - $$) db 0
+;TIMES 446 - ($ - $$) db 0
 
 ; MBR Data
-DISKSIG:              dd 0
-RES:                  dw 0x0
 PartBegin:
 Part1:                
 P1DriveAttr:            db 0x80
