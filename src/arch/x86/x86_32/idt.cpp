@@ -55,9 +55,9 @@ static uintptr_t *interruptVector[] = {(uintptr_t *)DivZero,
                                        (uintptr_t *)BadInterrupt, 
                                        (uintptr_t *)BadInterrupt,
                                        (uintptr_t *)BadInterrupt,
-                                       (uintptr_t *)PITTimerHandler, // Pic Interrupts 0x30
-                                       (uintptr_t *)KeyboardHandler,    // Pic Interrupts 0x31
-                                       (uintptr_t *)BadHRDWRInterrupt,    // Pic Interrupts 0x32
+                                       (uintptr_t *)PITTimerHandler,   // Pic Interrupts 0x30
+                                       (uintptr_t *)KeyboardHandler,   // Pic Interrupts 0x31
+                                       (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x32
                                        (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x33
                                        (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x34
                                        (uintptr_t *)BadHRDWRInterrupt, // Pic Interrupts 0x35
