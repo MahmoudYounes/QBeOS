@@ -40,3 +40,58 @@ This tool does multiple things but mainly solves two issues:
 The FAT32 parser folder added to this repo is used to validate the images
 created.
 
+# Fat 32
+- file parts are called clusters
+- a directory is a special file. The data of that file is a 32 byte dir entries
+- on Fat32 RootDirEnt is always 0
+- with MS FAT32 implementation:
+  - num fats must be 2 
+  - reserved sectors must be 32 secotrs
+  - there exists a sector that is called FSInfo that placed somewhere. It
+    contains 
+- Each Dir Entry is a 32 byte (not bit)
+- On Fat32 the RootEntCnt is 0 because  
+## Fat32 structure
++---------------+
+|  boot sector  |
++---------------+
+|  nn secotrs   |
+|  reserved     |
+|  app specific |
+|  (2nd BL)     |
++---------------+
+|  Fat          |
+|               |
++---------------+
+|  Data         |
+|               |
++---------------+
+
+## Boot Sector
+The boot sector contains all the required information about the FS.
+The structure of this can be seen in the fat32.go file.
+
+## FAT Entry
+fat entry is 32 bits (4 bytes) with only 28 bits addressable. The 4 MSBs are
+reserved and should be kept as they are.
+The entry index is used as a cluster number. The entry value is used as a 
+pointer to the number of the next cluster.
+
+## FAT32 Access algorithm
+Always start at the RootClus number. Resolve this cluster address and then
+read SecPerClus sectors. This is the root directory entry. It contains
+a 32 byte consecutive directory entries that could either be directories or files.
+
+read dir:
+For each of the entries, read the cluster number hi and lo. This is the first 
+cluster of the file/dir. 
+
+If it is a file, then you can read the file cluster right away. to get the next
+cluster you resolve the FAT entry of the cluster and then read this fat entry.
+If it contains 0x0fffffff then you know this was the only cluster you needed 
+to read, otherwise, you resolve the cluster number address and then read it
+and then jump to the next entry.
+
+If it is a directory, then you go to the read dir
+
+

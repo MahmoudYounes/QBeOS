@@ -1,0 +1,30 @@
+package main
+
+import (
+	"encoding/binary"
+)
+
+func bytesToInt(numBytes []byte) int{
+  var num int	
+  b := make([]byte, 4)
+	copy(b, numBytes)
+	num = int(binary.LittleEndian.Uint32(b))
+	return num
+}
+
+func intToBytes(num int) []byte {
+  bs := [4]byte{}
+  bst := make([]byte, 4)
+  binary.LittleEndian.PutUint32(bst, uint32(num))
+  copy(bs[:], bst[:4])
+	return bs[:]
+}
+
+func shortToBytes(num int16) ([]byte) {
+  bs := [2]byte{}
+  bst := make([]byte, 2)
+  binary.LittleEndian.PutUint16(bst, uint16(num))
+  copy(bs[:], bst[:2])
+	return bs[:]
+}
+
