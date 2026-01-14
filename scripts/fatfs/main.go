@@ -1,14 +1,12 @@
 package main
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io/fs"
 	"log"
 	"os"
-	"unsafe"
-
-	"golang.org/x/sys/unix"
 )
 
 const (
@@ -49,9 +47,9 @@ func main(){
     Fatal(fmt.Sprintf("MBR must be %d bytes or less", SECTOR_SIZE))
   }
  
-  log.Println(fmt.Sprintf(`going to use directory %s to create a FAT32 img
+  fmt.Printf(`going to use directory %s to create a FAT32 img
   with bootable image at %s. will write the output at %s`, *directoryPath,
-  *bootImagePath, *outputPath)) 
+  *bootImagePath, *outputPath) 
 
   bootloaderBuffer, err := os.ReadFile(*bootImagePath)
   if err != nil {
@@ -71,24 +69,8 @@ func main(){
   if len(secondStageBuffer) > 16 * SECTOR_SIZE {
     Fatal(fmt.Sprintf("Second stage bootloader must be %d bytes or less", 16 * SECTOR_SIZE)) 
   }
-
-	outputFile, err := os.OpenFile(*outputPath, os.O_RDWR | os.O_CREATE, 0777)
-	if err != nil {
-		Fatal(fmt.Errorf("failed to open file at %s, with error %w", *outputPath, err).Error())
-	}
-
-	err = outputFile.Truncate(4 << 30)
-	if err != nil {
-		Fatal(fmt.Errorf("failed to seek file with error: %w", err).Error())
-	}
 	
-	b, err := unix.Mmap(int(outputFile.Fd()), 0, 4 << 30, unix.PROT_READ | unix.PROT_WRITE, unix.MAP_SHARED)
-	if err != nil {
-		Fatal(fmt.Errorf("failed to mmap the disk file: %w", err).Error())
-	}
-
 	fileSysImg, err := NewFAT32(
-		unsafe.Pointer(&b[0]),
 		SectorsCountFromBytes(IMG_SIZE_BYTES),
 		bootloaderBuffer,
 		secondStageBuffer)
@@ -99,25 +81,20 @@ func main(){
 	if err := fileSysImg.BuildFSFromRoot(dp); err != nil {
 		Fatal(fmt.Errorf("failed to build the file system image: %w", err).Error())
 	}
-
-	err = unix.Msync(b, unix.MS_SYNC)
+  
+	buf := make([]byte, 4 * 1024 * 1024 * 1024)
+	n, err := binary.Encode(buf, binary.LittleEndian, *fileSysImg)
 	if err != nil {
-		Fatal(fmt.Errorf("failed to msync: %s", err.Error()).Error())
+		Fatal(err.Error())
 	}
 
-	err = unix.Munmap(b)
-	if err != nil {
-		Fatal(fmt.Errorf("failed to unmap region: %w", err).Error())
+	if n == 0 || n < 4 * 1024 * 1024 * 1024 {
+		Fatal(fmt.Errorf("didn't write correct number of bytes. expected %d but wrote %d", 4 * 1024 * 1024 * 1024, n).Error())
 	}
 
-	err = outputFile.Sync()
-	if err != nil {
-		Fatal(fmt.Errorf("failed to sync file: %w", err).Error())
-	}
-
-	err = outputFile.Close()
-	if err != nil {
-		Fatal(fmt.Errorf("failed to close file: %w", err).Error())
+	fmt.Printf("\n\nfirst 512 bytes: %v\n", buf[:512])
+	if err := os.WriteFile(*outputPath, buf, 0666); err != nil {
+		Fatal(err.Error())
 	}
 }
 

@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"unsafe"
 )
 
 const (
@@ -19,55 +18,6 @@ var (
 	EOC_MARKER = []byte{0xFF, 0xFF, 0xFF, 0x0F}
 	EMT_MARKER = []byte{0x00, 0x00, 0x00, 0x00}
 )
-
-type FatDirEntry struct {
-  Name [11]byte
-	Attr byte
-	NTRes byte
-	CreateTimeTenth byte
-	CreateTime [2]byte
-	CreateDate [2]byte 
-	LastAccessDate [2]byte
-	FirstClusHigh [2]byte
-	WriteTime [2]byte
-	WriteDate [2]byte
-	FirstClustLow [2]byte
-	FileSize [4]byte
-}
-
-func (fde *FatDirEntry) IsEmpty() bool {
-	for _, b := range fde.Name {
-		if b != 0 {
-			return false
-		}
-	}
-	return true
-}
-
-func (fde *FatDirEntry) IsDir() bool {
-	return false
-	
-}
-
-func GetFatDirEntry(parts []byte) (*FatDirEntry, error) {
-	if len(parts) < 32 {
-		return nil, fmt.Errorf("passed buffer can't be deserialized to fat dir entry") 
-	}
-	fde := FatDirEntry{}
-	copy(fde.Name[:], parts[0:11])
-	fde.Attr = parts[11]
-	fde.NTRes = parts[12]
-	fde.CreateTimeTenth = parts[13]
-	copy(fde.CreateTime[:], parts[14:16])
-	copy(fde.CreateDate[:], parts[16:18])
-	copy(fde.LastAccessDate[:], parts[18:20])
-	copy(fde.FirstClusHigh[:], parts[20:22])
-	copy(fde.WriteTime[:], parts[22:24])
-	copy(fde.WriteDate[:], parts[24:26])
-	copy(fde.FirstClustLow[:], parts[26:28])
-	copy(fde.FileSize[:], parts[28:])
-	return &fde, nil
-}
 
 // 36 bytes
 type BPB struct {
@@ -114,7 +64,6 @@ func (c Cluster) NumSectors() uint{
 
 type FATEntry [4]byte
 
-
 type FAT32 struct{
 	BPB BPB            // 36 bytes
   Fat32BPB BPB_FAT32 // 90 bytes
@@ -126,12 +75,11 @@ type FAT32 struct{
 
 // NewFAT32 Creates a new FAT32 object
 func NewFAT32(
-  ptr unsafe.Pointer,
 	diskSizeSectors int,
 	bootloaderCode []byte,
   secondStageCode []byte) (*FAT32, error) {
 
-	fat32 := (*FAT32)(ptr)
+	fat32 := FAT32{} 
    
   secPerClus, ok := MapDiskSzToSecPerClus(diskSizeSectors) 
   if !ok {
@@ -204,7 +152,7 @@ func NewFAT32(
 	} 
   
   fat32.Data = make([]Cluster, FATEntriesCount)
-  return fat32, nil
+  return &fat32, nil
 }
 
 func (fs *FAT32) FirstDataSector() (int, error) {
@@ -238,13 +186,16 @@ func (fs *FAT32) GetFatEntryForCluster(ClusterNum int) (int, int, error) {
 func (fs *FAT32) GetEmptyClusters(clusterCount uint) []uint {
 	clusterIndexes := make([]uint, clusterCount)
 	clusterPtr := 0
+  found := 0
+	for idx := 3; idx < len(fs.FAT[0]) - 3; idx++ {
+		fe := fs.FAT[0][idx]
 
-	for idx, fe := range fs.FAT[0]{
-		if len(clusterIndexes) == int(clusterCount) {
+		if found == int(clusterCount) {
 			break
 		}
 
 		if SameBytes(fe[:], EMT_MARKER){
+			found++
 			clusterIndexes[clusterPtr] = uint(idx)
 			clusterPtr++
 		}
@@ -284,12 +235,20 @@ func (fs *FAT32) UpdateFAT(clusterChain []uint) error {
 	if len(clusterChain) == 0 {
 		return fmt.Errorf("can't update the fat with empty cluster chain")
 	}
+  
+  clusterChain = append(clusterChain, uint(bytesToInt(EOC_MARKER)))
 
-	for idx := range clusterChain {
+	fmt.Printf("len cluster chain after adding EOC Marker %d\n", len(clusterChain))
+  fmt.Printf("cluster chain %v\n", clusterChain)
+	for idx := range len(clusterChain) - 1 {
+		
+		fmt.Printf("idx %d clustNum %d nextClustNum %d\n", idx, clusterChain[idx], clusterChain[idx+1])
+		
 		if idx == len(clusterChain) - 1 {
 			copy(fs.FAT[0][idx][:], EOC_MARKER)
 		}
-		copy(fs.FAT[0][idx][:], intToBytes(int(clusterChain[idx + 1]))[:])
+		clusterNum := clusterChain[idx]
+		copy(fs.FAT[0][clusterNum][:], intToBytes(int(clusterChain[idx + 1]))[:])
 	}
 	return nil
 }
@@ -308,19 +267,23 @@ func sameFsNames(fsDirName [11]byte, ostr string) bool {
 		}
 	}
 	return true
-} 
+}
+
+func isEmptyFsName(fsDirName [11]byte) bool {
+	for _, b := range fsDirName {
+		if b != 0 {
+			return false
+		}
+	}
+	return true
+}
 
 // Locates the cluster that contains the directory
 func (fs *FAT32) GetClusterNumberForPath(dirPath string) (uint, error) {
-	rc := bytesToInt(fs.Fat32BPB.BPB_RootClus[:])
-	rs, err := fs.GetFirstSectorOfCluster(rc)
-	if err != nil {
-		return 0, fmt.Errorf("failed to get first sector of cluster: %w", err)
-	}
-
+	rc := bytesToInt(fs.Fat32BPB.BPB_RootClus[:])	
 	// return root dir entry
 	if dirPath == "." {
-		return uint(rs), nil 
+		return uint(rc), nil 
 	}
  
 	parts := filepath.SplitList(dirPath)
@@ -328,21 +291,63 @@ func (fs *FAT32) GetClusterNumberForPath(dirPath string) (uint, error) {
 	currCluster := rc
 	// Start at the root cluster
 	itr := NewDirEntryItr(fs.Data[currCluster])
-  for de := itr.GetNextDirEntry(); de != nil; {
+	
+	// TODO: Looks like this error needs to be handled
+	// Error cases here could be that the path is not reachable
+  for de, err := itr.GetNextDirEntry(); de != nil && err != nil; {
 		if !sameFsNames(de.Name, parts[partsPtr]){
 			continue
 		}
-		
-		// read cluster and reset the iterator
+    
+		// found a dir in path. Let's look for the next dir
+		partsPtr++
 
+		// read cluster and reset the iterator if should go to next
+		firstClusLow := bytesToInt(de.FirstClustLow[:])
+		firstClusHigh := bytesToInt(de.FirstClusHigh[:])
+		firstClust := (firstClusHigh << 16) | firstClusLow
+
+		if partsPtr == len(parts) {
+      return uint(firstClust), nil
+		} else {
+			itr = NewDirEntryItr(fs.Data[firstClust])	
+		}
 	}
-	
   
 	return 0, nil
 }
 
 func (fs *FAT32) prepareRootDirEntry() error {
 	_ = NewFsMetadata(fs)	
+	return nil
+}
+
+// Given a cluster, iterate until we find the next empty location to append a dir entry
+// and place a dir entry there given the metadata.
+func (fs *FAT32) UpdateClusterWithDirEntry(pDirClusNumber uint, fileClusNumber uint, fsPath, diskPath string) error {
+	fmt.Printf("updating parent cluster number %d with a dir entry for %s with first cluster number %d\n", pDirClusNumber, fsPath, fileClusNumber)
+  cluster := fs.Data[pDirClusNumber]
+	itr := NewDirEntryItr(cluster)
+	bDirOffset, err := itr.GetFirstEmptyDirEntryOffset()
+	if err != nil {
+		return fmt.Errorf("failed to update cluster %d with dir entry for path %s:%w", pDirClusNumber,
+			fsPath, err)
+	}
+
+	// Get file metadata
+	fstat, err := os.Lstat(diskPath)
+	if err != nil {
+		return err
+	}
+  
+	dirEntryBytes := GetDirEntryBytesFromFstat(fileClusNumber, fstat)
+	
+	sectorIdx := bDirOffset / SECTOR_SIZE 
+  inSector := bDirOffset % SECTOR_SIZE 
+
+	fmt.Printf("len parent cluster is %d sector Idx %d inSector %d\n", len(fs.Data[pDirClusNumber]), sectorIdx, inSector)
+
+  copy(fs.Data[pDirClusNumber][sectorIdx][inSector:inSector+32], dirEntryBytes)
 	return nil
 }
 
@@ -354,16 +359,21 @@ func (fs *FAT32) prepareRootDirEntry() error {
  * - Handle the case for doing this to the root dir entry. If not,
  * 
  */
-func (fs *FAT32) UpdateDirEntry(fsParent, fsPath, diskPath string) error {
+func (fs *FAT32) UpdateDirEntry(fileFirstCluster uint, fsParent, fsPath, diskPath string) error {
 	fmt.Printf("going to update dir %s that contains %s\n", fsParent, fsPath)
 	if fsParent == fsPath {
 		// Prep root dir entry
 		fs.prepareRootDirEntry()
 	}
 
-	_, err := fs.GetClusterNumberForPath(fsParent)
+	pDirClusNumber, err := fs.GetClusterNumberForPath(fsParent)
 	if err != nil {
 		return fmt.Errorf("failed to locate sector dir for %s:%w", fsPath, err)
+	}
+
+	if err := fs.UpdateClusterWithDirEntry(pDirClusNumber, fileFirstCluster, fsPath, diskPath); err != nil {
+		return fmt.Errorf("failed to update cluster %d with dir entry for path %s:%w", pDirClusNumber,
+			fsPath, err) 
 	}
 	return nil	
 }
@@ -378,7 +388,12 @@ func (fs *FAT32) UpdateDirEntry(fsParent, fsPath, diskPath string) error {
  * 
  * TODO: Next task on your plate is to handle directory vs file addition
  */
-func (fs *FAT32) Add(parent, fsPath, diskPath string) error {	
+func (fs *FAT32) Add(parent, fsPath, diskPath string) error {
+	// Handle the case for the root dir (.)
+	if parent == fsPath {
+		return nil
+	}
+
 	isDir, err := IsDirPath(diskPath)
   if err != nil {
 		return fmt.Errorf("can not figure out if %s is a dir or not: %w", diskPath, err)
@@ -388,13 +403,13 @@ func (fs *FAT32) Add(parent, fsPath, diskPath string) error {
 		return fs.addDir(parent, fsPath, diskPath)
 	} 
 	
-	return fs. addFile(parent, fsPath, diskPath)
+	return fs.addFile(parent, fsPath, diskPath)
 }
 
 func (fs *FAT32) addDir(parent, fsPath, diskPath string) error {
 	dirClust := fs.GetEmptyClusters(1)
   fs.UpdateFAT(dirClust)
-	fs.UpdateDirEntry(parent, fsPath, diskPath)
+	fs.UpdateDirEntry(dirClust[0], parent, fsPath, diskPath)
 	return nil
 }
 
@@ -408,6 +423,7 @@ func (fs *FAT32) addFile(parent, fsPath, diskPath string) error {
 	numberOfClusters := CalculateClustersFromSize(meta.SecPerClus, fileSize)
 
 	emptyClusters := fs.GetEmptyClusters(numberOfClusters)
+	fmt.Printf("empty clusters %v\n", emptyClusters)
   
 	if err := fs.CopyFileToClusters(diskPath, emptyClusters); err != nil {
 		return fmt.Errorf("failed to copy file to clusters: %w", err)
@@ -418,7 +434,7 @@ func (fs *FAT32) addFile(parent, fsPath, diskPath string) error {
 		return fmt.Errorf("failed to update the FAT: %w", err)
 	}
 
-	if err := fs.UpdateDirEntry(parent, fsPath, diskPath); err != nil {
+	if err := fs.UpdateDirEntry(emptyClusters[0], parent, fsPath, diskPath); err != nil {
 		return fmt.Errorf("failed to update the dir entry: %w", err)
 	}
 
@@ -438,8 +454,8 @@ func (fs *FAT32) BuildFSFromRoot(rootPath string) error {
     
 		fsPath := filepath.Base(relativePath)
 		parentPath := filepath.Dir(fsPath)
-		fmt.Println(fmt.Sprintf("Adding %s", diskPath))
-		fmt.Println(fmt.Sprintf("Adding %s with parent %s", fsPath, parentPath))
+		fmt.Printf("Adding %s\n", diskPath)
+		fmt.Printf("Adding %s with parent %s\n", fsPath, parentPath)
 		return fs.Add(parentPath, fsPath, diskPath)
 	})
 }
