@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"unsafe"
 )
@@ -18,10 +19,12 @@ type DirEntryItr struct {
 
 func NewDirEntryItr(cluster Cluster) *DirEntryItr {
 	cbytes := make([]byte, cluster.NumSectors() * SECTOR_SIZE)
+	binary.Encode(cbytes, binary.LittleEndian, cluster)
+	/*
   for si := range cluster {
-		copy(cbytes[si * SECTOR_SIZE: si * SECTOR_SIZE + 1], cluster[si][:])
+		copy(cbytes[si * SECTOR_SIZE: si * SECTOR_SIZE + 1][:], cluster[si][:])
 	}
-
+  */ 
 	return &DirEntryItr{
 		cluster: cbytes, 
 		currDirIdx: -int(unsafe.Sizeof(FatDirEntry{})),
@@ -43,16 +46,19 @@ func (si *DirEntryItr) GetNextDirEntry() (*FatDirEntry, error) {
 
 func (si *DirEntryItr) GetFirstEmptyDirEntryOffset() (int, error) {
   defer si.reset()
-  fmt.Printf("trying to find empty dir entry in a cluster with bytes length %d\n", len(si.cluster))	
 	for si.currDirIdx = 0;si.currDirIdx < len(si.cluster); si.currDirIdx += si.dirEntrySize {
 		de, err := GetFatDirEntry(si.cluster[si.currDirIdx:si.currDirIdx + si.dirEntrySize])
 		if err != nil {
 			return 0, err
 		}
+		
+		if de == nil {
+			return si.currDirIdx, nil
+		}
     
-		fmt.Printf("is de empty? %v\n", isEmptyFsName(de.Name))
+		isEmptyName := isEmptyFsName(de.Name)
 
-		if isEmptyFsName(de.Name) {
+		if isEmptyName {
 			return si.currDirIdx, nil
 		}
 

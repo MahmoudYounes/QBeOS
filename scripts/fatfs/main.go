@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -12,7 +11,7 @@ import (
 const (
    SECTOR_SIZE = 512
    INIT_FAT_SIZE = 4097
-	 IMG_SIZE_BYTES = (4 * 1024 * 1024 * 1024) - 1
+	 IMG_SIZE_BYTES = (3 * 1024 * 1024 * 1024) - 1
 )
 
 // Fatal reports a fatal error and exists
@@ -50,6 +49,7 @@ func main(){
   fmt.Printf(`going to use directory %s to create a FAT32 img
   with bootable image at %s. will write the output at %s`, *directoryPath,
   *bootImagePath, *outputPath) 
+	fmt.Println()
 
   bootloaderBuffer, err := os.ReadFile(*bootImagePath)
   if err != nil {
@@ -81,19 +81,11 @@ func main(){
 	if err := fileSysImg.BuildFSFromRoot(dp); err != nil {
 		Fatal(fmt.Errorf("failed to build the file system image: %w", err).Error())
 	}
-  
-	buf := make([]byte, 4 * 1024 * 1024 * 1024)
-	n, err := binary.Encode(buf, binary.LittleEndian, *fileSysImg)
+
+	fileSysImg.PrintLS()
+  	
+	err = fileSysImg.Serialize(*outputPath)
 	if err != nil {
-		Fatal(err.Error())
-	}
-
-	if n == 0 || n < 4 * 1024 * 1024 * 1024 {
-		Fatal(fmt.Errorf("didn't write correct number of bytes. expected %d but wrote %d", 4 * 1024 * 1024 * 1024, n).Error())
-	}
-
-	fmt.Printf("\n\nfirst 512 bytes: %v\n", buf[:512])
-	if err := os.WriteFile(*outputPath, buf, 0666); err != nil {
 		Fatal(err.Error())
 	}
 }

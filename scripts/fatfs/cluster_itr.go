@@ -16,7 +16,7 @@ func NewClusterIterator(fs *FAT32) *ClusterIterator {
 		fat:               fs.FAT[0],
 		clusters:           fs.Data,
 		metadata: 				 meta,
-		currClusIdx:       2,
+		currClusIdx:       -1,
 	}
 }
 
@@ -32,14 +32,18 @@ func (ci *ClusterIterator) GetFirstDataSector() uint {
   return uint(reservedSecCnt + (numFats * fatSize))
 }
 
-func (ci *ClusterIterator) GetFirstSectorOfCluster(N uint) uint {
-  secPerCluster := ci.metadata.SecPerClus
-  firstDataSec := ci.GetFirstDataSector()
-  return ((N - 2) * secPerCluster) + firstDataSec
-}
-
 func (ci *ClusterIterator) NextCluster() Cluster {
+	if ci.currClusIdx == -1 {
+		ci.currClusIdx = 2
+		return ci.clusters[ci.currClusIdx]
+	}
+
 	nextClusterIdx := uint(bytesToInt(ci.fat[ci.currClusIdx][:]))
+	if nextClusterIdx == uint(bytesToInt(EOC_MARKER[:])) ||
+	   nextClusterIdx == uint(bytesToInt(EMT_MARKER[:])) {
+		return nil
+	}
+
 	ci.currClusIdx = int(nextClusterIdx)
 	return ci.clusters[ci.currClusIdx]
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
-	"strings"
 )
 
 type DirAttr byte
@@ -44,7 +43,13 @@ func (fde *FatDirEntry) IsEmpty() bool {
 }
 
 func (fde *FatDirEntry) IsDir() bool {
-	return false	
+  return fde.Attr & byte(ATTR_DIRECTORY) != 0 
+}
+
+func (fde *FatDirEntry) Print() {
+	fmt.Printf("Name: %s\n", string(fde.Name[:])) 
+	fmt.Printf("Is Dir: %v\n", fde.IsDir())
+	fmt.Println()
 }
 
 func GetFatDirEntry(parts []byte) (*FatDirEntry, error) {
@@ -64,21 +69,21 @@ func GetFatDirEntry(parts []byte) (*FatDirEntry, error) {
 	copy(fde.WriteDate[:], parts[24:26])
 	copy(fde.FirstClustLow[:], parts[26:28])
 	copy(fde.FileSize[:], parts[28:])
+	if fde.IsEmpty() {
+		return nil, nil
+	}
+
 	return &fde, nil
 }
 
 func GetDirEntryBytesFromFstat(firstClust uint, fstat os.FileInfo) []byte {
-	name := strings.ToUpper(fstat.Name())
-	if len(name) > 8 {
-		name = strings.ToUpper(fstat.Name()[0:8])
-	}
-	
+	name := GetFnameBytes(fstat.Name()) 
 	fSize := 0
 	var attr DirAttr
 	if fstat.IsDir(){
 		attr = ATTR_DIRECTORY
 	} else {
-		attr = 0x0
+		attr = 0x20
 		fSize = int(fstat.Size())
 	}
 	
@@ -88,8 +93,59 @@ func GetDirEntryBytesFromFstat(firstClust uint, fstat os.FileInfo) []byte {
 	de.Attr = byte(attr)
 	copy(de.FirstClusHigh[:], intToBytes(int(firstClust))[2:4]) 
 	copy(de.FirstClustLow[:], intToBytes(int(firstClust))[0:2]) 
+	//copy(de.CreateDate[:], 
  
 	buf := make([]byte, 32)
 	binary.Encode(buf, binary.LittleEndian, de)
+	return buf
+}
+
+func GetFnameBytes(name string) []byte {
+	buf := make([]byte, 11)
+	ptr := 0
+	extPtr := 0
+	for _, ru := range name {
+		if ptr >= 8 {
+		 break 
+		} 
+		if ru == '.' {
+			extPtr = ptr
+			break
+		}
+
+		buf[ptr] = byte(ru)
+		ptr++
+	}
+
+	for ;ptr < 8;ptr++ {
+		buf[ptr] = ' '
+	}
+
+  if extPtr == 0 {
+		for ;extPtr < len(name); extPtr++ {
+			if name[extPtr] == '.' { break }
+		}
+    
+		if extPtr == len(name) {
+			// no extension found
+			buf[8] = 'u'
+			buf[9] = 'n'
+			buf[10] = 'k'
+		} else {
+			for i := 1; i <= 3; i++ {
+				if extPtr + i >= len(name) {
+					panic("Wrong extension detection")
+				}
+				buf[7 + i] = name[extPtr + i]
+			}
+		}
+	} else {
+		for i := 1; i <= 3; i++ {
+			if extPtr + i >= len(name) {
+				panic("Wrong extension detection")
+			}
+			buf[7 + i] = name[extPtr + i]
+		}
+	}
 	return buf
 }
