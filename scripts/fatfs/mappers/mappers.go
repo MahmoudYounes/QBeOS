@@ -1,10 +1,10 @@
-package main
+package mappers 
 
 import (
 	"encoding/binary"
 )
 
-func bytesToInt(numBytes []byte) int{
+func BytesToInt(numBytes []byte) int{
   var num int	
   b := make([]byte, 4)
 	copy(b, numBytes)
@@ -12,7 +12,7 @@ func bytesToInt(numBytes []byte) int{
 	return num
 }
 
-func intToBytes(num int) []byte {
+func IntToBytes(num int) []byte {
   bs := [4]byte{}
   bst := make([]byte, 4)
   binary.LittleEndian.PutUint32(bst, uint32(num))
@@ -20,7 +20,7 @@ func intToBytes(num int) []byte {
 	return bs[:]
 }
 
-func shortToBytes(num int16) ([]byte) {
+func ShortToBytes(num int16) ([]byte) {
   bs := [2]byte{}
   bst := make([]byte, 2)
   binary.LittleEndian.PutUint16(bst, uint16(num))
@@ -28,3 +28,6 @@ func shortToBytes(num int16) ([]byte) {
 	return bs[:]
 }
 
+func SizeGbToBytes(gbs int) uint {
+	return uint(gbs << 30)
+}
