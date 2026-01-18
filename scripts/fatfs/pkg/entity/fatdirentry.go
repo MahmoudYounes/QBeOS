@@ -1,21 +1,9 @@
-package main
+package entity 
 
 import (
 	"encoding/binary"
 	"fmt"
 	"os"
-)
-
-type DirAttr byte
-
-const (
-	ATTR_READ_ONLY DirAttr = 0x01
-	ATTR_HIDDEN DirAttr = 0x02
-	ATTR_SYSTEM DirAttr = 0x04
-	ATTR_VOLUME_ID DirAttr = 0x08
-	ATTR_DIRECTORY DirAttr = 0x10
-	ATTR_ARCHIVE DirAttr = 0x20
-	ATTR_LONG_NAME = ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_VOLUME_ID
 )
 
 type FatDirEntry struct {

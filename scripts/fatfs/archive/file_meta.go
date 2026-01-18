@@ -1,4 +1,4 @@
-package main
+package archive 
 
 import (
 	"os"
@@ -24,7 +24,7 @@ func GetFileSize(path string) (uint, error) {
 	return uint(stat.Size()), nil 
 }
 
-func sameFsNames(fsDirName [11]byte, ostr string) bool {
+func SameFsNames(fsDirName [11]byte, ostr string) bool {
 	upper := strings.ToUpper(ostr)
 	if len(upper) > 8 {
 		// TODO: This is an info
@@ -40,7 +40,7 @@ func sameFsNames(fsDirName [11]byte, ostr string) bool {
 	return true
 }
 
-func isEmptyFsName(fsDirName [11]byte) bool {
+func IsEmptyFsName(fsDirName [11]byte) bool {
 	for _, b := range fsDirName {
 		if b != 0 {
 			return false

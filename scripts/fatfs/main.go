@@ -2,76 +2,93 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"io/fs"
 	"log"
 	"os"
+
+	"github.com/MahmoudYounes/QBeOS/scripts/fatfs/pkg/constants"
+
 )
 
-const (
-   SECTOR_SIZE = 512
-   INIT_FAT_SIZE = 4097
-	 IMG_SIZE_BYTES = (3 * 1024 * 1024 * 1024) - 1
-)
-
-// Fatal reports a fatal error and exists
-func Fatal(errMsg string){
-  log.Fatalf("Fatal Error: %s", errMsg)
+type Params struct {
+	rootDirPath     string
+	mbrPath         string
+	secondStagePath string
+	outputPath      string
+	imgSizeGbs      uint
 }
 
+// Fatal reports a fatal error and exists
+func Fatal(err error){
+  log.Fatalf("Fatal Error: %s", err)
+}
+
+func parseCliFlags() *Params {
+	var directoryPath = flag.String("d", "", "specify the root directory")
+	var bootImagePath = flag.String("a", "", "specify the path of the MBR create")
+	var secondStagePath = flag.String("b", "", "specify the location to the second stage bootloader")
+  var outputPath = flag.String("o", "qbeos.img", "the output image file")
+	var imgSizeGigaBytes = flag.Int("sb", 4, "Specify image size in gigabytes") 
+	flag.Parse()
+
+	return &Params{
+		rootDirPath:     *directoryPath,
+		mbrPath:         *bootImagePath,
+		secondStagePath: *secondStagePath,
+		outputPath:      *outputPath,
+		imgSizeGbs:      uint(*imgSizeGigaBytes),
+	}
+}
+
+func validateParams(params *Params) error {
+	if _, err := os.Stat(params.rootDirPath); errors.Is(err, fs.ErrNotExist) {
+    return err
+  }
+
+  if blf, err := os.Stat(params.mbrPath); errors.Is(err, fs.ErrNotExist) {
+    return err
+  } else if blf.Size() > constants.SECTOR_SIZE {
+    return fmt.Errorf("MBR must be %d bytes or less", constants.SECTOR_SIZE)
+  }
+  return nil	
+}
+
+
 func main(){
-	//var directoryPath = flag.String("d", "", "specify the root directory")
-  //var bootImagePath = flag.String("b", "", `specify the location of the MBR create. this
-  //MBR must have the FAT32 data reserved at the end as they will be overwritten.`)
-  //var outputPath = flag.String("o", "qbeos.img", "the output image file")
- 
-	// TODO: Enable flag parse
-	//flag.Parse()
-	dp := "/home/myonaiz/repos/QBeOS/iso_root"
-	directoryPath := &dp
-	bip := "/home/myonaiz/repos/QBeOS/iso_root/bootloader.bin"
-	bootImagePath := &bip
-	sstg := "/home/myonaiz/repos/QBeOS/iso_root/kloader.bin"
-	secondStagePath := &sstg
-	op := "/home/myonaiz/repos/QBeOS/scripts/fatfs/QBeOS.hdd"
-	outputPath := &op
- 
-  if _, err := os.Stat(*directoryPath); errors.Is(err, fs.ErrNotExist) {
-    Fatal(err.Error())
-  }
+	p := parseCliFlags()
+	
+	err := validateParams(p)
+	if err != nil {
+		Fatal(err)
+	}
 
-  if blf, err := os.Stat(*bootImagePath); errors.Is(err, fs.ErrNotExist) {
-    Fatal(err.Error())
-  } else if blf.Size() > SECTOR_SIZE {
-    Fatal(fmt.Sprintf("MBR must be %d bytes or less", SECTOR_SIZE))
-  }
- 
-  fmt.Printf(`going to use directory %s to create a FAT32 img
-  with bootable image at %s. will write the output at %s`, *directoryPath,
-  *bootImagePath, *outputPath) 
-	fmt.Println()
+  
+  fmt.Printf("creating Fat32 img from dir %s output at %s\n", p.rootDirPath, p.outputPath) 
 
-  bootloaderBuffer, err := os.ReadFile(*bootImagePath)
+
+  bootloaderBuffer, err := os.ReadFile(p.mbrPath)
   if err != nil {
     Fatal(err.Error())
   }
 
-  if len(bootloaderBuffer) > SECTOR_SIZE {
-    Fatal(fmt.Sprintf("MBR must be %d bytes or less", SECTOR_SIZE)) 
+  if len(bootloaderBuffer) > constants.SECTOR_SIZE {
+    Fatal(fmt.Sprintf("MBR must be %d bytes or less", constants.SECTOR_SIZE)) 
   }
 
-	secondStageBuffer, err := os.ReadFile(*secondStagePath)
+	secondStageBuffer, err := os.ReadFile(p.secondStagePath)
   if err != nil {
     Fatal(err.Error())
   }
-  secondStageBuffer = padBufferToLength(secondStageBuffer, 16 * SECTOR_SIZE) 
+  secondStageBuffer = padBufferToLength(secondStageBuffer, 16 * constants.SECTOR_SIZE) 
 
-  if len(secondStageBuffer) > 16 * SECTOR_SIZE {
-    Fatal(fmt.Sprintf("Second stage bootloader must be %d bytes or less", 16 * SECTOR_SIZE)) 
+  if len(secondStageBuffer) > 16 * constants.SECTOR_SIZE {
+    Fatal(fmt.Sprintf("Second stage bootloader must be %d bytes or less", 16 * constants.SECTOR_SIZE)) 
   }
 	
 	fileSysImg, err := NewFAT32(
-		SectorsCountFromBytes(IMG_SIZE_BYTES),
+		SectorsCountFromBytes(imgSizeBytes),
 		bootloaderBuffer,
 		secondStageBuffer)
 	if err != nil {

@@ -1,4 +1,4 @@
-package main
+package mappers 
 
 func MapDiskSzToSecPerClus(diskSizeSec int) (int, bool){
 	if diskSizeSec <= 66600 {

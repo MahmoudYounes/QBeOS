@@ -1,4 +1,4 @@
-package main
+package iterator 
 
 type ClusterIterator struct {
 	fat []FATEntry
