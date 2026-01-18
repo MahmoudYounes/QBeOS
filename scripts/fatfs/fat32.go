@@ -1,22 +1,26 @@
 package main
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+	"unsafe"
+
 )
 
 const (
 	BYTES_PER_SEC = 512
-	RES_SEC_COUNT = 32
+	RES_SEC_COUNT = 30
 	NUM_FATS = 2
 )
 
 var (
 	EOC_MARKER = []byte{0xFF, 0xFF, 0xFF, 0x0F}
 	EMT_MARKER = []byte{0x00, 0x00, 0x00, 0x00}
+
+	writtenClusters = 0
 )
 
 // 36 bytes
@@ -25,7 +29,7 @@ type BPB struct {
   BS_OEMName [8]byte
   BPB_BytsPerSec [2]byte // How many bytes per sector
   BPB_SecPerClus byte    // How many sectors per cluster
-  BPB_RsvdSecCnt [2]byte // How many sectors are reserved (32 including the BPB)
+  BPB_RsvdSecCnt [2]byte // How many sectors are reserved (32 including the BPB & FSInfo)
   BPB_NumFATs byte       // Number of FAT tables
   BPB_RootEntCnt [2]byte // Set to 0 on FAT32
   BPB_TotSec16 [2]byte   // The total number of sectors
@@ -66,9 +70,10 @@ type FATEntry [4]byte
 
 type FAT32 struct{
 	BPB BPB            // 36 bytes
-  Fat32BPB BPB_FAT32 // 90 bytes
-	BootCode [422]byte 
-  ReservedSectors [RES_SEC_COUNT - 1]Sector  // - 1 because of the Boot Sector 
+  Fat32BPB BPB_FAT32 // 54 bytes
+	BootCode [422]byte
+	FSInfo   Sector
+  ReservedSectors [RES_SEC_COUNT]Sector  
 	FAT [][]FATEntry  // FAT tables	
   Data []Cluster 
 }
@@ -103,7 +108,7 @@ func NewFAT32(
 
 	copy(fat32.BPB.BPB_BytsPerSec[:], shortToBytes(SECTOR_SIZE))
 	fat32.BPB.BPB_SecPerClus = byte(secPerClus)
-	copy(fat32.BPB.BPB_RsvdSecCnt[:], shortToBytes(int16(RES_SEC_COUNT)))
+	copy(fat32.BPB.BPB_RsvdSecCnt[:], shortToBytes(int16(RES_SEC_COUNT + 2)))
 	fat32.BPB.BPB_NumFATs = byte(NUM_FATS)
 	copy(fat32.BPB.BPB_RootEntCnt[:], shortToBytes(0))
 	fat32.BPB.BPB_TotSec16 = [2]byte{0, 0}
@@ -116,43 +121,186 @@ func NewFAT32(
 
 	// Extended BPB
 	copy(fat32.Fat32BPB.BPB_FATSz32[:], intToBytes(FATSizeSectors))
-	fat32.Fat32BPB.BPB_ExtFlags[0] = 0x41 // 01000001
+	fat32.Fat32BPB.BPB_ExtFlags[0] = 0x40 // 01000000
 	fat32.Fat32BPB.BPB_ExtFlags[1] = 0
 	fat32.Fat32BPB.BPB_FSVer[0] = 0
 	fat32.Fat32BPB.BPB_FSVer[1] = 0
 	copy(fat32.Fat32BPB.BPB_RootClus[:], intToBytes(2))
-	copy(fat32.Fat32BPB.BPB_FSInfo[:], shortToBytes(0))
+	copy(fat32.Fat32BPB.BPB_FSInfo[:], shortToBytes(1))
 	fat32.Fat32BPB.BPB_BkBootSec = [2]byte{0, 0}
 	fat32.Fat32BPB.BPB_Reserved = [12]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	fat32.Fat32BPB.BS_DrvNum[0] = 0x80
 	fat32.Fat32BPB.BS_Reserved1[0] = 0x0
-	fat32.Fat32BPB.BS_BootSig[0] = 0x0
+	fat32.Fat32BPB.BS_BootSig[0] = 0x29
 	fat32.Fat32BPB.BS_VolID = [4]byte{0x0, 0x0, 0x0, 0x0}
-	fat32.Fat32BPB.BS_VolLab = [11]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	fat32.Fat32BPB.BS_VolLab = [11]byte{'N', 'O', ' ', 'N', 'A', 'M', 'E', ' ', ' ', ' ', ' '}
 	copy(fat32.Fat32BPB.BS_FilSysType[:], "FAT32   ")
 	
 	// BootCode
+	if len(bootloaderCode[90:]) >= len(fat32.BootCode){
+		return nil, fmt.Errorf("bootload code is bigger than a boot sector")
+	}
 	copy(fat32.BootCode[:], bootloaderCode[90:])	
 	fat32.BootCode[420] = 0x55
 	fat32.BootCode[421] = 0xaa
-
-	for i := range RES_SEC_COUNT - 1 {
+ 
+	// FSInfo struct
+	copy(fat32.FSInfo[0:4], []byte{0x52, 0x52, 0x61, 0x41})
+	copy(fat32.FSInfo[484:488], []byte{0x72, 0x72, 0x41, 0x61})
+	copy(fat32.FSInfo[488:492], []byte{0xff, 0xff, 0xff, 0xff})
+	copy(fat32.FSInfo[492:496], []byte{0xff, 0xff, 0xff, 0xff})
+	copy(fat32.FSInfo[508:512], []byte{0x00, 0x00, 0x55, 0xaa})
+  
+	// Second Stage
+	for i := range RES_SEC_COUNT {
 		if i * SECTOR_SIZE > len(secondStageCode) { break }
 		end := min(i * SECTOR_SIZE + SECTOR_SIZE - 1, len(secondStageCode))
 		fat32.ReservedSectors[i] = [512]byte{}
 		copy(fat32.ReservedSectors[i][:], secondStageCode[i*SECTOR_SIZE:end])
 	}
-
+  
+	// FAT
 	FATEntriesCount := (FATSizeSectors * SECTOR_SIZE) / 4 
 	fat32.FAT = make([][]FATEntry, 2) 
 	for idx := range fat32.FAT{
 		fat32.FAT[idx] = make([]FATEntry, FATEntriesCount)
-		fat32.FAT[idx][0][3] = fat32.BPB.BPB_Media
+		copy(fat32.FAT[idx][0][:], []byte{0xf8,0xff,0xff,0x0f})
 		copy(fat32.FAT[idx][1][:], EOC_MARKER)
 	} 
   
-  fat32.Data = make([]Cluster, FATEntriesCount)
+	// Data
+	dataSectors := diskSizeSectors - (RES_SEC_COUNT + 2 + FATSizeSectors * 2)
+	dataClusterCount := (dataSectors + secPerClus) / secPerClus
+	fmt.Printf("FATSize in Sectors %d", FATSizeSectors)
+	fmt.Printf("FAT Entries Count %d\n", FATEntriesCount)
+	fmt.Printf("Disk size sectors %d\n", diskSizeSectors)
+	fmt.Printf("Data cluster count %d\n", dataClusterCount)
+  fat32.Data = make([]Cluster, dataClusterCount)
+	for idx := range dataClusterCount{
+		fat32.Data[idx] = make([]Sector, secPerClus) 
+	}
+  fat32.prepareRootDirEntry()	
   return &fat32, nil
+}
+
+func (fat *FAT32) Serialize(outputPath string) error {
+	fmt.Printf("Wrote %d clusters\n", writtenClusters)
+	outputImg, err := os.OpenFile(outputPath, os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0666)	
+	if err != nil {
+		return fmt.Errorf("failed to open file: %w", err)
+	}
+	totalBytesWritten := 0
+
+	buf := make([]byte, unsafe.Sizeof(fat.BPB))
+	binary.Encode(buf, binary.LittleEndian, fat.BPB)
+	n, err := outputImg.Write(buf)
+	if err != nil {
+		return fmt.Errorf("failed to write Boot sector: %w", err)
+	}	
+	totalBytesWritten += n
+	
+	buf = make([]byte, unsafe.Sizeof(fat.Fat32BPB))
+	binary.Encode(buf, binary.LittleEndian, fat.Fat32BPB)
+	n, err = outputImg.Write(buf)
+	if err != nil {
+		return fmt.Errorf("failed to write extended boot sector: %w", err)
+	}	
+	totalBytesWritten += n
+
+	buf = make([]byte, unsafe.Sizeof(fat.BootCode))
+	binary.Encode(buf, binary.LittleEndian, fat.BootCode)
+	n, err = outputImg.Write(buf)
+	if err != nil {
+		return err
+	}
+	totalBytesWritten += n
+
+	buf = make([]byte, unsafe.Sizeof(fat.FSInfo))
+	binary.Encode(buf, binary.LittleEndian, fat.FSInfo)
+	n, err = outputImg.Write(buf)
+	if err != nil {
+		return fmt.Errorf("failed to write fsinfo: %w", err)
+	}	
+	totalBytesWritten += n
+
+	resSecCount := bytesToInt(fat.BPB.BPB_RsvdSecCnt[:])
+	if resSecCount != len(fat.ReservedSectors) + 2 {
+		return errors.New("inconsistent reserved sectors and reserved sectors count")	
+	}
+
+	reservedSectorsWritten := 0
+	if len(fat.ReservedSectors) > 0 {
+		for _, rs := range fat.ReservedSectors {
+			buf = make([]byte, SECTOR_SIZE)
+			binary.Encode(buf, binary.LittleEndian, rs)
+			n, err = outputImg.Write(buf)
+			if err != nil {
+				return err
+			}
+			totalBytesWritten += n
+			reservedSectorsWritten++
+		}
+	}
+
+	for range 16 - reservedSectorsWritten {
+		buf = make([]byte, SECTOR_SIZE)
+		n, err = outputImg.Write(buf)
+		if err != nil {
+			return err
+		}
+		totalBytesWritten += n
+	} 
+
+	if len(fat.FAT) != 0 {
+		for _, ffat := range fat.FAT {
+			if ffat[0] != [4]byte{0xf8,0xff,0xff,0x0f} { 
+				return fmt.Errorf("incorrect fat signature")
+			}
+
+			if ffat[1] != FATEntry(EOC_MARKER) {
+				return fmt.Errorf("incorrect fat end of cluster marker")
+			}
+
+			buf = make([]byte, int(unsafe.Sizeof(ffat[0])) * len(ffat))
+			binary.Encode(buf, binary.LittleEndian, ffat)
+
+			n, err = outputImg.Write(buf)
+			if err != nil {
+				return err
+			}
+			totalBytesWritten += n
+		}
+	}
+  	
+	if len(fat.Data) != 0 {
+		fmt.Printf("copying %d clusters\n", len(fat.Data))
+		totalClusters := len(fat.Data)
+		for idx, clus := range fat.Data {
+			if idx == 0 || idx == 1 {
+				continue
+			}
+			fmt.Printf("copying %d / %d\r", idx, totalClusters)
+			buf = make([]byte, len(clus) * SECTOR_SIZE)
+			binary.Encode(buf, binary.LittleEndian, clus)
+
+			n, err = outputImg.Write(buf)
+			if err != nil {
+				return err
+			}
+			totalBytesWritten += n
+		}
+		fmt.Println()
+	}
+  
+	// The last two clusters are always ignored
+  clusterBytes := 2 * uint(fat.BPB.BPB_SecPerClus) * SECTOR_SIZE
+	outputImg.Write(make([]byte, clusterBytes))
+
+  
+	outputImg.Sync()
+	outputImg.Close()
+
+	return nil		
 }
 
 func (fs *FAT32) FirstDataSector() (int, error) {
@@ -160,18 +308,6 @@ func (fs *FAT32) FirstDataSector() (int, error) {
   numFats := int(fs.BPB.BPB_NumFATs) 
   fatSize := bytesToInt(fs.Fat32BPB.BPB_FATSz32[:]) 
   return reservedSecCnt + (numFats * fatSize), nil
-}
-
-// Return the index of the first sector in cluster number N
-func (fs *FAT32) GetFirstSectorOfCluster(N int)(int, error){
-  secPerCluster := int(fs.BPB.BPB_SecPerClus)
- 
-  firstDataSec, err := fs.FirstDataSector()
-  if err != nil {
-		return 0, fmt.Errorf("failed to get first data sector: %w", err)
-  }
-
-  return ((N - 2) * secPerCluster) + firstDataSec, nil
 }
 
 func (fs *FAT32) GetFatEntryForCluster(ClusterNum int) (int, int, error) {
@@ -212,20 +348,19 @@ func (fs *FAT32) CopyFileToClusters(path string, emptyClusters []uint) error {
 		return fmt.Errorf("failed to read %s content: %w", path, err)
 	}
 
-	fmt.Printf("copying %s with size %d bytes in %d cluster(s)\n", path, len(fileBytes), len(emptyClusters))
 	bytesPerCluster := meta.SecPerClus * SECTOR_SIZE
 
-	for idx := range emptyClusters {
-		fs.Data[idx] = make([]Sector, meta.SecPerClus)
+	for idx, clusterIdx := range emptyClusters {
+		fs.Data[clusterIdx] = make([]Sector, meta.SecPerClus)
     
-		for cc := range int(meta.SecPerClus) {
-		  fileClusterStart := idx * int(bytesPerCluster) + cc * SECTOR_SIZE
-			fileClusterBoundary := min(idx * int(bytesPerCluster) + cc * SECTOR_SIZE + SECTOR_SIZE, len(fileBytes))
-			if fileClusterStart >= len(fileBytes) {
+		for cc := range meta.SecPerClus {
+		  fileClusterStart := uint(idx) * bytesPerCluster + cc * SECTOR_SIZE
+			fileClusterBoundary := min(fileClusterStart + SECTOR_SIZE, uint(len(fileBytes)))
+			if int(fileClusterStart) >= len(fileBytes) {
 				break
 			}
 			
-			copy(fs.Data[idx][cc][:], fileBytes[fileClusterStart : fileClusterBoundary]) 
+			copy(fs.Data[clusterIdx][cc][:], fileBytes[fileClusterStart : fileClusterBoundary]) 
 		}
 	}
 	return nil
@@ -236,46 +371,17 @@ func (fs *FAT32) UpdateFAT(clusterChain []uint) error {
 		return fmt.Errorf("can't update the fat with empty cluster chain")
 	}
   
-  clusterChain = append(clusterChain, uint(bytesToInt(EOC_MARKER)))
-
-	fmt.Printf("len cluster chain after adding EOC Marker %d\n", len(clusterChain))
-  fmt.Printf("cluster chain %v\n", clusterChain)
-	for idx := range len(clusterChain) - 1 {
-		
-		fmt.Printf("idx %d clustNum %d nextClustNum %d\n", idx, clusterChain[idx], clusterChain[idx+1])
-		
-		if idx == len(clusterChain) - 1 {
-			copy(fs.FAT[0][idx][:], EOC_MARKER)
-		}
+	for idx := range len(clusterChain) {	
 		clusterNum := clusterChain[idx]
-		copy(fs.FAT[0][clusterNum][:], intToBytes(int(clusterChain[idx + 1]))[:])
+		nextClusterNum := uint(bytesToInt(EOC_MARKER))
+		if idx + 1 < len(clusterChain) {
+			nextClusterNum = clusterChain[idx + 1]
+		}
+		copy(fs.FAT[0][clusterNum][:], intToBytes(int(nextClusterNum))[:])
+		copy(fs.FAT[1][clusterNum][:], intToBytes(int(nextClusterNum))[:])
 	}
+
 	return nil
-}
-
-func sameFsNames(fsDirName [11]byte, ostr string) bool {
-	upper := strings.ToUpper(ostr)
-	if len(upper) > 8 {
-		// TODO: This is an info
-		fmt.Println("should not set a fat 32 file name to more than 8 bytes. Taking only the first 8 bytes.")
-		upper = upper[0:8]
-	}
-	// name in FAT is 11 bytes. 8 for name and 3 for extension
-  for idx := range len(upper) {
-     if fsDirName[idx] != upper[idx]{
-				return false
-		}
-	}
-	return true
-}
-
-func isEmptyFsName(fsDirName [11]byte) bool {
-	for _, b := range fsDirName {
-		if b != 0 {
-			return false
-		}
-	}
-	return true
 }
 
 // Locates the cluster that contains the directory
@@ -294,7 +400,15 @@ func (fs *FAT32) GetClusterNumberForPath(dirPath string) (uint, error) {
 	
 	// TODO: Looks like this error needs to be handled
 	// Error cases here could be that the path is not reachable
-  for de, err := itr.GetNextDirEntry(); de != nil && err != nil; {
+  for ;; {
+		de, err := itr.GetNextDirEntry()
+		if err != nil {
+			panic("can't iterate on de")
+		}
+		if de == nil {
+			break
+		}
+
 		if !sameFsNames(de.Name, parts[partsPtr]){
 			continue
 		}
@@ -318,14 +432,19 @@ func (fs *FAT32) GetClusterNumberForPath(dirPath string) (uint, error) {
 }
 
 func (fs *FAT32) prepareRootDirEntry() error {
-	_ = NewFsMetadata(fs)	
+	meta := NewFsMetadata(fs)
+	fs.Data[2] = make([]Sector, meta.SecPerClus)
+	
+	err := fs.UpdateFAT([]uint{2})
+	if err != nil {
+		return fmt.Errorf("failed to update FAT entry for root cluster:%w", err)
+	}
 	return nil
 }
 
 // Given a cluster, iterate until we find the next empty location to append a dir entry
 // and place a dir entry there given the metadata.
 func (fs *FAT32) UpdateClusterWithDirEntry(pDirClusNumber uint, fileClusNumber uint, fsPath, diskPath string) error {
-	fmt.Printf("updating parent cluster number %d with a dir entry for %s with first cluster number %d\n", pDirClusNumber, fsPath, fileClusNumber)
   cluster := fs.Data[pDirClusNumber]
 	itr := NewDirEntryItr(cluster)
 	bDirOffset, err := itr.GetFirstEmptyDirEntryOffset()
@@ -345,7 +464,6 @@ func (fs *FAT32) UpdateClusterWithDirEntry(pDirClusNumber uint, fileClusNumber u
 	sectorIdx := bDirOffset / SECTOR_SIZE 
   inSector := bDirOffset % SECTOR_SIZE 
 
-	fmt.Printf("len parent cluster is %d sector Idx %d inSector %d\n", len(fs.Data[pDirClusNumber]), sectorIdx, inSector)
 
   copy(fs.Data[pDirClusNumber][sectorIdx][inSector:inSector+32], dirEntryBytes)
 	return nil
@@ -360,7 +478,6 @@ func (fs *FAT32) UpdateClusterWithDirEntry(pDirClusNumber uint, fileClusNumber u
  * 
  */
 func (fs *FAT32) UpdateDirEntry(fileFirstCluster uint, fsParent, fsPath, diskPath string) error {
-	fmt.Printf("going to update dir %s that contains %s\n", fsParent, fsPath)
 	if fsParent == fsPath {
 		// Prep root dir entry
 		fs.prepareRootDirEntry()
@@ -423,7 +540,6 @@ func (fs *FAT32) addFile(parent, fsPath, diskPath string) error {
 	numberOfClusters := CalculateClustersFromSize(meta.SecPerClus, fileSize)
 
 	emptyClusters := fs.GetEmptyClusters(numberOfClusters)
-	fmt.Printf("empty clusters %v\n", emptyClusters)
   
 	if err := fs.CopyFileToClusters(diskPath, emptyClusters); err != nil {
 		return fmt.Errorf("failed to copy file to clusters: %w", err)
@@ -434,9 +550,12 @@ func (fs *FAT32) addFile(parent, fsPath, diskPath string) error {
 		return fmt.Errorf("failed to update the FAT: %w", err)
 	}
 
+	writtenClusters += len(emptyClusters)
+
 	if err := fs.UpdateDirEntry(emptyClusters[0], parent, fsPath, diskPath); err != nil {
 		return fmt.Errorf("failed to update the dir entry: %w", err)
 	}
+	
 
 	return nil
 }
@@ -460,6 +579,35 @@ func (fs *FAT32) BuildFSFromRoot(rootPath string) error {
 	})
 }
 
+func (fs *FAT32) PrintLS(){
+	fmt.Println()
+	fmt.Println()
+	fmt.Printf("iterating through file system. Root Cluster Number: %v\n", bytesToInt(fs.Fat32BPB.BPB_RootClus[:]))
+	clusItr := NewClusterIterator(fs)
+	for ;; {
+		ne := clusItr.NextCluster() 
+		if ne == nil {
+			break
+		}
+
+		dirEntItr := NewDirEntryItr(ne)
+		for ;; {
+			de, err := dirEntItr.GetNextDirEntry()
+      if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			if de == nil || de.IsEmpty() {
+				break
+			}
+
+			de.Print()
+		}
+	}
+	
+}
+
 func SameBytes(buf1 []byte, buf2 []byte) bool {
 	if len(buf1) != len(buf2){
 		return false
@@ -479,5 +627,3 @@ func CalculateClustersFromSize(sectorsPerCluster, fileSize uint) uint {
 
 	return (fileSize + clusterBytes) / clusterBytes
 }
-
-
