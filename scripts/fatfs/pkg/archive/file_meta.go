@@ -4,6 +4,8 @@ import (
 	"os"
 	"fmt"
 	"strings"
+
+	"qbefat/pkg/constants"
 )
 
 func IsDirPath(path string) (bool, error){
@@ -47,4 +49,34 @@ func IsEmptyFsName(fsDirName [11]byte) bool {
 		}
 	}
 	return true
+}
+
+func SameBytes(buf1 []byte, buf2 []byte) bool {
+	if len(buf1) != len(buf2){
+		return false
+	}
+
+	for idx, b := range buf1{
+		if b != buf2[idx] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func CalculateClustersFromSize(sectorsPerCluster, fileSize uint) uint {
+	clusterBytes := sectorsPerCluster * constants.SECTOR_SIZE
+
+	return (fileSize + clusterBytes) / clusterBytes
+}
+
+func PadBufferToLength(buf []byte, finalLength uint) []byte {
+	nbuf := make([]byte, finalLength)
+	copy(nbuf, buf)
+	return nbuf
+}
+
+func SectorsCountFromBytes(sizeBytes int) int {
+	return (sizeBytes + (constants.BYTES_PER_SEC + 1)) / constants.BYTES_PER_SEC
 }

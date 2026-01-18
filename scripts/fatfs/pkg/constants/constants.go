@@ -1,4 +1,4 @@
-package entity
+package constants 
 
 const (
    SECTOR_SIZE = 512
@@ -24,6 +24,8 @@ const (
 )
 
 var (
+	TOOL_NAME = []byte("qbeosfat")
+
 	EOC_MARKER = []byte{0xFF, 0xFF, 0xFF, 0x0F}
 	EMT_MARKER = []byte{0x00, 0x00, 0x00, 0x00}
 )

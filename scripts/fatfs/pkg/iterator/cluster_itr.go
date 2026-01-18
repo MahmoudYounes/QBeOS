@@ -1,22 +1,27 @@
 package iterator 
 
+import (
+	"qbefat/pkg/entity"
+	"qbefat/pkg/constants"
+	"qbefat/pkg/mappers"
+)
+
 type ClusterIterator struct {
-	fat []FATEntry
-	clusters []Cluster
-	metadata *FsMetadata
+	fat []entity.FATEntry
+	meta *entity.FsMetadata
+	clusters []entity.Cluster
  
 	currClusIdx int
 }
 
 // A cluster iterator is an iterator that loops on all the clusters that contain
 // a directory.
-func NewClusterIterator(fs *FAT32) *ClusterIterator {
-	meta := NewFsMetadata(fs)
+func NewClusterIterator(fsMeta *entity.FsMetadata, fs *entity.FAT32) *ClusterIterator {
 	return &ClusterIterator{
 		fat:               fs.FAT[0],
 		clusters:           fs.Data,
-		metadata: 				 meta,
 		currClusIdx:       -1,
+		meta: fsMeta,
 	}
 }
 
@@ -26,21 +31,21 @@ func (ci *ClusterIterator) Reset(){
 }
 
 func (ci *ClusterIterator) GetFirstDataSector() uint {
-	reservedSecCnt := ci.metadata.ReservedSectors
-  numFats := ci.metadata.NumFats 
-  fatSize := ci.metadata.FatSizeSectors 
+	reservedSecCnt := ci.meta.ReservedSectors
+  numFats := uint(constants.NUM_FATS)
+  fatSize := ci.meta.FatSizeSectors 
   return uint(reservedSecCnt + (numFats * fatSize))
 }
 
-func (ci *ClusterIterator) NextCluster() Cluster {
+func (ci *ClusterIterator) NextCluster() entity.Cluster {
 	if ci.currClusIdx == -1 {
 		ci.currClusIdx = 2
 		return ci.clusters[ci.currClusIdx]
 	}
 
-	nextClusterIdx := uint(bytesToInt(ci.fat[ci.currClusIdx][:]))
-	if nextClusterIdx == uint(bytesToInt(EOC_MARKER[:])) ||
-	   nextClusterIdx == uint(bytesToInt(EMT_MARKER[:])) {
+	nextClusterIdx := uint(mappers.BytesToInt(ci.fat[ci.currClusIdx][:]))
+	if nextClusterIdx == uint(mappers.BytesToInt(constants.EOC_MARKER[:])) ||
+	   nextClusterIdx == uint(mappers.BytesToInt(constants.EMT_MARKER[:])) {
 		return nil
 	}
 

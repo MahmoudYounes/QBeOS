@@ -1,6 +1,10 @@
 package entity
 
-type Sector [SECTOR_SIZE]byte
+import (
+	"qbefat/pkg/constants"
+)
+
+type Sector [constants.SECTOR_SIZE]byte
 
 type Cluster []Sector
 
