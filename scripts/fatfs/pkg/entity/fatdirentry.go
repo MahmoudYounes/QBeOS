@@ -4,6 +4,9 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+
+	"qbefat/pkg/constants"
+	"qbefat/pkg/mappers"
 )
 
 type FatDirEntry struct {
@@ -31,7 +34,7 @@ func (fde *FatDirEntry) IsEmpty() bool {
 }
 
 func (fde *FatDirEntry) IsDir() bool {
-  return fde.Attr & byte(ATTR_DIRECTORY) != 0 
+  return fde.Attr & byte(constants.ATTR_DIRECTORY) != 0 
 }
 
 func (fde *FatDirEntry) Print() {
@@ -67,9 +70,9 @@ func GetFatDirEntry(parts []byte) (*FatDirEntry, error) {
 func GetDirEntryBytesFromFstat(firstClust uint, fstat os.FileInfo) []byte {
 	name := GetFnameBytes(fstat.Name()) 
 	fSize := 0
-	var attr DirAttr
+	var attr constants.DirAttr
 	if fstat.IsDir(){
-		attr = ATTR_DIRECTORY
+		attr = constants.ATTR_DIRECTORY
 	} else {
 		attr = 0x20
 		fSize = int(fstat.Size())
@@ -77,10 +80,10 @@ func GetDirEntryBytesFromFstat(firstClust uint, fstat os.FileInfo) []byte {
 	
 	de := FatDirEntry{}
 	copy(de.Name[:], name)
-	de.FileSize = [4]byte(intToBytes(fSize))
+	de.FileSize = [4]byte(mappers.IntToBytes(fSize))
 	de.Attr = byte(attr)
-	copy(de.FirstClusHigh[:], intToBytes(int(firstClust))[2:4]) 
-	copy(de.FirstClustLow[:], intToBytes(int(firstClust))[0:2]) 
+	copy(de.FirstClusHigh[:], mappers.IntToBytes(int(firstClust))[2:4]) 
+	copy(de.FirstClustLow[:], mappers.IntToBytes(int(firstClust))[0:2]) 
 	//copy(de.CreateDate[:], 
  
 	buf := make([]byte, 32)
