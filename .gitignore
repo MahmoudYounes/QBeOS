@@ -39,3 +39,6 @@ debugger-log.out
 *.hdd*
 qbefat
 
+**.o
+**.elf
+

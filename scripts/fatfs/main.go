@@ -23,6 +23,7 @@ func parseCliFlags() *entity.FsParams {
 	var directoryPath = flag.String("d", "", "specify the root directory")
 	var bootImagePath = flag.String("a", "", "specify the path of the MBR create")
 	var secondStagePath = flag.String("b", "", "specify the location to the second stage bootloader")
+	var thirdStagePath = flag.String("c", "", "specify the location to the third stage bootloader")
   var outputPath = flag.String("o", "qbeos.img", "the output image file")
 	var imgSizeGbs = flag.Int("sb", 4, "Specify image size in gigabytes") 
 	flag.Parse()
@@ -33,6 +34,7 @@ func parseCliFlags() *entity.FsParams {
 		RootDirPath:     *directoryPath,
 		MbrPath:         *bootImagePath,
 		SecondStagePath: *secondStagePath,
+		ThirdStagePath: *thirdStagePath,
 		OutputPath:      *outputPath,
 		ImgSizeGbs:      uint(*imgSizeGbs),
 		DiskSizeSectors: diskSizeSectors,

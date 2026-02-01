@@ -33,17 +33,16 @@ _start:
   ; far jmp to make sure that cs and ip are the correct values
   ; 5 = 1 opcode + 2 segment + 2 offset
 	jmp 0h: $ + 5
-
-  call func_biosClearScreen
   
-  mov si, LoadingMsg
-  call func_biosPrint
-
   ; preserving boot drive number
 	mov BYTE[BootDrive], dl
-
   call func_ResetDisk
 
+  ; logs
+  call func_biosClearScreen
+  mov si, LoadingMsg
+  call func_biosPrint
+  
   ; Check if int 13h extension methods 40h - 48h exist and supported by BIOS.
   ; if not bootFailure
   mov ah, 0x41
@@ -62,12 +61,14 @@ _start:
 	mov es, eax
 	xor edi, edi
   ; start with the first sector. sector 0 is the MBR
-  mov bl, [SecondStageLBAStart]   
+  mov bl, [SecondStageLBAStart]
+  mov cl, 0
 loadStage2:
 	call func_ReadLBA
-  inc ebx
+  inc bl
+  inc cl
   add edi, 512
-  cmp bl, [SecondStageLBAs]
+  cmp cl, [SecondStageLBAs]
   jle loadStage2
 
 ; important TODO: do we need the boot drive here? 
@@ -88,8 +89,8 @@ bootloaderEnd:
 %include "../earlyloader/screen.asm"
 
 BootDrive:					  db 0
-LoadingMsg:           db "Loading..", 0
-FailureMsg:           db "Failed boot..", 0
+LoadingMsg:           db "Loading..\n", 0
+FailureMsg:           db "Failed boot..\n", 0
 ; Location of the early loader
 MBRBufAddress:        dw 0x0840
 
