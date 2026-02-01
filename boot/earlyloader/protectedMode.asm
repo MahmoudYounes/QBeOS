@@ -1,12 +1,12 @@
-func_EnableProtectedModeAndJmpKernel:    
+func_EnableProtectedMode:
     ;; mark boot header as completed
-    xor ebx, ebx
-    mov bx, [BootHDRAddress]
-    mov es, bx
-    xor di, di
-    add di, 10
-    mov eax, 0x55be
-    stosd
+;    xor ebx, ebx
+;    mov bx, [BootHDRAddress]
+;    mov es, bx
+;    xor di, di
+;    add di, 10
+;    mov eax, 0x55be
+;    stosd
     
     ; reading control register zero to switch to 32 bit protected mode
     ; by setting the first bit in this register and putting it
@@ -29,10 +29,10 @@ func_EnableProtectedModeAndJmpKernel:
     mov es, eax
     mov esp, 0x3fffff
     
-    xor ebx, ebx
-    mov bx, [BootHDRAddress]
-    shl ebx, 4 ; passing the address of the boot header in ebx
+;    xor ebx, ebx
+;    mov bx, [BootHDRAddress]
+;    shl ebx, 4 ; passing the address of the boot header in ebx
 
     ; a far jump to flush the processor's pipeline
     ; and fix cs and ip (since we entered 32 bit mode)
-    jmp 8h:0xa400
+;    jmp 8h:0xa400

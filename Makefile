@@ -6,7 +6,7 @@ export ISO_ROOT_DIR := ${ROOT_DIR}/iso_root
 export ISO_NAME := QBeOS.iso
 export IMG_NAME := QBeOS.IMG
 export HDD_IMG_NAME := QBeOS.hdd
-SUBDIRS := src boot/bootloader boot/kloader
+SUBDIRS := src boot/bootloader boot/earlyloader
 
 .PHONY: build subdirs $(SUBDIRS)
 build: setupEnvironment subdirs
@@ -41,8 +41,8 @@ run-qemu: $(BIN_DIR)/$(ISO_NAME)
 run: $(BIN_DIR)/$(ISO_NAME)	
 	virtualboxvm --startvm QBeOS	
 
-run-bochs: $(HDD_IMG_NAME)
-	bochs -q -f bochsrc.txt
+run-bochs:
+	bochs -debugger -q -f bochsrc.txt
 
 debug: $(BIN_DIR)/$(ISO_NAME)
 	qemu-system-i386                                 	   \
@@ -67,11 +67,3 @@ clean:
 rebuild:
 	$(MAKE) clean
 	$(MAKE) build
-
-.PHONY: $(HDD_IMG_NAME)
-$(HDD_IMG_NAME):
-	go build -C ./scripts/fatfs/ .
-	./scripts/fatfs/fatfs
-	dd if=iso_root/KERNEL.IMG of=QBeOS.hdd oseek=16
-	dd if=/dev/null of=QBeOS.hdd seek=8388608
-

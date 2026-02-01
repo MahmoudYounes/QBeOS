@@ -28,17 +28,29 @@ This tool does multiple things but mainly solves two issues:
 - the directory will contain a MBR used to boot whatever can be booted from
   this directory.
 - it will write a correct MBR to this image with the correct data.
-- burn the generated image to any device.
 
-# Caveats
-- this tool may be or may not be tightly coupled with QBeOS.
-- this tool is not a generic tool to create FAT drives or images. It only supports
-  one usecase which is to create a QBeOS boot image formatted as FAT32. However,
-  this tool can be extended to be a general purpose tool for FAT filesystem.
+# Known lacking features
+- supports only one volume with no partition table
+- supports only fat32 filesys.
+- the FATs and BPB are not backed up
 
-# Testing
-The FAT32 parser folder added to this repo is used to validate the images
-created.
+# Known bugs
+- fails creating directories. 
+
+# Running and Testing
+To run this tool:
+- setup the go environment for your go projects, ideally by installing golang.
+- clone this repo and cd into scripts/fatfs (until I have an official bin release)
+- go build
+- run qbefat --help to figure out the main options and syntax of usage
+- there are 3 main options you could care about which are, the path to 
+  the location of the root image. The file you want to use an MBR and is placed
+  in the boot sector of the partition. The output directory/file-name.
+  Optionally you could provide a second bootloader file to be loaded by 
+  your boot sector. To make the boot sector minimal in this case, the 
+  second bootloader code is guaranteed to be placed at the 7th sector and
+  will be no bigger than 26 sectors which should also be the maximum size
+  of the second boot loader in this case.
 
 # Fat 32
 - file parts are called clusters
@@ -92,6 +104,7 @@ If it contains 0x0fffffff then you know this was the only cluster you needed
 to read, otherwise, you resolve the cluster number address and then read it
 and then jump to the next entry.
 
-If it is a directory, then you go to the read dir
-
+If it is a directory, then you also read the cluster hi lo and load this cluster.
+This cluster will also contain a list of dir enteries some of which are files
+and some of which are other directories and so on.
 

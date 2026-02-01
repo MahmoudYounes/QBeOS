@@ -1,11 +1,12 @@
 export TMP_BLD_DIR := ${SRC_ROOT}/build
 export GCC := i686-elf-g++
 export LD := i686-elf-g++
+export ASM := nasm
 export OBJCPY := i686-elf-objcopy
-export OBJCPYFLAGS := -O binary
-
+export OBJCPYELFBINFLAGS := -O binary
 export GCCFLAGS := -g -O3 -masm=intel -ffreestanding -lgcc -Wall -Wextra -fno-exceptions -fno-rtti -nostdlib -ffunction-sections -fno-builtin
 export GCCFLAGS_INTR := -mno-red-zone
+# TODO: Remove this because it is likely not used
 # set of configs fixated for now until we can allow the user to configure them.
 export CFG_DEFS := -D KERN_X86_32
 export INCLUDES := -I $(shell pwd)
@@ -19,7 +20,7 @@ CPP_SRCS := $(wildcard *.cpp)
 build: setupEnvironment srcs
 	mv *.o ${TMP_BLD_DIR}
 	$(LD) -nostdlib -T $(ROOT_DIR)/linker.ld -o ${TMP_BLD_DIR}/kernel.elf $(TMP_BLD_DIR)/*.o -lgcc
-	$(OBJCPY) $(OBJCPYFLAGS) ${TMP_BLD_DIR}/kernel.elf ${TMP_BLD_DIR}/KERNEL.IMG
+	$(OBJCPY) $(OBJCPYELFBINFLAGS) ${TMP_BLD_DIR}/kernel.elf ${TMP_BLD_DIR}/KERNEL.IMG
 
 	cp ${TMP_BLD_DIR}/KERNEL.IMG ${BLD_DIR}
 	cp ${TMP_BLD_DIR}/kernel.elf ${BLD_DIR}

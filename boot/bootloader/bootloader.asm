@@ -13,7 +13,7 @@
 [BITS 16]
 [ORG 0x7C00]
 jmp _start ; this jump will be handled by the tool that will write the MBR
-times 88 db 0 ; a tool will use this area to write require DS 
+times 88 db 0 ; a tool will use this area to write DS for BIOS 
 global _start
 _start:
   cli
@@ -28,29 +28,21 @@ _start:
 	mov sp, 0x4eff 
   ; for reference to why this value check docs / memory_layout.md or docs / OSMap.txt
   ; 0x02d0 * 16 + 0x4eff = 0x7bff
-
   sti
 
   ; far jmp to make sure that cs and ip are the correct values
   ; 5 = 1 opcode + 2 segment + 2 offset
 	jmp 0h: $ + 5
 
+  call func_biosClearScreen
+  
+  mov si, LoadingMsg
+  call func_biosPrint
+
   ; preserving boot drive number
 	mov BYTE[BootDrive], dl
 
-  ; resetting boot drive
-	mov cx, 3
-rd_loop_trials:
-	mov ah, 0
-	int 13h
-	jc rd_ResetFail
-  jmp rd_ResetDone
-rd_ResetFail:
-	dec cx
-	cmp cx, 0
-	je bootFailure
-	jmp rd_loop_trials
-rd_ResetDone:
+  call func_ResetDisk
 
   ; Check if int 13h extension methods 40h - 48h exist and supported by BIOS.
   ; if not bootFailure
@@ -63,21 +55,20 @@ rd_ResetDone:
   ; the second stage bootloader exists in the 4 sectors after the first sector
   ; the second stage bootloader is fixated to 2048 bytes
   xor eax, eax
-  ; ebx: counter to the number of LBAs loaded and which LBA we will load 
+  ; ebx is the counter to the number of LBAs loaded and which LBA we will load 
   xor ebx, ebx
   ; we move the location in memory we will load the second stage BL into
   mov ax, [MBRBufAddress]
 	mov es, eax
 	xor edi, edi
   ; start with the first sector. sector 0 is the MBR
-  mov ebx, 1   
+  mov bl, [SecondStageLBAStart]   
 loadStage2:
 	call func_ReadLBA
   inc ebx
   add edi, 512
-  cmp ebx, 4
-  jle loadStage2 
-
+  cmp bl, [SecondStageLBAs]
+  jle loadStage2
 
 ; important TODO: do we need the boot drive here? 
 jumpStage2:
@@ -85,107 +76,26 @@ jumpStage2:
   jmp 0h:0x8400 
 
 bootFailure:
-	mov si, BootFailureMsg
+	mov si, FailureMsg 
 	call func_biosPrint
   jmp bootloaderEnd
 bootloaderEnd:
 	cli
 	hlt
+;;;;;;;;;;; end ;;;;;;;;;;;
 
-; ========================================
-; Function that reads a sector from disk
-; using LBA
-;
-; args:
-; ebx: sector LBA
-; es : segment to load the lba in
-; di : offset to load the lba in
-;
-; after the end of this function, the LVA will be at es:di in memory
-; ========================================
-func_ReadLBA:
-  pushad
+%include "../earlyloader/disk.asm"
+%include "../earlyloader/screen.asm"
 
-	mov cx, 1
-  mov ax, es
-	mov WORD[dapNumSectors], cx
-	mov WORD[dapBufferOffset], di
-	mov WORD[dapBufferSegment], ax
-	mov DWORD[dapSectorNumL], ebx
-	mov DWORD[dapSectorNumH], 0	
+BootDrive:					  db 0
+LoadingMsg:           db "Loading..", 0
+FailureMsg:           db "Failed boot..", 0
+; Location of the early loader
+MBRBufAddress:        dw 0x0840
 
-	mov ah, 0x42
-	mov dl, BYTE[BootDrive]
-	mov si, DAP
-	int 13h
-	jc bootFailure
-  popad
-  ret
-
-func_biosPrint:
-loop_biosPrint:		; printing loop
-	lodsb
-	cmp al, 0
-	je end_biosPrint
-	mov ah, 0x0e
-	int 0x10
-	jmp loop_biosPrint
-end_biosPrint:
-  ret
-
-;%include "./enableA20.asm"
-;%include "../drivers/disk/disk.asm"
-;%include "./kernelLoader.asm"
-;%include "./memory.asm"
-;%include "./pci.asm"
-;%include "./gdt.asm"
-;%include "./protectedMode.asm"
-
-;; boot loader data
-BootDrive:					        db 0
-
-BootFailureMsg:				      db "fail", 0
-;MemDiscoveryFailureMsg:	    db "Memory discover failed", 0
-BootLoadingMsg:				      db "laod", 0
-;PCIErrorMsg:                db "Couldn't discover PCI", 0
-;BytesPerSector:				      dw 0
-
-; kernel loader info
-KernelLoaderName:					db "KLOADER.BIN", 0x3b, 0x31
-KernelLoaderLBA:					dd 0
-KernelLoaderLength:				dd 0
-
-; kernel load address
-MBRBufAddress:	dw 0x0840
-
-; Memory Layout Table Buf
-;MLTBufAddress:     dw 0x7000
-;MemRegionsCount:   dd 0
-;BootHDRAddress:    dw 0x7800
-
-; gdtr
-;gdtData:
-;	dd 0x0000
-;	dd 0x0000
-    ;;Code Descriptor
-;	dw 0xFFFF; Limit(Low)
-;	dw 0x0000; Base(Low)
-;	DB 0x00; Base(Middle)
-;	DB 10011010b; Access
-;	DB 11001111b; Granularity
-;	DB 0x00; Base(High)
-    ;;Data Descriptor
-;	dw 0xFFFF; Limit(Low)
-;	dw 0x0000; Base(Low)
-;	DB 0x00; Base(Middle)
-;	DB 10010010b; Access
-;	DB 11001111b; Granularity
-;	DB 0x00; Base(High)
-;gdtEnd:
-;GDT:
-;	dw gdtEnd - gdtData - 1;GDT Size - 1
-;	dd gdtData;Base Of GDT
-
+SecondStageLBAStart:  db 2
+; How many LBAs are there to read for the second stage
+SecondStageLBAs:      db 2 
 
 ;; DAP buffer
 DAP:						      db 10h; DAP size(disk address packet)
@@ -195,9 +105,6 @@ dapBufferOffset:			dw 0; offset for buffer
 dapBufferSegment:			dw 0; segment for buffer
 dapSectorNumL:				dd 0; absolute sector number low
 dapSectorNumH:				dd 0; absolute sector number high
-
-; fill in the rest of the output file for isofs compatability
-;TIMES 446 - ($ - $$) db 0
 
 ; MBR Data
 PartBegin:

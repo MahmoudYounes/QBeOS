@@ -1,11 +1,12 @@
 package entity
 
 import (
-	"fmt"
-	"os"
-	"unsafe"
 	"encoding/binary"
 	"errors"
+	"fmt"
+	"os"
+	"strings"
+	"unsafe"
 
 	"qbefat/pkg/constants"
 	"qbefat/pkg/mappers"
@@ -150,7 +151,7 @@ func (fat *FAT32) Serialize(outputPath string) error {
 			if idx == 0 || idx == 1 {
 				continue
 			}
-			fmt.Printf("copying %d / %d\r", idx, totalClusters)
+			printProgress(idx, totalClusters)
 			buf = make([]byte, len(clus) * constants.SECTOR_SIZE)
 			binary.Encode(buf, binary.LittleEndian, clus)
 
@@ -174,3 +175,19 @@ func (fat *FAT32) Serialize(outputPath string) error {
 	return nil		
 }
 
+func printProgress(idx int, totalClusters int) {
+	shadedBars := int(float64(idx) * 12.0 / float64(totalClusters))
+	percent := int(float64(idx) / float64(totalClusters) * 100)
+	progress := make([]string, 12) 
+	progress[0] = "["
+	progress[11] = "]"
+	for i := 1; i < 11; i++ {
+		char := "-"
+		if i < shadedBars {
+			char = "="
+		}
+		progress[i] = char
+	}
+ 
+	fmt.Printf("Progress: %d%% %s\r", percent, strings.Join(progress, ""))
+}

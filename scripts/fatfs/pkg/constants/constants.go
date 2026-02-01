@@ -19,7 +19,9 @@ const (
 
 const (
 	BYTES_PER_SEC = 512
-	RES_SEC_COUNT = 30
+	
+	RES_SEC_COUNT = 62
+	
 	NUM_FATS = 2
 )
 
