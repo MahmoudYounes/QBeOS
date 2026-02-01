@@ -36,5 +36,6 @@ debugger-log.out
 .gdb_history
 
 # generated image
-*.hdd
+*.hdd*
+qbefat
 

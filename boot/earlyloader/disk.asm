@@ -56,7 +56,7 @@ rd_loop_trials:
 	mov ah, 0
 	int 13h
 	jc rd_ResetFail
-	ret
+  jmp rd_done
 rd_ResetFail:
 	dec cx
 	cmp cx, 0
@@ -64,6 +64,7 @@ rd_ResetFail:
   je bootFailure
 	jmp rd_loop_trials
 
+rd_done:
   popad
   ret
 

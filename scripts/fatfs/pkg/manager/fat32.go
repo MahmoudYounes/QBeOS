@@ -23,10 +23,7 @@ type Manager struct {
 	
 }
 
-func NewManager(params *entity.FsParams) (*Manager, error) {
-	//bootloaderCode []byte
-  //secondStageCode []byte
-  
+func NewManager(params *entity.FsParams) (*Manager, error) { 
 	fat32 := entity.FAT32{}
 	m := Manager{
 		fs: &fat32,

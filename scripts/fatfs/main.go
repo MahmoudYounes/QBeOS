@@ -40,6 +40,16 @@ func parseCliFlags() *entity.FsParams {
 }
 
 func validateParams(params *entity.FsParams) error {
+	if params.DiskSizeSectors == 0 {
+		return fmt.Errorf("must specify an image size")
+	}
+
+	if len(params.OutputPath) == 0 {
+		return fmt.Errorf("must specify an output path")
+	}
+
+	// TODO: Validate that the output path is writable by writing a file
+
 	if _, err := os.Stat(params.RootDirPath); errors.Is(err, fs.ErrNotExist) {
 		return fmt.Errorf("failed to stat root path: %w", err)
   }
