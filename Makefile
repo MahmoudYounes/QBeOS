@@ -6,7 +6,7 @@ export ISO_ROOT_DIR := ${ROOT_DIR}/iso_root
 export ISO_NAME := QBeOS.iso
 export IMG_NAME := QBeOS.IMG
 export HDD_IMG_NAME := QBeOS.hdd
-SUBDIRS := src boot/bootloader boot/earlyloader
+SUBDIRS := src boot/bootloader boot/earlyloader boot/qbekloader
 
 .PHONY: build subdirs $(SUBDIRS)
 build: setupEnvironment subdirs

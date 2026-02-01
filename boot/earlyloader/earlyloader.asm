@@ -51,12 +51,14 @@ _start:
 	mov es, eax
 	xor edi, edi
   ; start with the first sector. sector 0 is the MBR
-  mov bl, [QBekSectorStart]   
+  mov bl, [QBekSectorStart]
+  mov cl, 0
 loadStage3:
 	call func_ReadLBA
-  inc ebx
+  inc bl
+  inc cl
   add edi, [QBekSectorSize]
-  cmp bl, [QBekSectorsCount]
+  cmp cl, [QBekSectorsCount]
   jle loadStage3
  
   ; TODO: Mark the boot header here
@@ -76,14 +78,14 @@ loadStage3:
   ; bit  2    -> table indicator (0 : GDT, 1 : LDT)
   ; bits 3>15 -> descriptor selector. hence code descriptor 8h -> (descriptor number 1:00001)(ti:0)(prvl:00)
   ; remember null descriptor is at 0
-  mov eax, 10h
+  mov eax, 0x10
   mov ds, eax
   mov fs, eax
   mov gs, eax
   mov ss, eax
   mov es, eax
   mov esp, 0x3fffff
-  jmp 0h:0x8800
+  jmp 0x08:0x8800
 
 bootFailure:
 	mov si, LoaderFailuresMsg
@@ -111,9 +113,9 @@ PCIErrorMsg:                db "Couldn't discover PCI", 0
 ;;; QBek specific data
 BootDrive:        db 0
 QBekLoadAddr:     dw 0x880
-QBekSectorStart:  db 5
+QBekSectorStart:  db 4
 QBekSectorsCount: db 62
-QBekSectorSize:   dw 512
+QBekSectorSize:   dd 512
 
 ;;; BOOTHDR
 BootHDRAddress:             dw 0x7800
@@ -133,6 +135,7 @@ dapSectorNumH:				dd 0; absolute sector number high
 
 ; gdtr
 gdtData:
+;;Null descriptor
 	dd 0x0000
 	dd 0x0000
 

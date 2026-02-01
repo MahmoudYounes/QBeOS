@@ -18,9 +18,7 @@ type Manager struct {
 	fs *entity.FAT32
 	*entity.FsMetadata
 	params *entity.FsParams
-	writtenClusters int
-
-	
+	writtenClusters int	
 }
 
 func NewManager(params *entity.FsParams) (*Manager, error) { 
@@ -31,7 +29,7 @@ func NewManager(params *entity.FsParams) (*Manager, error) {
 		FsMetadata: &entity.FsMetadata{},
 		writtenClusters: 0,
 	}
-	bootloaderCode, secondStageCode, err := m.loadBootBuffers()
+	bootloaderCode, secondStageCode, thirdStageCode, err := m.loadBootBuffers()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load boot buffers:%w", err)
 	}
@@ -47,6 +45,7 @@ func NewManager(params *entity.FsParams) (*Manager, error) {
 	m.loadExtendedBPB()
 	m.loadBootCode(bootloaderCode)
 	m.loadSecondStage(secondStageCode)
+	m.loadThirdStage(thirdStageCode)
 	m.loadFats()
 	m.loadDataRegion()
   m.prepareRootDirEntry()	
@@ -54,33 +53,37 @@ func NewManager(params *entity.FsParams) (*Manager, error) {
 	return &m, nil
 }
 
-func (m *Manager) loadBootBuffers() ([]byte, []byte, error) {
+func (m *Manager) loadBootBuffers() ([]byte, []byte, []byte, error) {
 	bootloaderBuffer, err := os.ReadFile(m.params.MbrPath)
   if err != nil {
-		return nil, nil, fmt.Errorf("failed to read first stage bootloader:%w", err)
+		return nil, nil, nil, fmt.Errorf("failed to read first stage bootloader:%w", err)
   }
 
   if len(bootloaderBuffer) > constants.SECTOR_SIZE {
-    return nil, nil, fmt.Errorf("MBR must be %d bytes or less", constants.SECTOR_SIZE) 
+    return nil, nil, nil, fmt.Errorf("MBR must be %d bytes or less", constants.SECTOR_SIZE) 
   }
 
 	secondStageBuffer, err := os.ReadFile(m.params.SecondStagePath)
   if err != nil {
-		return nil, nil, fmt.Errorf("failed to read second stage bootloader:%w", err)
+		return nil, nil, nil, fmt.Errorf("failed to read second stage bootloader:%w", err)
   }
-  secondStageBuffer = archive.PadBufferToLength(secondStageBuffer, 16 * constants.SECTOR_SIZE) 
+  secondStageBuffer = archive.PadBufferToLength(secondStageBuffer, constants.SEC_STAGE_SECTORS_COUNT * constants.SECTOR_SIZE) 
 
-  if len(secondStageBuffer) > 16 * constants.SECTOR_SIZE {
-    return nil, nil, fmt.Errorf("Second stage bootloader must be %d bytes or less",
-			16 * constants.SECTOR_SIZE) 
-  }
+	thirdStageBuffer, err := os.ReadFile(m.params.ThirdStagePath)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to read third stage bootloader:%w", err)
+	}
+	fmt.Printf("Thirdstage length before padding is %d\n", len(thirdStageBuffer))
+  thirdStageBuffer = archive.PadBufferToLength(thirdStageBuffer, constants.THIRD_STAGE_SECTORS_COUNT * constants.SECTOR_SIZE)
+	fmt.Printf("Thirdstage length after padding is %d\n", len(thirdStageBuffer))
 
+ 
 	if len(bootloaderBuffer[90:]) >= len(m.fs.BootCode){
-		return nil, nil, fmt.Errorf("bootload code is bigger than a boot sector")
+		return nil, nil, nil, fmt.Errorf("bootload code is bigger than a boot sector")
 	}
 
 
-	return bootloaderBuffer, secondStageBuffer, nil
+	return bootloaderBuffer, secondStageBuffer, thirdStageBuffer, nil
 }
 
 func (m *Manager) loadBPB(bootloaderCode []byte) {    
@@ -138,11 +141,27 @@ func (m *Manager) loadBootCode(bootloaderCode []byte) {
 }
 
 func (m *Manager) loadSecondStage(secondStageCode []byte) {
-	for i := range constants.RES_SEC_COUNT {
-		if i * constants.SECTOR_SIZE > len(secondStageCode) { break }
-		end := min(i * constants.SECTOR_SIZE + constants.SECTOR_SIZE - 1, len(secondStageCode))
+	m.fs.ReservedSectors[0] = [512]byte{}
+	copy(m.fs.ReservedSectors[0][:], secondStageCode[0:constants.SECTOR_SIZE])
+
+	m.fs.ReservedSectors[1] = [512]byte{}
+	copy(m.fs.ReservedSectors[1][:], secondStageCode[constants.SECTOR_SIZE:])
+}
+
+func (m *Manager) loadThirdStage(thirdStageCode []byte){
+	thirdStageSectors := len(thirdStageCode) / constants.SECTOR_SIZE;
+	fmt.Printf("third stage sectors %d\n", thirdStageSectors);
+  if thirdStageSectors > constants.THIRD_STAGE_SECTORS_COUNT{
+		panic(fmt.Sprintf("third stage sectors must be %d sectors", constants.THIRD_STAGE_SECTORS_COUNT))
+	}
+  
+	i := 2
+	j := 0
+	for ; i < constants.RES_SEC_COUNT && j < thirdStageSectors; {
 		m.fs.ReservedSectors[i] = [512]byte{}
-		copy(m.fs.ReservedSectors[i][:], secondStageCode[i*constants.SECTOR_SIZE:end])
+		copy(m.fs.ReservedSectors[i][:], thirdStageCode[j*constants.SECTOR_SIZE:j*constants.SECTOR_SIZE + constants.SECTOR_SIZE])
+		i++
+		j++
 	}
 }
 
