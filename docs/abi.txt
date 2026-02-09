@@ -1,2 +1,11 @@
 # SYSV ABI
+Standards for multiple things like:
+- executable file formats (ELF is part of sysv)
+- calling conventions
+- how to do dynamic linking
+- object file format
+- etc.
+
+# Why do we need this in QBekern?
+
 

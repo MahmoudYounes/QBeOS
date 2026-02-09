@@ -1,4 +1,8 @@
+#ifndef COMMON_H
+#define COMMON_H
 #include <stdint.h>
+
+#define NULL 0
 
 static inline void outb(uint16_t port, uint8_t val){
     __asm__ __volatile__ ("out %0, %1"
@@ -43,3 +47,7 @@ static inline int max(int a, int b){
 }
 
 #define HLT() for(;;) __asm__("hlt")
+
+void panic(char str[]);
+
+#endif
