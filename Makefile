@@ -28,11 +28,15 @@ setupEnvironment:
 
 run-qemu: $(BIN_DIR)/$(ISO_NAME)
 	qemu-system-i386                                      \
+	-machine q35																					\
   -enable-kvm									                          \
 	-m 4096                                               \
-	-drive format=raw,file=QBeOS.hdd                      \
 	-smp 4                                                \
 	-device i8042           															\
+  -usb                                                  \
+  -device usb-ehci,id=ehci                              \
+  -drive if=none,id=usbdisk,format=raw,file=QBeOS.hdd   \
+  -device usb-storage,bus=ehci.0,drive=usbdisk          \
 	-vga std                                              \
   -no-shutdown -no-reboot                               \
 	-monitor stdio                                        \
@@ -54,6 +58,7 @@ debug: $(BIN_DIR)/$(ISO_NAME)
 	-serial stdio                                  		   \
 	-smp 1                                         		   \
 	-vga std                                       		   \
+	-L /usr/share/qemu/sgabios.bin                       \
   -d int -no-shutdown -no-reboot -S -s
 
 .PHONY: clean

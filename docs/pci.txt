@@ -3,4 +3,6 @@ PCI Bus is replacing ISA Buses due to its higher speed and bandwidth in data
 transformaiton. it is a bus with independent microcontroller and data connection
 that arbitrates an amount of connected devices and allows them to interrupt the CPU
 
-
+CONFIG_ADDRESS: 0xcf8 ioport  specifies the address to be accessed
+CONFIG_DATA   : 0xcfc ioport  generates the config access and will transfer data
+                              to and from CONFIG_DATA register
