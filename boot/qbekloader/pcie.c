@@ -165,13 +165,21 @@ uint16_t get_class_subclass(uint8_t busnr, uint8_t devnr, uint8_t funcnr){
 }
 
 void print_debug(){
-  static char buf[4096];
+  static char buf[128];
   for (int idx = 0; idx < last_dev_idx; idx++){
     if (devices[idx] == NULL) {
       continue;
     }
     struct device_t* dev = devices[idx]; 
-    sprintf(buf, "[PCIe] %x:%x.%x found device venid %x devid %x class %x subclass %x\n\0", dev->busnr, dev->devnr, dev->funcnr, dev->vendorid, dev->deviceid, dev->classid, dev->subclass);
+    sprintf(buf, "[PCIe] %x:%x.%x found device venid %x devid %x class %x subclass %x\n\0",
+            dev->busnr,
+            dev->devnr,
+            dev->funcnr,
+            dev->vendorid,
+            dev->deviceid,
+            dev->classid,
+            dev->subclass);
+
     putstr(buf);
   }
 }

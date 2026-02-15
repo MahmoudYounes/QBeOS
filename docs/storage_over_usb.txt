@@ -1,0 +1,83 @@
+# Overview
+The steps needed to implement a USB Driver.
+
+# Prerequisits
+- usb driver needs to interact with pci driver.
+- The usb driver will use the EHCI to drive the usb workload
+
+# PCI Integration
+- The EHCI class is always 0xc and the subclass 0x3 (serial bus, usb device)
+  and pi 0x20 usb 2.0
+- Read the EHCI base register is in BAR0 that contains the address of the 
+  memory mapped IO registers for the EHCI. contains address 31:8 (inclusive)
+  bit 7:3 is reserved and bit 0 wired to zero and bits 2:1:
+  00: can be mapped into 32 bit only
+  10: can be mapped into 64 bit
+
+
+# How to do initialization
+## setup
+
+- PCI driver gets initialized first. 
+- We then check if there is a device with class 0xc and subclass 0x3
+- We get the bar0 of this device
+- The memory region refered to by this register is the capability registers.
+  The first register contains the length of the capabilities registers CAPLEN.
+- We add CAPLEN to the memory offset in BAR0 and then we get the area of the 
+  operational registers.
+- We save those two addresses because this is how we will configure the EHCI
+  and talk with all connected usb devices.
+- Read the HCCPARAMS register (register number 4 in the capability registers)
+  if 0 then all DS is addressable via 32bit addresses.
+  if 1 then all DS may be addressable by 64bit addresses.
+- Save the address of the USBSTS (usb status) register as it will most likely
+  be frequently used.
+- Save the address of the USBCMD (usb cmd) register
+
+## Initialization
+-- refer to (AppA) to read about the EHCI and companion HCs model
+- Reset the device by writing 1 in bit 1 in USBCMD only if USBSTS HALTbit is 1.
+  if USBHLT is 0 then write 0 in Run/Stop wait for HALt to be 1 and then reset.
+- Program the Control Data Structure Segment Register
+  - if HCCPARAMS is 0 then noop.
+  - else if HCCPARAMS is 1 then write integer 0 to this register.
+- Program USBINTR register to enable appropriate interrupts.
+  - for the sake of the bootloader, we may not want to install in IDT. If this is
+    possible, then we can put integer 0 into this register and rely on polling
+    the status register.
+- Program the base address of the periodic list register
+  - in the BL context we this maybe too complicated to work with (limited memory)
+    so program it to 0 and don't enable periodic schedules.
+- Program USB CMD:
+  - setup interrupt theshold (noop for us)
+  - turn the host controller ON via setting the Run/Stop bit (leave off as this
+    runs the schedule processing)
+- Write 1 to config flag resgister to route all ports to the EHCI controller.
+
+# Appendix
+## A
+- EHCI/OHCI/UHCI/xHCI are specifications on how to implement controllers from
+  the hardware perspectives and how to implement drivers from software perspectives.
+- The usb devices get connected to physical ports. Each port has a compnaion
+  host controller (HC). The companion HC implement USB 1 and USB 1.1. So an
+  ohci or uhci drivers are needed to work with those.
+- EHCI is a separate controller (1 controller) that can also handle all devices
+  USB 2.0, USB1.1, and USB1.0. If the motherboard supports EHCI, it is the best
+  thing to do to rely on the EHCI to drive the devices.
+- The relation between ports and usb devices is 1:1.
+
+## B USBCMD Register
+bit 0: Run/Stop 
+bit 1: reset. 0 no reset, 1 do reset and HC will put 0 when reset is done.
+       write 1 only if USBSTS HLT is 1
+
+## C USBSTS Register
+bit 12: HALTED
+
+## D CONFIGFLAG (CF) Register
+a 31 reserved bit register with bit 0 deciding whether default routes are
+used (so route to companion HCs) or route the devices to this HC.
+
+## E Periodic Schedule
+You can setup a multiple commands that will be processed by the EHCI in a
+scheduled fashion. 

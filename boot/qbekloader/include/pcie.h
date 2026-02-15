@@ -8,6 +8,50 @@
 
 #define MAX_DEV_COUNT 256
 
+#define SUPPORTED_DEV_COUNT 18
+
+enum CLASS_TYPES{
+  unclassified = 0x0,
+  mass_storage = 0x1,
+  network      = 0x2,
+  display      = 0x3,
+  multimedia   = 0x4,
+  memory       = 0x5,
+  bridge       = 0x6,
+  scc          = 0x7,
+  bsp          = 0x8,
+  idc          = 0x9,
+  dock         = 0xa,
+  processor    = 0xb,
+  serial_bus   = 0xc,
+  wireless     = 0xd,
+  intelli      = 0xe,
+  satcomm      = 0xf,
+  encryption   = 0x10,
+  singal       = 0x11,
+};
+
+static const char *class_names[SUPPORTED_DEV_COUNT] = {
+  "unclassified",
+  "mass storage",
+  "network",
+  "display",
+  "multimedia",
+  "memory",
+  "bridge",
+  "simple communication controller",
+  "base system peripheral",
+  "input device controller",
+  "docking station",
+  "processor",
+  "serial bus controller",
+  "wireless controller",
+  "intelligent controller",
+  "satalite communication controller",
+  "encryption controller",
+  "singal processing controller", 
+};
+
 struct device_t{
   uint8_t busnr;
   uint8_t devnr;
